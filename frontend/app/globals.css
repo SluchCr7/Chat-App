@@ -1,0 +1,104 @@
+@plugin "daisyui";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+:root {
+  --bg: rgb(255 255 255) !important;
+  --text: rgb(0 0 0) !important;
+  --primary: rgb(0 122 255) !important;
+}
+
+/* Red Theme */
+.theme-red {
+  --bg: rgb(0 0 0) !important;
+  --text: rgb(110, 10, 10) !important;
+  --primary: rgb(255 0 0) !important;
+}
+
+/* Black Theme */
+.theme-black {
+  --bg: rgb(0 0 0);
+  --text: rgb(255 255 255);
+  --primary: rgb(34 34 34);
+}
+
+/* White Theme */
+.theme-white {
+  --bg: rgb(255 255 255);
+  --text: rgb(0 0 0);
+  --primary: rgb(100 100 100);
+}
+
+/* Green Theme */
+.theme-green {
+  --bg: rgb(0 0 0);
+  --text: rgb(1, 119, 1);
+  --primary: rgb(0 200 0);
+}
+
+/* Yellow Theme */
+.theme-yellow {
+  --bg: rgb(0 0 0);
+  --text: rgb(168, 126, 0);
+  --primary: rgb(255 215 0);
+}
+
+/* Blue Theme */
+.theme-blue {
+  --bg: rgb(0 0 0);
+  --text: rgb(27, 0, 134);
+  --primary: rgb(0 122 255);
+}
+
+.bg-bg {
+  background-color: var(--bg);
+}
+.text-text {
+  color: var(--text);
+}
+.text-primary {
+  color: var(--primary);
+}
+
+.showImage{
+    background-color: rgba(0, 0, 0, 0.5);
+}
+.menu_bg{
+    background-color: rgba(0, 0, 0, 0.666);
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.text{
+  text-decoration:underline;
+}
+
+@keyframes spin-border {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.loading_border {
+  /* border: 4px solid transparent;
+  border-top-color: #3b82f6; 
+  border-left-color: #3b82f6; */
+  border-radius: 50%;
+  animation: spin-border 1s linear infinite;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}

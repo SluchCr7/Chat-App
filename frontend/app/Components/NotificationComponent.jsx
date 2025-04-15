@@ -29,7 +29,7 @@ const NotificationComponent = ({ showMenu, setShowMenu , showNotification , setS
                   {
                     notifications.map((notification) => {
                       return (
-                        <div className="flex items-center gap-2 p-3 hover:bg-gray-100 transition-all duration-700">
+                        <div key={notification._id} className="flex items-center gap-2 p-3 hover:bg-gray-100 transition-all duration-700">
                           <Image src={notification?.sender?.profilePic?.url} alt="avatar" width={30} height={30} className="rounded-full" />
                           <span className="text-gray-600">{notification?.username} Send you a message</span>
                         </div>

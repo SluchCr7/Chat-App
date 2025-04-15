@@ -19,6 +19,7 @@ const NotificationMenuScreen = ({showNotification , setShowNotification }) => {
             notifications.map((notification) => {
               return (
                 <div
+                  key={notification._id}
                   onClick={() => { setSelectedUser(notification.sender); setShowAll(false) }}
                   className="flex justify-between items-center gap-2 p-4 w-full hover:bg-gray-100 transition-all duration-700"
                 >

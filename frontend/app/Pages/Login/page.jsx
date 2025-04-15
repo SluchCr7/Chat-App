@@ -82,7 +82,7 @@ const Page = () => {
               Login
             </button>
             <p className='text-sm text-gray-400'>
-              Don't have an account? 
+              Don`&apos;`t have an account? 
               <Link className='text-blue-500 hover:underline ml-1' href="/Pages/Register">Register</Link>
             </p>
           </form>

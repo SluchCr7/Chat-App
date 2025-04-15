@@ -18,7 +18,7 @@ const getUsersInSideBar = async (req, res) => {
 }
 const getMessages = async (req, res) => {
     try {
-        const { id: userToChatId } = req.params
+        const userToChatId = req.params.id
         const sender = req.user._id
         const messages = await Message.find({
             $or: [
@@ -35,7 +35,7 @@ const getMessages = async (req, res) => {
 const sendMessage = async (req, res) => {
   try {
     const { text } = req.body;
-    const { id: userToChatId } = req.params;
+    const userToChatId = req.params.id;
     const sender = req.user._id;
 
     let Photos = req.files?.image || []; // "image" might be single or multiple

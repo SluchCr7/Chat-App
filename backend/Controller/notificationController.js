@@ -2,7 +2,7 @@ const asynchandler = require('express-async-handler')
 const { Notification } = require('../modules/notification')
 
 const addNewNotify = asynchandler(async (req, res) => {
-    const { id: userToChatId } = req.params
+    const userToChatId = req.params.id
     const sender = req.user._id
     const { content } = req.body
     const receiver = userToChatId

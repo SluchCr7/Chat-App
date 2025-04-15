@@ -22,10 +22,6 @@ const LayoutComponent = ({ children }) => {
         {
         loading
             ?
-            // <div className="w-full justify-center min-h-screen flex items-center">
-            //     <span className='text-white bg-black rounded-full w-12 h-12 justify-center flex items-center'><LuMessageSquare className='text-3xl' /></span>
-            // </div>
-
                 <div className="w-full justify-center min-h-screen flex items-center bg-gray-100">
                 <div className="relative w-24 h-24 flex items-center justify-center">
                     {/* Animated border circle */}

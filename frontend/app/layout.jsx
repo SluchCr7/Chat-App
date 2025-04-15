@@ -1,6 +1,6 @@
 import "./globals.css";
 import NavBar from "./Components/NavBar";
-import LayoutComponent from "./Components/layoutComponent";
+import LayoutComponent from "./Components/LayoutComponent";
 import { JetBrains_Mono } from "next/font/google";
 
 const jetBrainsMono = JetBrains_Mono({

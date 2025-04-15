@@ -7,6 +7,7 @@ const jwt = require("jsonwebtoken");
 const { cloudUpload, cloudRemove } = require("../utils/cloudinary.js");
 const fs = require('fs')
 const path = require('path')
+
 const signup = asynchandler(async (req, res) => {
     const { error } = validateUser(req.body);
 

@@ -1,56 +1,58 @@
-const { User } = require('../modules/User')
-const { Message, validateMessage } = require('../modules/Message')
-const {v2} = require('cloudinary')
-// const { cloudRemove , cloudUpload } = require('../Config/cloudUpload')
-const fs = require('fs')
-const path = require('path')
-const { getReceiverSocketId } = require('../config/socket')
-const { io } = require('../config/socket')
+const { User } = require('../modules/User');
+const { Message, validateMessage } = require('../modules/Message');
+const { v2 } = require('cloudinary');
+const fs = require('fs');
+const { getReceiverSocketId, io } = require('../config/socket');
+
+// Get all users except the logged-in one
 const getUsersInSideBar = async (req, res) => {
-    try {
-        const loggedUser = req.user._id
-        const users = await User.find({ _id: { $ne: loggedUser } }) // get all users except the logged user
-        res.status(200).json(users)
-    } catch (error) {
-        res.status(500).json({ message: error.message })
+  try {
+    const loggedUser = req.user._id;
+    const users = await User.find({ _id: { $ne: loggedUser } });
+    res.status(200).json(users);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
 
-    }
-}
+// Get messages between logged-in user and another user
 const getMessages = async (req, res) => {
-    try {
-        const userToChatId = req.params.id
-        const sender = req.user._id
-        const messages = await Message.find({
-            $or: [
-                { sender, receiver: userToChatId },
-                { sender: userToChatId, receiver: sender }
-            ]
-        }).populate('sender', 'username profilePic _id').populate('receiver', 'username profilePic _id')
-        res.status(200).json(messages)
-    } catch (error) {
-        res.status(500).json({ message: error.message })
-    }
-}
+  try {
+    const userToChatId = req.params.id;
+    const sender = req.user._id;
 
+    const messages = await Message.find({
+      $or: [
+        { sender, receiver: userToChatId },
+        { sender: userToChatId, receiver: sender }
+      ]
+    })
+      .populate('sender', 'username profilePic _id')
+      .populate('receiver', 'username profilePic _id');
+
+    res.status(200).json(messages);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Send a new message (text and/or image)
 const sendMessage = async (req, res) => {
   try {
     const { text } = req.body;
     const userToChatId = req.params.id;
     const sender = req.user._id;
 
-    let Photos = req.files?.image || []; // "image" might be single or multiple
+    let photos = req.files?.image || [];
 
-    // Normalize to array
-    if (!Array.isArray(Photos)) {
-      Photos = [Photos];
+    if (!Array.isArray(photos)) {
+      photos = [photos];
     }
 
-    // Validate at least one content (text or image)
-    if (!text && Photos.length === 0) {
+    if (!text && photos.length === 0) {
       return res.status(400).json({ message: "Message must contain text or image." });
     }
 
-    // Validate message text (optional)
     if (text) {
       const { error } = validateMessage({ text });
       if (error) {
@@ -58,10 +60,9 @@ const sendMessage = async (req, res) => {
       }
     }
 
-    let uploadedPhotos = [];
+    const uploadedPhotos = [];
 
-    // Upload images to Cloudinary if present
-    for (const image of Photos) {
+    for (const image of photos) {
       const result = await v2.uploader.upload(image.path, { resource_type: "image" });
 
       uploadedPhotos.push({
@@ -69,21 +70,19 @@ const sendMessage = async (req, res) => {
         publicId: result.public_id,
       });
 
-      // Clean up local file
       fs.unlinkSync(image.path);
     }
 
-    // Create the message
-    const message = new Message({
+    const messageData = {
       sender,
       receiver: userToChatId,
       ...(text && { text }),
-      ...(uploadedPhotos.length > 0 && { Photos: uploadedPhotos }), // You might want to rename Photo → photos (plural)
-    });
+      ...(uploadedPhotos.length > 0 && { Photos: uploadedPhotos })
+    };
 
+    const message = new Message(messageData);
     await message.save();
 
-    // todo: real-time functionality with socket.io
     const receiverSocketId = getReceiverSocketId(userToChatId);
     if (receiverSocketId) {
       io.to(receiverSocketId).emit("newMessage", message);
@@ -95,5 +94,8 @@ const sendMessage = async (req, res) => {
   }
 };
 
-
-module.exports = { getUsersInSideBar, getMessages , sendMessage }
+module.exports = {
+  getUsersInSideBar,
+  getMessages,
+  sendMessage,
+};

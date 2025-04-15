@@ -1,35 +1,50 @@
-const asynchandler = require('express-async-handler')
-const { Notification } = require('../modules/notification')
+const asyncHandler = require('express-async-handler');
+const { Notification } = require('../modules/notification');
 
-const addNewNotify = asynchandler(async (req, res) => {
-    const userToChatId = req.params.id
-    const sender = req.user._id
-    const { content } = req.body
-    const receiver = userToChatId
+// Add a new notification
+const addNewNotify = asyncHandler(async (req, res) => {
+    const receiver = req.params.id;
+    const sender = req.user._id;
+    const { content } = req.body;
+
     const newNotify = new Notification({
         content,
         sender,
         receiver
-    })
-    await newNotify.save()
-    res.status(200).json(newNotify)
-})
+    });
 
-const getAllNotificationsByUser = asynchandler(async (req, res) => {
-    const notifications = await Notification.find({ receiver: req.user._id }).populate('sender')
-    res.status(200).json(notifications)
-})
+    await newNotify.save();
+    res.status(200).json(newNotify);
+});
 
-const getAllNotify = asynchandler(async (req, res) => {
-    const notifications = await Notification.find()
-    res.status(200).json(notifications)
-})
+// Get all notifications for the logged-in user
+const getAllNotificationsByUser = asyncHandler(async (req, res) => {
+    const notifications = await Notification.find({ receiver: req.user._id })
+        .populate('sender');
+    res.status(200).json(notifications);
+});
 
-const deleteNotify = asynchandler(async (req, res) => {
-    const notify = await Notification.findById(req.params.id)
-    if (!notify) return res.status(404).json({ message: "Notification not found" })
-    await Notification.findByIdAndDelete(req.params.id)
-    res.status(200).json({ message: "Notification deleted" })
-})
+// Get all notifications (admin use case?)
+const getAllNotify = asyncHandler(async (req, res) => {
+    const notifications = await Notification.find();
+    res.status(200).json(notifications);
+});
 
-module.exports = { addNewNotify, getAllNotify, deleteNotify , getAllNotificationsByUser }
+// Delete a notification
+const deleteNotify = asyncHandler(async (req, res) => {
+    const notify = await Notification.findById(req.params.id);
+
+    if (!notify) {
+        return res.status(404).json({ message: "Notification not found" });
+    }
+
+    await notify.remove();
+    res.status(200).json({ message: "Notification deleted" });
+});
+
+module.exports = {
+    addNewNotify,
+    getAllNotify,
+    deleteNotify,
+    getAllNotificationsByUser
+};

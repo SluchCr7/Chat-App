@@ -1,6 +1,6 @@
 const express = require("express");
 const route = express.Router();
-const { checkAuth, login, logout, signup, getAllUsers , getUserById , updateUser , uploadPhoto } = require("../Controller/UserController.js");
+const {login, logout, signup, getAllUsers , getUserById , updateUser , uploadPhoto } = require("../Controller/UserController.js");
 const {verifyToken} = require("../middelwares/verifyToken.js");
 const photoUpload = require("../middelwares/uploadPhoto.js");
 route.route("/register")

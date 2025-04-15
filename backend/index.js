@@ -5,11 +5,13 @@ const connectDB = require('./config/db.js')
 require('dotenv').config()
 const cors = require('cors')
 const cookieParser = require('cookie-parser');
+const xss = require('xss-clean')
+const rateLimit = require('express-rate-limit')
+const helmet = require('helmet')
 // Connect to DB
 connectDB()
 
 // Middlewares
-app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors(
     {
@@ -17,7 +19,20 @@ app.use(cors(
         credentials: true,
     }
 ));
+app.use(express.json());
 app.use(cookieParser())
+
+
+app.use(xss())
+
+app.use(rateLimit({
+    windowMs: 10 * 60 * 1000, // 10 minutes
+    max: 200, // Limit each IP to 10 requests per `window` (here, per 10 minutes)
+    message: "Too many requests, please try again later.",
+}))
+
+app.use(helmet())
+
 // Routes
 app.get('/', (req, res) => {
     res.send('API is running...')

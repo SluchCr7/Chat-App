@@ -8,6 +8,7 @@ const cookieParser = require('cookie-parser');
 const xss = require('xss-clean')
 const rateLimit = require('express-rate-limit')
 const helmet = require('helmet')
+const {errorhandler} = require('./middelwares/errorHandler.js')
 // Connect to DB
 connectDB()
 
@@ -41,6 +42,7 @@ app.get('/', (req, res) => {
 app.use('/api/auth', require('./Routes/UserRoute.js'))
 app.use('/api/message', require('./Routes/MessageRoute.js'))
 app.use('/api/notify', require('./Routes/NotifyRoute.js'))
+app.use(errorhandler)
 // Start server
 
 server.listen(process.env.PORT, () => console.log(`Server running on port ${process.env.PORT}`))

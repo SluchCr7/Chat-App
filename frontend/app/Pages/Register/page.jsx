@@ -55,11 +55,15 @@ const Page = () => {
             <label className='block text-gray-300 mb-1'>Password</label>
             <div className='flex items-center border border-gray-500 p-2 rounded-md bg-gray-800'>
               <FaLock className='text-gray-400 mx-2' />
-              <input value={user.password} onChange={(e) => setUser({ ...user, password: e.target.value })} type={show ? "text" : "password"} placeholder='Enter your password' className='w-full bg-transparent outline-none text-white' />
+              <input 
+              value={user.password} 
+              onChange={(e) => setUser({ ...user, password: e.target.value })} 
+              type={show ? "text" : "password"} placeholder='Enter your password' className='w-full bg-transparent outline-none text-white' />
                 {
                   show ?
-                  <BiSolidHide className='text-gray-400 mx-2 cursor-pointer' onClick={() => setShow(false)} /> :
-                  <BiSolidShow className='text-gray-400 mx-2 cursor-pointer' onClick={() => setShow(true)} />
+                  <BiSolidShow className='text-gray-400 mx-2 cursor-pointer' onClick={() => setShow(false)} />
+                  :
+                  <BiSolidHide className='text-gray-400 mx-2 cursor-pointer' onClick={() => setShow(true)} />
                 }
             </div>
           </div>

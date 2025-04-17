@@ -45,7 +45,7 @@ const Page = () => {
           </div>
           
           <form onSubmit={handleSubmit} className='flex flex-col w-full md:w-2/3 gap-6 mt-5'>
-            < className='relative w-full'>
+            <div className='relative w-full'>
               <label className='block text-gray-300 mb-2'>Email</label>
               <div className='flex items-center border border-gray-600 p-3 rounded-md bg-gray-800'>
                 <MdEmail className='text-gray-400 mx-2' />

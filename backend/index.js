@@ -13,7 +13,7 @@ connectDB()
 app.use(express.urlencoded({ extended: true }));
 app.use(cors(
     {
-        origin: process.env.FRONT_URL,
+        origin: "https://chat-blue-one.vercel.app",
         credentials: true,
     }
 ));

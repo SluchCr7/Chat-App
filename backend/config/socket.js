@@ -8,7 +8,7 @@ const server = http.createServer(app);
 // Setup socket.io with CORS
 const io = new Server(server, {
     cors: {
-        origin: process.env.FRONT_URL,
+        origin: "https://chat-blue-one.vercel.app",
         methods: ['GET', 'POST'],
         credentials: true,
     },

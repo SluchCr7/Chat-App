@@ -12,14 +12,14 @@ const SideBar = () => {
     const {onlineUsers} = useContext(AuthContext)
     if (isUserLoading) return <SideBarSkeleton/>
     return (
-    <div className='w-[20%] min-h-[100vh] border-r border-base-300 transition-all duration-200 flex flex-col items-start'>
+    <div className='w-[20%] min-h-[100vh] border-r border-base-300 transition-all duration-200 flex flex-col items-center'>
         <div className='border-b border-base-300 w-full p-5 '>
             <div className='flex items-center gap-2'>
                 <span><FaUser className='w-4 h-4' /></span>
                 <span className='font-medium hidden lg:block'>Contacts</span>
             </div>
             {/* Todo : Online Users Filtier and Count */}
-            <p>
+            <p className='hidden md:block'>
                 {
                     onlineUsers.length > 0 && (
                         <span className='text-sm text-gray-400'>{onlineUsers.filter((user) => user !== authUser._id).length} Users Online Now</span>

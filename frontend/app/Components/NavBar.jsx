@@ -17,7 +17,7 @@ const NavBar = ({showMenu , setShowMenu , showNotification , setShowNotification
     <div className='flex items-center justify-between w-full py-4 px-8'>
       <div className='flex items-center gap-1'>
         <span className='text-white bg-black rounded-full w-8 h-8 justify-center flex items-center'><LuMessageSquare className='text-lg' /></span>
-        <Link href={"/"} className='font-bold text-xl uppercase'>ChatYou</Link>
+        <Link href={"/"} className='font-bold text-lg uppercase'>ChatYou</Link>
       </div>
       <div className='flex items-center gap-3 relative'>
         <Link href={"/Pages/Setting"}><CiSettings className='text-primary text-2xl' /></Link>

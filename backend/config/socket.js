@@ -1,14 +1,14 @@
 const { Server } = require("socket.io");
 const http = require("http");
 const express = require("express");
-
+const cors = require('cors');
 const app = express();
 const server = http.createServer(app);
 
 // Setup socket.io with CORS
 const io = new Server(server, {
     cors: {
-        origin: "https://chat-blue-one.vercel.app",
+        origin: 'https://chat-blue-one.vercel.app',
         methods: ['GET', 'POST'],
         credentials: true,
     },

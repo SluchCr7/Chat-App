@@ -2,7 +2,7 @@
 
 import axios from "axios";
 import { createContext, useContext, useEffect, useState } from "react";
-import { toast, ToastContainer } from "react-toastify";
+import { toast } from "react-toastify";
 import { MessageContext } from "./MessageContext";
 import { AuthContext } from "./AuthContext";
 
@@ -71,20 +71,7 @@ const NotifyContextProvider = ({ children }) => {
 
     return (
         <>
-            <ToastContainer
-                position="top-center"
-                autoClose={3000}
-                hideProgressBar={false}
-                newestOnTop={false}
-                closeOnClick
-                rtl={false}
-                pauseOnFocusLoss
-                draggable
-                pauseOnHover
-                theme="dark"
-                className="custom-toast-container"
-                toastClassName="custom-toast"
-            />
+
             <NotifyContext.Provider value={{
                 notifications,
                 setNotifications,

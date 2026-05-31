@@ -7,8 +7,7 @@ import React, { useContext, useState } from 'react';
 import { FaLock } from 'react-icons/fa';
 import { MdEmail } from 'react-icons/md';
 import { BiSolidShow, BiSolidHide } from 'react-icons/bi';
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { toast } from 'react-toastify';
 import { AuthContext } from '@/app/Context/AuthContext';
 
 const Page = () => {
@@ -32,7 +31,7 @@ const Page = () => {
 
   return (
     <div className="min-h-screen bg-bg-primary text-text-primary transition-all duration-300">
-      <ToastContainer />
+
       <div className="mx-auto flex min-h-screen max-w-7xl flex-col-reverse lg:flex-row items-center justify-center gap-10 px-6 py-12">
         
         {/* Left Side Form */}

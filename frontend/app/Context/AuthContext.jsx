@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useEffect, useState } from "react";
-import { ToastContainer, toast } from "react-toastify";
+import { ToastContainer, toast, Slide } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import api from "../lib/axios";
 import axios from "axios";
@@ -200,13 +200,14 @@ const AuthContextProvider = ({ children }) => {
                 position="top-center"
                 autoClose={3000}
                 hideProgressBar={false}
-                newestOnTop={false}
+                newestOnTop={true}
                 closeOnClick
                 rtl={false}
                 pauseOnFocusLoss
                 draggable
                 pauseOnHover
                 theme="dark"
+                transition={Slide}
                 className="custom-toast-container"
                 toastClassName="custom-toast"
             />

@@ -2,11 +2,10 @@ const path = require("path");
 const multer = require("multer");
 const fs = require("fs");
 
-// Ensure the upload directory exists
-const tmpDir = path.join(__dirname, '../images');
-if (!fs.existsSync(tmpDir)) {
-    fs.mkdirSync(tmpDir, { recursive: true });
-}
+const os = require("os");
+
+// Use the OS temporary directory, which is guaranteed to exist and be writable in serverless environments like Vercel
+const tmpDir = os.tmpdir();
 
 const photoStorage = multer.diskStorage({
     destination: function(req, file, cb) {

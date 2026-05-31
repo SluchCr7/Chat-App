@@ -154,7 +154,7 @@ const uploadPhoto = asynchandler(async (req, res) => {
         return res.status(400).json({message : "No file uploaded"})
     }
     // Get image 
-    const imagePath = path.join(__dirname, `../images/${req.file.filename}`)
+    const imagePath = req.file.path;
     // Upload Image
     const result = await cloudUpload(imagePath)
     // console.log(req.user)

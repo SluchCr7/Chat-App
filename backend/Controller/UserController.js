@@ -69,7 +69,8 @@ const login = asynchandler(async (req, res) => {
 
 const logout = (req, res) => {
   try {
-    res.cookie("jwt", "", { maxAge: 0 });
+    res.cookie("token", "", { maxAge: 0, httpOnly: true, secure: true, sameSite: 'None' });
+    res.cookie("jwt", "", { maxAge: 0, httpOnly: true, secure: true, sameSite: 'None' });
     res.status(200).json({ message: "Logged out successfully" });
   } catch (error) {
     console.log("Error in logout controller", error.message);
@@ -78,34 +79,67 @@ const logout = (req, res) => {
 };
 
 const getAllUsers = asynchandler(async (req, res) => {
-  const users = await User.find();
-  res.status(200).json(users);
-})
+  const { search, page = 1, limit = 50 } = req.query;
+  const query = {};
+
+  if (search) {
+    query.$or = [
+      { username: { $regex: search, $options: 'i' } },
+      { email: { $regex: search, $options: 'i' } },
+      { profileName: { $regex: search, $options: 'i' } },
+    ];
+  }
+
+  const skip = (Number(page) - 1) * Number(limit);
+  const users = await User.find(query)
+    .select('-password')
+    .skip(skip)
+    .limit(Number(limit));
+
+  const total = await User.countDocuments(query);
+
+  res.status(200).json({
+    users,
+    page: Number(page),
+    limit: Number(limit),
+    total,
+    pages: Math.ceil(total / Number(limit)),
+  });
+});
 
 const getUserById = asynchandler(async (req, res) => {
-  const user = await User.findById(req.params.id);
+  const user = await User.findById(req.params.id).select("-password");
+  if (!user) return res.status(404).json({ message: "User not found" });
   res.status(200).json(user);
-})
+});
 
 const updateUser = asynchandler(async (req, res) => {
   const {error} = validateUpdate(req.body);
   if (error) return res.status(400).json({message : error.details[0].message});
+  
+  const updateData = {};
+  if (req.body.username) updateData.username = req.body.username;
+  if (req.body.email) updateData.email = req.body.email;
+  if (req.body.profileName) updateData.profileName = req.body.profileName;
+  if (req.body.description) updateData.description = req.body.description;
+  
   if (req.body.password) {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(req.body.password, salt);
-    req.body.password = hashedPassword;
+    updateData.password = hashedPassword;
   }
+  
+  // Custom features
+  if (req.body.status) updateData.status = req.body.status;
+  if (req.body.socialLinks) updateData.socialLinks = req.body.socialLinks;
+  if (req.body.bannerPic) updateData.bannerPic = req.body.bannerPic;
+
   const newUserUpdate = await User.findByIdAndUpdate(req.params.id, {
-      $set: {
-          username: req.body.username,
-          email: req.body.email,
-          password: req.body.password,
-          profileName: req.body.profileName,
-          description: req.body.description
-      }
-    }, { new: true })
-    res.status(200).json(newUserUpdate);
-})
+      $set: updateData
+    }, { new: true }).select("-password");
+    
+  res.status(200).json(newUserUpdate);
+});
 
 /**
  * @desc    Upload Profile Photo

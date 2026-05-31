@@ -26,9 +26,29 @@ const userSchema = new mongoose.Schema({
             publicId: null
         }
     },
-    description : {
+    description: {
         type: String,
         default: "No description"
+    },
+    bannerPic: {
+        type: Object,
+        default: {
+            url: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=1200&auto=format&fit=crop&q=80",
+            publicId: null
+        }
+    },
+    socialLinks: {
+        type: Object,
+        default: {
+            github: "",
+            twitter: "",
+            linkedin: ""
+        }
+    },
+    status: {
+        type: String,
+        enum: ["online", "offline", "away", "busy", "invisible"],
+        default: "offline"
     },
     isOnline: {
         type: Boolean,
@@ -67,11 +87,21 @@ const validateLogin = (user) => {
 
 const validateUpdate = (user) => {
     const schema = Joi.object({
-        username: Joi.string(),
-        email: Joi.string().email(),
-        password: Joi.string(),
-        profileName: Joi.string(),
-        description: Joi.string(),
+        username: Joi.string().allow('', null),
+        email: Joi.string().email().allow('', null),
+        password: Joi.string().allow('', null),
+        profileName: Joi.string().allow('', null),
+        description: Joi.string().allow('', null),
+        status: Joi.string().valid("online", "offline", "away", "busy", "invisible").allow('', null),
+        socialLinks: Joi.object({
+            github: Joi.string().allow('', null),
+            twitter: Joi.string().allow('', null),
+            linkedin: Joi.string().allow('', null)
+        }).allow(null),
+        bannerPic: Joi.object({
+            url: Joi.string().allow('', null),
+            publicId: Joi.string().allow(null)
+        }).allow(null)
     });
     return schema.validate(user);
 };

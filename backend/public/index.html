@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Backend Dashboard</title>
+    <style>
+        :root {
+            --bg: #0f172a;
+            --surface: rgba(30, 41, 59, 0.95);
+            --text: #e2e8f0;
+            --muted: #94a3b8;
+            --accent: #38bdf8;
+            --accent-strong: #0ea5e9;
+            --border: rgba(148, 163, 184, 0.2);
+        }
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            margin: 0;
+            font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: radial-gradient(circle at top, #1e293b 0%, #0f172a 45%, #020617 100%);
+            color: var(--text);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+        .page {
+            max-width: 1120px;
+            margin: 0 auto;
+            padding: 40px 24px 60px;
+        }
+        header {
+            display: grid;
+            gap: 24px;
+            padding: 40px 32px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 28px;
+            box-shadow: 0 20px 80px rgba(15, 23, 42, 0.35);
+        }
+        header h1 {
+            margin: 0;
+            font-size: clamp(2.5rem, 4vw, 4rem);
+            color: #f8fafc;
+        }
+        header p {
+            margin: 0;
+            max-width: 760px;
+            color: var(--muted);
+            font-size: 1.05rem;
+        }
+        .hero-grid {
+            display: grid;
+            gap: 16px;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        }
+        .card {
+            background: rgba(15, 23, 42, 0.95);
+            border: 1px solid var(--border);
+            border-radius: 22px;
+            padding: 24px;
+        }
+        .card h2 {
+            margin-top: 0;
+            margin-bottom: 12px;
+            font-size: 1.25rem;
+            color: #f8fafc;
+        }
+        .card p {
+            margin: 0;
+            color: var(--muted);
+        }
+        .endpoint {
+            margin: 0.75rem 0;
+            padding: 14px 18px;
+            border-radius: 16px;
+            background: rgba(2, 12, 27, 0.9);
+            border: 1px solid rgba(56, 189, 248, 0.13);
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
+            color: #cbd5e1;
+            word-break: break-all;
+        }
+        .feature-grid {
+            display: grid;
+            gap: 20px;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            margin-top: 20px;
+        }
+        .feature {
+            background: rgba(15, 23, 42, 0.88);
+            border: 1px solid var(--border);
+            padding: 22px;
+            border-radius: 20px;
+        }
+        .feature h3 {
+            margin: 0 0 10px;
+            color: #f8fafc;
+            font-size: 1.1rem;
+        }
+        .feature p {
+            margin: 0;
+            color: var(--muted);
+        }
+        footer {
+            margin-top: 40px;
+            text-align: center;
+            color: var(--muted);
+            font-size: 0.95rem;
+        }
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 14px;
+            border-radius: 999px;
+            background: rgba(56, 189, 248, 0.14);
+            border: 1px solid rgba(56, 189, 248, 0.2);
+            color: #dbeafe;
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <main class="page">
+        <header>
+            <div>
+                <span class="badge">Backend System</span>
+                <h1>Welcome to the Chat Backend Control Center</h1>
+                <p>Monitor application services, access API endpoints, and verify connectivity for your chat system from a polished homepage built for backend operations.</p>
+            </div>
+            <div class="hero-grid">
+                <div class="card">
+                    <h2>Server Status</h2>
+                    <p>Your Node.js Express backend is ready to serve requests, connect with the database, and handle real-time socket events.</p>
+                </div>
+                <div class="card">
+                    <h2>API Root</h2>
+                    <p>Use this page as the default landing route for the backend and access quick links to the main chat API groups.</p>
+                </div>
+                <div class="card">
+                    <h2>Fast Access</h2>
+                    <p>Routes for authentication, messaging, notifications, groups, and admin functions are available across the backend system.</p>
+                </div>
+            </div>
+        </header>
+
+        <section class="feature-grid">
+            <article class="feature">
+                <h3>Authentication</h3>
+                <p>Login, register, update profile, and manage user sessions through the authentication API.</p>
+                <div class="endpoint">/api/auth</div>
+            </article>
+            <article class="feature">
+                <h3>Messaging</h3>
+                <p>Send, fetch, and manage messages for one-on-one and group conversations.</p>
+                <div class="endpoint">/api/message</div>
+            </article>
+            <article class="feature">
+                <h3>Notifications</h3>
+                <p>Review notification routes and keep your real-time alerts connected to active users.</p>
+                <div class="endpoint">/api/notify</div>
+            </article>
+            <article class="feature">
+                <h3>Groups</h3>
+                <p>Manage group membership, creation, and chat channels through the backend group API.</p>
+                <div class="endpoint">/api/group</div>
+            </article>
+            <article class="feature">
+                <h3>Admin Tools</h3>
+                <p>Administer platform settings and moderation controls from the admin endpoint.</p>
+                <div class="endpoint">/api/admin</div>
+            </article>
+        </section>
+
+        <footer>
+            Powered by Node.js, Express, and socket-based chat integration. Open the developer console to confirm API responses and socket activity.
+        </footer>
+    </main>
+</body>
+</html>

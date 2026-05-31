@@ -3,98 +3,266 @@
 @tailwind components;
 @tailwind utilities;
 
-
+/* Core Design Tokens & Dynamic Theme Layout System */
 :root {
-  --bg: rgb(255 255 255) !important;
-  --text: rgb(0 0 0) !important;
-  --primary: rgb(0 122 255) !important;
+  /* Corner Radii Elevation System */
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --radius-xl: 32px;
+
+  /* Shadow Elevation System */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -1px rgba(0, 0, 0, 0.04);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.12), 0 4px 6px -2px rgba(0, 0, 0, 0.06);
+  --shadow-xl: 0 24px 38px -4px rgba(0, 0, 0, 0.18), 0 9px 16px -6px rgba(0, 0, 0, 0.08);
+
+  /* Default Premium Dark (Black) Theme Settings */
+  --primary: #0ea5e9;
+  --primary-hover: #0284c7;
+  --primary-light: #38bdf8;
+  --primary-dark: #0369a1;
+  --secondary: #64748b;
+  --secondary-hover: #475569;
+  --accent: #818cf8;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --error: #ef4444;
+  --info: #3b82f6;
+
+  /* Layered Background Elevations (Obsidian Levels) */
+  --bg-primary: #080a10;
+  --bg-secondary: #0f131a;
+  --bg-tertiary: #171d26;
+  --surface: #171d26;
+  --surface-hover: #212936;
+  --surface-active: #2b3545;
+  --card: #0f131a;
+  --card-hover: #171d26;
+  --modal-bg: #0f131a;
+  --dropdown-bg: #0f131a;
+  --sidebar-bg: #0a0d14;
+  --navbar-bg: #0a0d14;
+  --footer-bg: #05060a;
+
+  /* Text Hierarchy (Contrast Accessibility) */
+  --text-primary: #f3f4f6;
+  --text-secondary: #9ca3af;
+  --text-muted: #6b7280;
+  --text-disabled: #4b5563;
+  --text-inverse: #080a10;
+
+  /* Borders */
+  --border: rgba(255, 255, 255, 0.07);
+  --border-light: rgba(255, 255, 255, 0.03);
+  --border-hover: rgba(255, 255, 255, 0.15);
+  --border-focus: #0ea5e9;
+  --online: #10b981;
 }
 
-/* Red Theme */
-.theme-red {
-  --bg: rgb(0 0 0) !important;
-  --text: rgb(110, 10, 10) !important;
-  --primary: rgb(255 0 0) !important;
-}
-
-/* Black Theme */
+/* 1. Cyber Dark Theme (Defaults) */
 .theme-black {
-  --bg: rgb(0 0 0);
-  --text: rgb(255 255 255);
-  --primary: rgb(34 34 34);
+  --primary: #0ea5e9;
+  --primary-hover: #0284c7;
+  --primary-light: #38bdf8;
+  --primary-dark: #0369a1;
+  --bg-primary: #090b11;
+  --bg-secondary: #111520;
+  --bg-tertiary: #191f2d;
+  --surface: #191f2d;
+  --surface-hover: #222b3d;
+  --surface-active: #2b374e;
+  --card: #111520;
+  --card-hover: #191f2d;
+  --sidebar-bg: #0a0d14;
+  --navbar-bg: #0a0d14;
+  --text-primary: #f3f4f6;
+  --text-secondary: #9ca3af;
+  --text-muted: #6b7280;
+  --text-disabled: #4b5563;
+  --border: rgba(255, 255, 255, 0.06);
 }
 
-/* White Theme */
+/* 2. Premium Accessible Light Theme (White) */
 .theme-white {
-  --bg: rgb(255 255 255);
-  --text: rgb(0 0 0);
-  --primary: rgb(100 100 100);
+  --primary: #4f46e5;
+  --primary-hover: #4338ca;
+  --primary-light: #818cf8;
+  --primary-dark: #3730a3;
+  --secondary: #64748b;
+  --secondary-hover: #475569;
+  --accent: #06b6d4;
+  
+  --bg-primary: #f8fafc;
+  --bg-secondary: #f1f5f9;
+  --bg-tertiary: #e2e8f0;
+  --surface: #ffffff;
+  --surface-hover: #f1f5f9;
+  --surface-active: #e2e8f0;
+  --card: #ffffff;
+  --card-hover: #f8fafc;
+  --modal-bg: #ffffff;
+  --dropdown-bg: #ffffff;
+  --sidebar-bg: #ffffff;
+  --navbar-bg: #ffffff;
+  --footer-bg: #f8fafc;
+
+  /* Accessible High Contrast Text variables */
+  --text-primary: #0f172a;
+  --text-secondary: #334155;
+  --text-muted: #64748b;
+  --text-disabled: #94a3b8;
+  --text-inverse: #ffffff;
+
+  --border: rgba(15, 23, 42, 0.08);
+  --border-light: rgba(15, 23, 42, 0.04);
+  --border-hover: rgba(15, 23, 42, 0.16);
+  --border-focus: #4f46e5;
 }
 
-/* Green Theme */
+/* 3. Deep Coral Rose Theme (Red) */
+.theme-red {
+  --primary: #f43f5e;
+  --primary-hover: #e11d48;
+  --primary-light: #fb7185;
+  --primary-dark: #be123c;
+  --bg-primary: #0d090a;
+  --bg-secondary: #171012;
+  --bg-tertiary: #22171a;
+  --surface: #22171a;
+  --surface-hover: #2f2024;
+  --surface-active: #3c292f;
+  --card: #171012;
+  --card-hover: #22171a;
+  --border: rgba(244, 63, 94, 0.08);
+  --text-primary: #ffe4e6;
+  --text-secondary: #fda4af;
+  --text-muted: #f43f5e;
+}
+
+/* 4. Emerald Forest Theme (Green) */
 .theme-green {
-  --bg: rgb(0 0 0);
-  --text: rgb(1, 119, 1);
-  --primary: rgb(0 200 0);
+  --primary: #10b981;
+  --primary-hover: #059669;
+  --primary-light: #34d399;
+  --primary-dark: #047857;
+  --bg-primary: #050a07;
+  --bg-secondary: #0b1410;
+  --bg-tertiary: #12221b;
+  --surface: #12221b;
+  --surface-hover: #1b3228;
+  --surface-active: #244235;
+  --card: #0b1410;
+  --card-hover: #12221b;
+  --border: rgba(16, 185, 129, 0.08);
+  --text-primary: #d1fae5;
+  --text-secondary: #6ee7b7;
+  --text-muted: #10b981;
 }
 
-/* Yellow Theme */
-.theme-yellow {
-  --bg: rgb(0 0 0);
-  --text: rgb(168, 126, 0);
-  --primary: rgb(255 215 0);
-}
-
-/* Blue Theme */
+/* 5. Deep Ocean Sapphire Theme (Blue) */
 .theme-blue {
-  --bg: rgb(0 0 0);
-  --text: rgb(27, 0, 134);
-  --primary: rgb(0 122 255);
+  --primary: #3b82f6;
+  --primary-hover: #2563eb;
+  --primary-light: #60a5fa;
+  --primary-dark: #1d4ed8;
+  --bg-primary: #050b14;
+  --bg-secondary: #0a1324;
+  --bg-tertiary: #0f1d37;
+  --surface: #0f1d37;
+  --surface-hover: #172a50;
+  --surface-active: #1f3769;
+  --card: #0a1324;
+  --card-hover: #0f1d37;
+  --border: rgba(59, 130, 246, 0.08);
+  --text-primary: #dbeafe;
+  --text-secondary: #93c5fd;
+  --text-muted: #3b82f6;
 }
 
-.bg-bg {
-  background-color: var(--bg);
-}
-.text-text {
-  color: var(--text);
-}
-.text-primary {
-  color: var(--primary);
-}
-
-.showImage{
-    background-color: rgba(0, 0, 0, 0.5);
-}
-.menu_bg{
-    background-color: rgba(0, 0, 0, 0.666);
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    z-index: 1000;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+/* 6. Honey Amber Gold Theme (Yellow) */
+.theme-yellow {
+  --primary: #f59e0b;
+  --primary-hover: #d97706;
+  --primary-light: #fbbf24;
+  --primary-dark: #b45309;
+  --bg-primary: #080603;
+  --bg-secondary: #120e07;
+  --bg-tertiary: #1d170b;
+  --surface: #1d170b;
+  --surface-hover: #292010;
+  --surface-active: #352915;
+  --card: #120e07;
+  --card-hover: #1d170b;
+  --border: rgba(245, 158, 11, 0.08);
+  --text-primary: #fef9c3;
+  --text-secondary: #fde047;
+  --text-muted: #f59e0b;
 }
 
-.text{
-  text-decoration:underline;
+/* Custom Standard Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+/* Glassmorphism Panel styles */
+.glass-panel {
+  background: var(--bg-card);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-xl);
+}
+
+.glass-panel-light {
+  background: rgba(255, 255, 255, 0.02);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+/* Glow Status Rings */
+.status-glow-online {
+  box-shadow: 0 0 14px var(--online), 0 0 2px var(--online);
+  animation: status-pulse 2s infinite ease-in-out;
+}
+
+@keyframes status-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(0.9); opacity: 0.8; }
+}
+
+.menu_bg {
+  background-color: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(12px);
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 @keyframes spin-border {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
 .loading_border {
-  /* border: 4px solid transparent;
-  border-top-color: #3b82f6; 
-  border-left-color: #3b82f6; */
   border-radius: 50%;
   animation: spin-border 1s linear infinite;
   display: flex;

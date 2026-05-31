@@ -2,8 +2,8 @@ const path = require("path");
 const multer = require("multer");
 const fs = require("fs");
 
-// Ensure the temp directory exists (some environments might not pre-create it)
-const tmpDir = path.join('/tmp', 'uploads');
+// Ensure the upload directory exists
+const tmpDir = path.join(__dirname, '../images');
 if (!fs.existsSync(tmpDir)) {
     fs.mkdirSync(tmpDir, { recursive: true });
 }
@@ -25,14 +25,26 @@ const photoStorage = multer.diskStorage({
 const photoUpload = multer({
     storage: photoStorage,
     fileFilter: function(req, file, cb) {
-        if (file.mimetype.startsWith("image")) {
+        const allowedTypes = [
+            "image/", 
+            "video/", 
+            "audio/", 
+            "application/pdf", 
+            "application/msword", 
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            "text/plain", 
+            "application/zip",
+            "application/x-zip-compressed"
+        ];
+        const isAllowed = allowedTypes.some(type => file.mimetype.startsWith(type) || file.mimetype === type);
+        if (isAllowed) {
             cb(null, true);
         } else {
-            cb({ message: 'Only .png, .jpg and .jpeg format allowed!' }, false);
+            cb({ message: 'File format not supported! Only images, videos, audio, and standard documents (PDF, Doc, TXT, ZIP) are allowed.' }, false);
         }
     },
     limits: {
-        fileSize: 1024 * 1024 // 1MB limit
+        fileSize: 10 * 1024 * 1024 // 10MB limit
     }
 });
 

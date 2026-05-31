@@ -38,7 +38,7 @@ const deleteNotify = asyncHandler(async (req, res) => {
         return res.status(404).json({ message: "Notification not found" });
     }
 
-    await notify.remove();
+    await Notification.deleteOne({ _id: notify._id });
     res.status(200).json({ message: "Notification deleted" });
 });
 

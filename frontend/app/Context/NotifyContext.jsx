@@ -1,64 +1,98 @@
-'use client'
+'use client';
+
 import axios from "axios";
 import { createContext, useContext, useEffect, useState } from "react";
-export const NotifyContext = createContext();
-import { toast , ToastContainer } from "react-toastify";
+import { toast, ToastContainer } from "react-toastify";
 import { MessageContext } from "./MessageContext";
+import { AuthContext } from "./AuthContext";
+
+export const NotifyContext = createContext();
+
 const NotifyContextProvider = ({ children }) => {
-    const [notifications, setNotifications] = useState([])
-    const {selectedUser} = useContext(MessageContext)
+    const [notifications, setNotifications] = useState([]);
+    const { selectedUser } = useContext(MessageContext);
+    const { authUser } = useContext(AuthContext);
+
+    // Fetch notifications only when the auth user changes, not continuously!
     useEffect(() => { 
-        axios.get(`${process.env.NEXT_PUBLIC_SOCKET_URL}/api/notify/user` , {headers : {authorization : `Bearer ${localStorage.getItem("userToken")}`}})
-        .then((res) => {
-            setNotifications(res.data)
-        }).catch((err) => {
-            console.log(err)
-        })
-    }, [notifications])
-    const AddNotify = async (content) => {
-        try {
-            const res = await axios.post(`${process.env.NEXT_PUBLIC_SOCKET_URL}/api/notify/send/${selectedUser._id}`, { content },
-                {
-                    headers:
-                        { Authorization: `Bearer ${localStorage.getItem("userToken")}` }
-                })
-            toast.success(res.data.message);
-        } catch (err) { 
-            console.log(err)
+        const fetchNotifications = async () => {
+            try {
+                const token = localStorage.getItem("userToken");
+                if (!token) return;
+
+                const res = await axios.get(`${process.env.NEXT_PUBLIC_SOCKET_URL}/api/notify/user`, {
+                    headers: { authorization: `Bearer ${token}` }
+                });
+                setNotifications(res.data);
+            } catch (err) {
+                console.error("Error fetching notifications:", err);
+            }
+        };
+
+        if (authUser) {
+            fetchNotifications();
+        } else {
+            setNotifications([]);
         }
-    }
+    }, [authUser]);
+
+    // Send a new notification and append it locally
+    const AddNotify = async (content) => {
+        if (!selectedUser) return;
+        try {
+            const token = localStorage.getItem("userToken");
+            const res = await axios.post(
+                `${process.env.NEXT_PUBLIC_SOCKET_URL}/api/notify/send/${selectedUser._id}`, 
+                { content },
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+            // Append locally
+            setNotifications(prev => [res.data, ...prev]);
+        } catch (err) { 
+            console.error("Error adding notification:", err);
+        }
+    };
+
+    // Delete a notification and remove it locally
     const deleteNotify = async (id) => {
         try {
-            const res = await axios.delete(`${process.env.NEXT_PUBLIC_SOCKET_URL}/api/notify/${id}` , {headers : {authorization : `Bearer ${localStorage.getItem("userToken")}`}})
-            toast.success(res.data.message);
+            const token = localStorage.getItem("userToken");
+            const res = await axios.delete(
+                `${process.env.NEXT_PUBLIC_SOCKET_URL}/api/notify/${id}`, 
+                { headers: { authorization: `Bearer ${token}` } }
+            );
+            toast.success(res.data.message || "Notification deleted");
+            // Remove locally
+            setNotifications(prev => prev.filter(n => n._id !== id));
         } catch (err) {
-            console.log(err)
+            console.error("Error deleting notification:", err);
         }
-    }
+    };
+
     return (
         <>
-        <ToastContainer
-            position="top-center"
-            autoClose={3000}
-            hideProgressBar={false}
-            newestOnTop={false}
-            closeOnClick
-            rtl={false}
-            pauseOnFocusLoss
-            draggable
-            pauseOnHover
-            theme="dark"
-            className="custom-toast-container"
-            toastClassName="custom-toast"
-        />
-        <NotifyContext.Provider value={{
-            notifications,
-            setNotifications,
-            AddNotify,
-            deleteNotify
-        }}>
-        {children}
-        </NotifyContext.Provider>
+            <ToastContainer
+                position="top-center"
+                autoClose={3000}
+                hideProgressBar={false}
+                newestOnTop={false}
+                closeOnClick
+                rtl={false}
+                pauseOnFocusLoss
+                draggable
+                pauseOnHover
+                theme="dark"
+                className="custom-toast-container"
+                toastClassName="custom-toast"
+            />
+            <NotifyContext.Provider value={{
+                notifications,
+                setNotifications,
+                AddNotify,
+                deleteNotify
+            }}>
+                {children}
+            </NotifyContext.Provider>
         </>
     );
 };

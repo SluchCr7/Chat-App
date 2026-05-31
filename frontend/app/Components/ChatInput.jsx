@@ -1,114 +1,192 @@
-'use client'
-import Image from 'next/image';
-import React, { useContext, useState } from 'react';
-import { FaImage } from "react-icons/fa6";
+'use client';
+
+import React, { useContext, useState, useEffect, useRef } from 'react';
+import { FaImage, FaPaperclip, FaSmile, FaMicrophone } from "react-icons/fa";
 import { IoIosSend } from "react-icons/io";
 import { IoMdClose } from "react-icons/io";
 import { MessageContext } from '../Context/MessageContext';
-import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
-import axios from "axios";
-import { NotifyContext } from '../Context/NotifyContext';
+import { AuthContext } from '../Context/AuthContext';
+
 const ChatInput = () => {
-  const [images, setImages] = useState([]);
+  const { selectedUser, selectedGroup, selectedChannel, AddNewMessage } = useContext(MessageContext);
+  const { socket, authUser } = useContext(AuthContext);
+
   const [message, setMessage] = useState('');
-  // const { AddNewMessage } = useContext(MessageContext);
-  const {selectedUser , AddNewMessage} = useContext(MessageContext)
-  const {AddNotify} = useContext(NotifyContext)
-  const handleImageChange = (e) => {
-    const files = Array.from(e.target.files);
-    setImages((prev) => [...prev, ...files]);
+  const [attachments, setAttachments] = useState([]);
+  const [isTyping, setIsTyping] = useState(false);
+  const typingTimeoutRef = useRef(null);
+
+  // --- Real-time Typing Handlers ---
+  const handleInputChange = (e) => {
+    setMessage(e.target.value);
+    
+    if (!socket) return;
+
+    const targetId = selectedUser?._id || selectedGroup?._id || selectedChannel?._id;
+    const type = selectedUser ? "direct" : selectedGroup ? "group" : "channel";
+
+    if (!isTyping) {
+      setIsTyping(true);
+      socket.emit("typingStart", { targetId, type, senderName: authUser?.username });
+    }
+
+    // Debounce stop typing event
+    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+
+    typingTimeoutRef.current = setTimeout(() => {
+      setIsTyping(false);
+      socket.emit("typingStop", { targetId, type });
+    }, 2000);
   };
 
-  const handleRemoveImage = (index) => {
-    setImages((prev) => prev.filter((_, i) => i !== index));
+  const handleFileChange = (e) => {
+    const files = Array.from(e.target.files);
+    // Enforce 10MB limit
+    const validFiles = files.filter(file => {
+      if (file.size > 10 * 1024 * 1024) {
+        alert(`File ${file.name} exceeds 10MB limit.`);
+        return false;
+      }
+      return true;
+    });
+
+    setAttachments((prev) => [...prev, ...validFiles]);
   };
-  const handleAddNew = async () => {
-    AddNewMessage(message, images);
-    setTimeout(() => {
-      setMessage('');
-      setImages([]);
-    }, 2000);
-    AddNotify(message)
-  }
+
+  const handleRemoveAttachment = (index) => {
+    setAttachments((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleSend = async () => {
+    if (!message.trim() && attachments.length === 0) return;
+
+    // Emit stop typing immediately
+    if (socket) {
+      const targetId = selectedUser?._id || selectedGroup?._id || selectedChannel?._id;
+      const type = selectedUser ? "direct" : selectedGroup ? "group" : "channel";
+      setIsTyping(false);
+      socket.emit("typingStop", { targetId, type });
+    }
+
+    // Call Context wrapper
+    await AddNewMessage(message, attachments);
+    
+    // Clear local inputs
+    setMessage('');
+    setAttachments([]);
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
+  };
+
   return (
-    <>
-      {images.length > 0 && (
-        <div className='menu_bg'>
-          <div className="fixed inset-0 z-50 flex flex-col justify-center items-center px-4">
-            <div className="relative w-full max-w-2xl p-4 rounded-lg shadow-lg">
-              <button
-                onClick={() => setImages([])}
-                className="absolute top-2 right-2 text-white hover:text-red-500"
-              >
-                <IoMdClose size={24} />
-              </button>
-              <div className={` mb-4 ${images.length > 1 ? "grid grid-cols-2 gap-4 max-h-[400px] overflow-y-auto" : "w-[80%] mx-auto"}`}>
-                {images.map((img, index) => (
-                  <div key={index} className="relative">
-                    <Image
-                      src={URL.createObjectURL(img)}
-                      alt={`preview-${index}`}
-                      width={200}
-                      height={200}
-                      className="rounded-md w-full object-contain"
-                    />
-                    <button
-                      onClick={() => handleRemoveImage(index)}
-                      className="absolute top-1 right-1 bg-black bg-opacity-50 text-white rounded-full p-1 hover:text-red-500"
-                    >
-                      <IoMdClose size={16} />
-                    </button>
-                  </div>
-                ))}
+    <div className="border-t border-border p-4 bg-surface flex flex-col space-y-3 relative transition-all duration-300">
+      {/* File Previews Panel */}
+      {attachments.length > 0 && (
+        <div className="flex flex-wrap gap-3 p-3 bg-bg-primary border border-border rounded-xl max-h-32 overflow-y-auto">
+          {attachments.map((file, index) => {
+            const isImage = file.type.startsWith("image/");
+            return (
+              <div key={index} className="relative flex items-center gap-2.5 p-2 bg-surface rounded-lg border border-border pr-8">
+                {isImage ? (
+                  <img 
+                    src={URL.createObjectURL(file)} 
+                    alt="preview" 
+                    className="w-10 h-10 object-cover rounded border border-border" 
+                  />
+                ) : (
+                  <FaPaperclip className="text-primary text-sm" />
+                )}
+                <div className="flex flex-col max-w-[120px] text-left">
+                  <span className="text-[10px] font-bold text-text-primary truncate">{file.name}</span>
+                  <span className="text-[8px] text-text-muted font-bold">{(file.size / 1024 / 1024).toFixed(2)} MB</span>
+                </div>
+                <button 
+                  onClick={() => handleRemoveAttachment(index)}
+                  className="absolute right-1 top-1/2 -translate-y-1/2 text-text-muted hover:text-rose-500 transition-all duration-300"
+                >
+                  <IoMdClose size={16} />
+                </button>
               </div>
-              <input
-                onChange={(e) => setMessage(e.target.value)}
-                value={message}
-                type="text"
-                placeholder="Add a message..."
-                className="w-full p-2 mb-4 text-text bg-transparent rounded-md outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              <button
-                onClick={handleAddNew}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-md transition"
-              >
-                Send
-              </button>
-            </div>
-          </div>
+            );
+          })}
         </div>
       )}
 
-      <div className='border-t w-full border-gray-300 p-3 flex items-center'>
-        <input
-          onChange={(e) => setMessage(e.target.value)}
-          value={message}
-          type='text'
-          placeholder='Type a message...'
-          className='flex-1 pl-4 bg-transparent p-2 rounded-full focus:outline-none focus:ring-2 text-text outline-none border border-white focus:ring-blue-500'
-        />
-        <div className='flex items-center gap-3 ml-3'>
-          <div>
-            <input
-              id="image"
-              type="file"
-              className='hidden'
-              accept="image/*"
-              multiple
-              onChange={handleImageChange}
-            />
-            <label htmlFor="image">
-              <FaImage className='text-xl text-gray-500 cursor-pointer hover:text-blue-500' />
-            </label>
-          </div>
-          <IoIosSend
-            onClick={handleAddNew}
-            className='text-xl text-blue-500 cursor-pointer hover:text-blue-700'
+      {/* Input controls row */}
+      <div className="flex items-center gap-3">
+        {/* Attachment buttons */}
+        <div className="flex items-center gap-1.5">
+          <input 
+            type="file"
+            id="file-attachment"
+            multiple
+            onChange={handleFileChange}
+            className="hidden"
+          />
+          <label 
+            htmlFor="file-attachment"
+            className="p-2.5 rounded-xl bg-bg-primary hover:bg-surface-hover border border-border hover:border-border-hover text-text-secondary hover:text-text-primary shadow-sm transition-all duration-300 cursor-pointer flex items-center justify-center"
+            title="Attach Files"
+          >
+            <FaPaperclip className="text-sm" />
+          </label>
+
+          <input 
+            type="file"
+            id="image-attachment"
+            accept="image/*"
+            multiple
+            onChange={handleFileChange}
+            className="hidden"
+          />
+          <label 
+            htmlFor="image-attachment"
+            className="p-2.5 rounded-xl bg-bg-primary hover:bg-surface-hover border border-border hover:border-border-hover text-text-secondary hover:text-text-primary shadow-sm transition-all duration-300 cursor-pointer flex items-center justify-center"
+            title="Attach Images"
+          >
+            <FaImage className="text-sm" />
+          </label>
+        </div>
+
+        {/* Text Input area */}
+        <div className="flex-1 relative">
+          <input 
+            type="text"
+            placeholder="Write a message..."
+            value={message}
+            onChange={handleInputChange}
+            onKeyDown={handleKeyDown}
+            className="w-full bg-bg-primary border border-border focus:border-primary focus:ring-1 focus:ring-primary rounded-xl px-4 py-2.5 text-sm text-text-primary placeholder:text-text-muted outline-none transition duration-300"
           />
         </div>
+
+        {/* Action triggers */}
+        <div className="flex items-center gap-2">
+          <button className="p-2.5 rounded-xl bg-bg-primary hover:bg-surface-hover border border-border hover:border-border-hover text-text-secondary hover:text-text-primary shadow-sm transition-all duration-300 flex items-center justify-center">
+            <FaSmile className="text-sm" />
+          </button>
+          <button className="p-2.5 rounded-xl bg-bg-primary hover:bg-surface-hover border border-border hover:border-border-hover text-text-secondary hover:text-text-primary shadow-sm transition-all duration-300 flex items-center justify-center">
+            <FaMicrophone className="text-sm" />
+          </button>
+          <button 
+            onClick={handleSend}
+            disabled={!message.trim() && attachments.length === 0}
+            className={`p-2.5 rounded-xl border transition-all duration-300 flex items-center justify-center ${
+              (message.trim() || attachments.length > 0)
+              ? "bg-primary border-primary hover:bg-primary-hover text-text-inverse shadow-md cursor-pointer font-bold hover:scale-105 active:scale-95"
+              : "bg-surface border-border text-text-disabled cursor-not-allowed"
+            }`}
+          >
+            <IoIosSend className="text-lg" />
+          </button>
+        </div>
       </div>
-    </>
+    </div>
   );
 };
 

@@ -1,0 +1,13 @@
+.swagger-ui .topbar { background: #0f172a; border-bottom: 1px solid rgba(148, 163, 184, 0.15); }
+.swagger-ui .topbar-wrapper a { color: #38bdf8 !important; }
+.swagger-ui .topbar .download-url-wrapper { display: none; }
+.swagger-ui .info .title { color: #e2e8f0 !important; }
+.swagger-ui .info .description { color: #94a3b8 !important; }
+.swagger-ui .scheme-container { background: rgba(15, 23, 42, 0.9); }
+.swagger-ui .opblock { background: rgba(15, 23, 42, 0.95); border: 1px solid rgba(148, 163, 184, 0.1); }
+.swagger-ui .opblock-summary { color: #f8fafc; }
+.swagger-ui .swagger-ui .opblock-summary-method { color: #38bdf8; }
+.swagger-ui .responses-wrapper, .swagger-ui .responses-inner, .swagger-ui .response-col_description__inner { background: rgba(15, 23, 42, 0.88); }
+.swagger-ui .parameter__name { color: #f8fafc; }
+.swagger-ui .parameter__type { color: #38bdf8; }
+.swagger-ui .schematic-container { color: #cbd5e1; }

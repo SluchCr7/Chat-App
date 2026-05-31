@@ -137,44 +137,63 @@ const AuthContextProvider = ({ children }) => {
         }
     }, []);
 
-    const handleUpdateProfile = async (username, profileName, description) => {
-        await axios.put(`${process.env.NEXT_PUBLIC_SOCKET_URL}/api/auth/profile/${authUser._id}`, {username, profileName, description}, 
-            {
-                headers: {
-                    authorization: `Bearer ${authUser?.token}`,
-                },
-            }
-        ).then((res) => {
-            localStorage.setItem("userAuth", JSON.stringify(res.data));
-            setAuthUser(res.data);
+    const handleUpdateProfile = async (username, profileName, description, status = null, socialLinks = null) => {
+        try {
+            const res = await axios.put(`${process.env.NEXT_PUBLIC_SOCKET_URL}/api/auth/profile/${authUser._id}`, 
+                { username, profileName, description, status, socialLinks }, 
+                {
+                    headers: {
+                        authorization: `Bearer ${authUser?.token}`,
+                    },
+                }
+            );
+            const updatedUser = { ...res.data, token: authUser.token };
+            localStorage.setItem("userAuth", JSON.stringify(updatedUser));
+            setAuthUser(updatedUser);
             toast.success("Profile updated");
-        }).catch((err) => {
-            toast.error(err?.response?.data?.message);
-        });
-    }
+        } catch (err) {
+            toast.error(err?.response?.data?.message || "Profile update failed");
+        }
+    };
+
     const updatePassword = async (password) => {
-        await axios.put(`${process.env.NEXT_PUBLIC_SOCKET_URL}/api/auth/profile/${authUser._id}`, { password },
-            {
-                headers: {
-                    authorization: `Bearer ${authUser?.token}`,
-                },
-            }
-        ).then((res) => {
-            localStorage.setItem("userAuth", {...authUser, password});
-            setAuthUser({...authUser, password});
-            toast.success("Password updated");
-        }).catch((err) => {
-            toast.error(err?.response?.data?.message);
-        });
-    }
+        try {
+            const res = await axios.put(`${process.env.NEXT_PUBLIC_SOCKET_URL}/api/auth/profile/${authUser._id}`, 
+                { password },
+                {
+                    headers: {
+                        authorization: `Bearer ${authUser?.token}`,
+                    },
+                }
+            );
+            const updatedUser = { ...res.data, token: authUser.token };
+            localStorage.setItem("userAuth", JSON.stringify(updatedUser));
+            setAuthUser(updatedUser);
+            toast.success("Password updated successfully");
+        } catch (err) {
+            toast.error(err?.response?.data?.message || "Password update failed");
+        }
+    };
+
+    const updatePresenceStatus = (status) => {
+        if (socket) {
+            socket.emit("updateCustomStatus", { status });
+            const updatedUser = { ...authUser, status };
+            localStorage.setItem("userAuth", JSON.stringify(updatedUser));
+            setAuthUser(updatedUser);
+        }
+    };
+
     useEffect(() => {
-        axios.get(`${process.env.NEXT_PUBLIC_SOCKET_URL}/api/auth`).then((res) => {
-            setAllUsers(res.data);
-        })
-        .catch((err) => {
-            console.log(err)
-        })
-    },[])
+        if (authUser) {
+            axios.get(`${process.env.NEXT_PUBLIC_SOCKET_URL}/api/auth`).then((res) => {
+                setAllUsers(res.data);
+            })
+            .catch((err) => {
+                console.log(err);
+            });
+        }
+    }, [authUser]);
     return (
         <>
             <ToastContainer
@@ -204,9 +223,11 @@ const AuthContextProvider = ({ children }) => {
                     logout,
                     updateProfilePhoto,
                     onlineUsers,
-                    updatePassword ,
+                    updatePassword,
                     handleUpdateProfile,
-                    allUsers
+                    allUsers,
+                    socket,
+                    updatePresenceStatus
                 }}
             >
                 {children}

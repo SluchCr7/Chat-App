@@ -1,86 +1,121 @@
-'use client'
+'use client';
+
 import AuthImagePattern from '@/app/Components/AuthImagePattern';
+import Logo from '@/app/Components/Logo';
 import Link from 'next/link';
 import React, { useContext, useState } from 'react';
-import { FaLock, FaUser } from "react-icons/fa";
-import { MdEmail } from "react-icons/md";
-import { BiSolidShow } from "react-icons/bi";
-import { BiSolidHide } from "react-icons/bi";
-import { LuMessageSquare } from "react-icons/lu";
+import { FaLock, FaUser } from 'react-icons/fa';
+import { MdEmail } from 'react-icons/md';
+import { BiSolidShow, BiSolidHide } from 'react-icons/bi';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import { AuthContext } from '@/app/Context/AuthContext';
 
 const Page = () => {
-  const [user, setUser] = useState({
-    email: "",
-    password: "",
-    Name : ""
-  });
-  const [show, setShow] = useState(false)
-  // const { signup } = useAuthStore()
-  const {register} = useContext(AuthContext)
+  const [user, setUser] = useState({ email: '', password: '', Name: '' });
+  const [show, setShow] = useState(false);
+  const { register } = useContext(AuthContext);
+
   const handleRegister = (e) => {
     e.preventDefault();
-    if(user.email && user.password && user.Name){
-      register(user.email , user.password , user.Name);
+    if (user.email && user.password && user.Name) {
+      register(user.email, user.password, user.Name);
+      return;
     }
-    else {
-      console.log("Please Fill All The Fields")
-    }
-  }
+    toast.error('Please fill in all target fields');
+  };
+
   return (
-    <div className='flex items-center justify-center min-h-screen w-full text-white'>
-      {/* Right Side - Background with Gradient */}
-      <div className='hidden md:flex w-1/2 min-h-[100vh] bg-gradient-to-b from-base-100 to-base-300 items-center justify-center'>
-        <AuthImagePattern title={'Join To our Community'} subtitle={'Connect with Frinds and , share photos and videos and memories'} />
-      </div>
-      {/* Left Side - Login Form */}
-      <div className='w-full md:w-1/2 flex flex-col items-center p-8 gap-6'>
-        <div className='flex items-center flex-col gap-2'>
-          <span className='text-4xl bg-white text-black rounded-full p-3'>
-            <LuMessageSquare />
-          </span>
-          <h1 className='text-2xl font-bold text-red-600 uppercase'>Register</h1>
-        </div>
+    <div className="min-h-screen bg-bg-primary text-text-primary transition-all duration-300">
+      <ToastContainer />
+      <div className="mx-auto flex min-h-screen max-w-7xl flex-col-reverse lg:flex-row items-center justify-center gap-10 px-6 py-12">
         
-        <form onSubmit={(e)=> handleRegister(e)} className='flex flex-col w-full md:w-2/3 gap-5'>
-          <div className='relative'>
-            <label className='block text-gray-300 mb-1'>Email</label>
-            <div className='flex items-center border border-gray-500 p-2 rounded-md bg-gray-800'>
-              <MdEmail className='text-gray-400 mx-2' />
-              <input value={user.email} onChange={(e) => setUser({ ...user, email: e.target.value })} type="email" placeholder='Enter your email' className='w-full bg-transparent outline-none text-white' />
+        {/* Left Side Image Overlay */}
+        <div className="w-full lg:w-1/2">
+          <div className="rounded-[28px] border border-border bg-surface p-8 shadow-xl">
+            <AuthImagePattern
+              title="Join our community"
+              subtitle="Create your secure profile and start chatting with friends, groups, and teammates instantly."
+            />
+          </div>
+        </div>
+
+        {/* Right Side Signup Form */}
+        <div className="w-full lg:w-1/2 rounded-[28px] border border-border bg-surface p-8 shadow-xl">
+          <div className="mb-8 flex flex-col items-start gap-4">
+            <div className="inline-flex items-center gap-3 rounded-2xl bg-bg-primary/50 border border-border px-4 py-3 shadow-inner">
+              <Logo compact />
+              <div className="text-left">
+                <h1 className="text-2xl sm:text-3xl font-extrabold text-text-primary">Create your account</h1>
+                <p className="mt-1 max-w-md text-xs text-text-secondary font-medium leading-relaxed">
+                  Get started with ChatYou and access instantly synced communities and conversations.
+                </p>
+              </div>
             </div>
           </div>
 
-          <div className='relative'>
-            <label className='block text-gray-300 mb-1'>Password</label>
-            <div className='flex items-center border border-gray-500 p-2 rounded-md bg-gray-800'>
-              <FaLock className='text-gray-400 mx-2' />
-              <input 
-              value={user.password} 
-              onChange={(e) => setUser({ ...user, password: e.target.value })} 
-              type={show ? "text" : "password"} placeholder='Enter your password' className='w-full bg-transparent outline-none text-white' />
-                {
-                  show ?
-                  <BiSolidShow className='text-gray-400 mx-2 cursor-pointer' onClick={() => setShow(false)} />
-                  :
-                  <BiSolidHide className='text-gray-400 mx-2 cursor-pointer' onClick={() => setShow(true)} />
-                }
+          <form onSubmit={handleRegister} className="space-y-6 text-left">
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-text-secondary uppercase tracking-wider">Email Address</label>
+              <div className="flex items-center gap-3 rounded-xl border border-border bg-bg-primary focus-within:border-primary px-4 py-3 transition duration-300">
+                <MdEmail className="text-text-muted" />
+                <input
+                  type="email"
+                  placeholder="Enter your email address"
+                  value={user.email}
+                  onChange={(e) => setUser({ ...user, email: e.target.value })}
+                  className="w-full bg-transparent text-text-primary outline-none placeholder:text-text-muted text-sm font-medium"
+                />
+              </div>
             </div>
-          </div>
 
-          <div className='relative'>
-            <label className='block text-gray-300 mb-1'>Full Name</label>
-            <div className='flex items-center border border-gray-500 p-2 rounded-md bg-gray-800'>
-              <FaUser className='text-gray-400 mx-2' />
-              <input value={user.Name} onChange={(e) => setUser({ ...user, Name: e.target.value })} type="text" placeholder='Enter your Name' className='w-full bg-transparent outline-none text-white' />
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-text-secondary uppercase tracking-wider">Password</label>
+              <div className="flex items-center gap-3 rounded-xl border border-border bg-bg-primary focus-within:border-primary px-4 py-3 transition duration-300">
+                <FaLock className="text-text-muted" />
+                <input
+                  type={show ? 'text' : 'password'}
+                  placeholder="Create a strong security password"
+                  value={user.password}
+                  onChange={(e) => setUser({ ...user, password: e.target.value })}
+                  className="w-full bg-transparent text-text-primary outline-none placeholder:text-text-muted text-sm font-medium"
+                />
+                <button type="button" onClick={() => setShow(!show)} className="text-text-muted transition hover:text-primary">
+                  {show ? <BiSolidHide /> : <BiSolidShow />}
+                </button>
+              </div>
             </div>
-          </div>
-          <button className='bg-red-600 w-full p-3 rounded-md hover:bg-red-700 transition font-semibold'>Register</button>
-          <p className='text-sm text-gray-400'>Have an Account? <Link className='text-blue-500 hover:underline' href="/Pages/Login">Login</Link></p>
-        </form>
+
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-text-secondary uppercase tracking-wider">Full Name</label>
+              <div className="flex items-center gap-3 rounded-xl border border-border bg-bg-primary focus-within:border-primary px-4 py-3 transition duration-300">
+                <FaUser className="text-text-muted" />
+                <input
+                  type="text"
+                  placeholder="Enter your full name"
+                  value={user.Name}
+                  onChange={(e) => setUser({ ...user, Name: e.target.value })}
+                  className="w-full bg-transparent text-text-primary outline-none placeholder:text-text-muted text-sm font-medium"
+                />
+              </div>
+            </div>
+
+            <button className="w-full rounded-xl bg-primary hover:bg-primary-hover px-5 py-3 text-sm font-bold text-text-inverse shadow-md transition duration-300 active:scale-95">
+              Register
+            </button>
+
+            <p className="text-xs text-text-muted font-bold text-center">
+              Already have an account?{' '}
+              <Link className="font-extrabold text-primary hover:text-primary-hover" href="/Pages/Login">
+                Sign in
+              </Link>
+            </p>
+          </form>
+        </div>
+
       </div>
     </div>
   );
-}
+};
 
 export default Page;

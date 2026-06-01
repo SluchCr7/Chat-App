@@ -54,7 +54,6 @@ const SideBar = () => {
 
         return () => clearTimeout(timer);
     }, [groupSearchQuery, handleSearchGroups]);
-    };
     const handleCreateGroupSubmit = async (e) => {
         e.preventDefault();
         if (!newGroupName.trim()) return;

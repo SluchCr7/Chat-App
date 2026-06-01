@@ -4,7 +4,7 @@ import React, { useContext, useState } from 'react';
 import { MessageContext } from '../Context/MessageContext';
 import { AuthContext } from '../Context/AuthContext';
 import Image from 'next/image';
-import { FaTimes, FaFileAlt, FaImages, FaUsers, FaUserShield, FaTrashAlt } from "react-icons/fa";
+import { FaTimes, FaFileAlt, FaImages, FaUsers, FaUserShield } from "react-icons/fa";
 import { toast } from 'react-toastify';
 import axios from 'axios';
 
@@ -18,6 +18,7 @@ const RightSidebar = () => {
     setShowRightSidebar,
     fetchSidebarData,
     fetchGroupDetails,
+    handleGroupRequestResponse,
     groupChannels,
     isGroupDetailsLoading
   } = useContext(MessageContext);
@@ -77,94 +78,122 @@ const RightSidebar = () => {
   };
 
   return (
-    <div className="w-full md:w-[24%] h-[90vh] bg-bg-sidebar border-l border-border flex flex-col overflow-hidden transition-all duration-300 animate-slide-in">
-      {/* Title Header */}
-      <div className="p-4 border-b border-border bg-bg-sidebar flex items-center justify-between">
-        <h3 className="font-bold text-xs text-text-primary uppercase tracking-widest">Workspace Details</h3>
-        <button 
-          onClick={() => setShowRightSidebar(false)}
-          className="p-1.5 rounded-lg bg-surface border border-border text-text-secondary hover:text-rose-500 transition-all duration-300"
-        >
-          <FaTimes className="text-xs" />
-        </button>
-      </div>
-
-      {/* Target details */}
-      <div className="p-5 flex flex-col items-center text-center border-b border-border space-y-3.5 bg-bg-sidebar/40">
-        <Image
-          src={
-            isDirect 
-              ? selectedUser.profilePic?.url || "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png"
-              : group?.avatar?.url || "https://cdn.pixabay.com/photo/2016/11/14/17/39/group-1824145_1280.png"
-          }
-          alt="avatar"
-          width={72}
-          height={72}
-          className="rounded-full object-cover border border-border shadow-md"
-        />
-        <div>
-          <h4 className="font-bold text-sm text-text-primary leading-snug">{isDirect ? selectedUser.username : group?.name}</h4>
-          <span className="text-[11px] text-text-muted font-bold tracking-wider">
-            {isDirect ? `@${selectedUser.profileName}` : `${group?.members?.length || 0} members`}
-          </span>
+    <div className="fixed inset-0 z-50 md:static md:w-[24%] md:h-[90vh] h-full bg-bg-sidebar/95 md:bg-bg-sidebar border-l border-border md:border-l border-border flex flex-col overflow-hidden transition-all duration-300 animate-slide-in">
+      <div className="absolute inset-0 bg-black/40 md:hidden" onClick={() => setShowRightSidebar(false)} />
+      <div className="relative z-10 flex flex-col h-full">
+        {/* Title Header */}
+        <div className="p-4 border-b border-border bg-bg-sidebar flex items-center justify-between">
+          <div>
+            <h3 className="font-bold text-xs text-text-primary uppercase tracking-widest">Workspace Details</h3>
+            <p className="text-[10px] text-text-muted mt-1">{isDirect ? 'Direct message details' : 'Community summary and management'}</p>
+          </div>
+          <button 
+            onClick={() => setShowRightSidebar(false)}
+            className="p-2 rounded-xl bg-surface border border-border text-text-secondary hover:text-rose-500 transition-all duration-300"
+            aria-label="Close sidebar"
+          >
+            <FaTimes className="text-sm" />
+          </button>
         </div>
-        <p className="text-xs text-text-secondary max-w-xs leading-relaxed font-medium">
-          {isDirect ? selectedUser.description || "No bio description added." : group?.description || "Welcome to our group community!"}
-        </p>
-      </div>
 
-      {/* Sub Tabs Navigation */}
-      <div className="flex border-b border-border bg-bg-sidebar/60 p-1">
-        {isGroup && (
-          <button 
-            onClick={() => setActiveSubTab('members')}
-            className={`flex-1 py-2 text-xs font-semibold rounded-lg flex items-center justify-center gap-1.5 transition-all duration-300 ${
-              activeSubTab === 'members' ? "bg-surface text-text-primary shadow-sm" : "text-text-muted hover:text-text-secondary"
-            }`}
-          >
-            <FaUsers className="text-[10px]" /> Members
-          </button>
-        )}
-        {isGroup && (
-          <button 
-            onClick={() => setActiveSubTab('channels')}
-            className={`flex-1 py-2 text-xs font-semibold rounded-lg flex items-center justify-center gap-1.5 transition-all duration-300 ${
-              activeSubTab === 'channels' ? "bg-surface text-text-primary shadow-sm" : "text-text-muted hover:text-text-secondary"
-            }`}
-          >
-            <span className="text-[10px]">#</span> Channels
-          </button>
-        )}
-        {isGroup && (group && ["owner", "admin"].includes(getGroupRole())) && (
-          <button 
-            onClick={() => setActiveSubTab('requests')}
-            className={`flex-1 py-2 text-xs font-semibold rounded-lg flex items-center justify-center gap-1.5 transition-all duration-300 ${
-              activeSubTab === 'requests' ? "bg-surface text-text-primary shadow-sm" : "text-text-muted hover:text-text-secondary"
-            }`}
-          >
-            <FaUserShield className="text-[10px]" /> Requests
-          </button>
-        )}
-        <button 
-          onClick={() => setActiveSubTab('media')}
-          className={`flex-1 py-2 text-xs font-semibold rounded-lg flex items-center justify-center gap-1.5 transition-all duration-300 ${
-            activeSubTab === 'media' ? "bg-surface text-text-primary shadow-sm" : "text-text-muted hover:text-text-secondary"
-          }`}
-        >
-          <FaImages className="text-[10px]" /> Media ({sharedMedia.length})
-        </button>
-        <button 
-          onClick={() => setActiveSubTab('files')}
-          className={`flex-1 py-2 text-xs font-semibold rounded-lg flex items-center justify-center gap-1.5 transition-all duration-300 ${
-            activeSubTab === 'files' ? "bg-surface text-text-primary shadow-sm" : "text-text-muted hover:text-text-secondary"
-          }`}
-        >
-          <FaFileAlt className="text-[10px]" /> Files ({sharedFiles.length})
-        </button>
-      </div>
+        {/* Target details */}
+        <div className="p-5 flex flex-col items-center text-center border-b border-border space-y-4 bg-bg-sidebar/40">
+          <Image
+            src={
+              isDirect 
+                ? selectedUser.profilePic?.url || "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png"
+                : group?.avatar?.url || "https://cdn.pixabay.com/photo/2016/11/14/17/39/group-1824145_1280.png"
+            }
+            alt="avatar"
+            width={84}
+            height={84}
+            className="w-20 h-20 rounded-full object-cover border border-border shadow-lg"
+          />
+          <div className="space-y-2 w-full">
+            <h4 className="font-bold text-base text-text-primary leading-snug truncate">{isDirect ? selectedUser.username : group?.name}</h4>
+            <div className="flex flex-wrap justify-center gap-2">
+              <span className="rounded-full bg-surface px-3 py-1 text-[10px] font-semibold text-text-primary border border-border">
+                {isDirect ? `@${selectedUser.profileName}` : group?.isPrivate ? 'Private community' : 'Open community'}
+              </span>
+              {!isDirect && (
+                <span className="rounded-full bg-surface px-3 py-1 text-[10px] font-semibold text-text-primary border border-border">
+                  {group?.members?.length || 0} members
+                </span>
+              )}
+            </div>
+            <p className="text-xs text-text-secondary max-w-[28rem] mx-auto leading-relaxed font-medium">
+              {isDirect ? selectedUser.description || "No bio description added." : group?.description || "Welcome to this community. Use the tabs below to review members, channels, requests, media, and files."}
+            </p>
+          </div>
 
-      {/* Lists contents */}
-      <div className="flex-1 overflow-y-auto p-4 scrollbar-thin">
+          <div className="grid grid-cols-2 gap-2 w-full sm:grid-cols-3">
+            <div className="rounded-3xl bg-surface/90 border border-border p-3 text-center">
+              <p className="text-[10px] uppercase tracking-[0.24em] text-text-muted">Channels</p>
+              <p className="text-sm font-bold text-text-primary mt-1">{groupChannels.length || 0}</p>
+            </div>
+            <div className="rounded-3xl bg-surface/90 border border-border p-3 text-center">
+              <p className="text-[10px] uppercase tracking-[0.24em] text-text-muted">Media</p>
+              <p className="text-sm font-bold text-text-primary mt-1">{sharedMedia.length}</p>
+            </div>
+            <div className="rounded-3xl bg-surface/90 border border-border p-3 text-center sm:col-span-2">
+              <p className="text-[10px] uppercase tracking-[0.24em] text-text-muted">Files</p>
+              <p className="text-sm font-bold text-text-primary mt-1">{sharedFiles.length}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Sub Tabs Navigation */}
+        <div className="grid grid-cols-2 gap-2 p-3 border-b border-border bg-bg-sidebar/60 sm:grid-cols-3">
+          {isGroup && (
+            <button 
+              onClick={() => setActiveSubTab('members')}
+              className={`py-2 text-xs font-semibold rounded-2xl transition-all duration-300 ${
+                activeSubTab === 'members' ? "bg-surface text-text-primary shadow-sm" : "text-text-muted hover:text-text-secondary bg-bg-sidebar"
+              }`}
+            >
+              <span className="flex items-center justify-center gap-2"><FaUsers className="text-[11px]" /> Members</span>
+            </button>
+          )}
+          {isGroup && (
+            <button 
+              onClick={() => setActiveSubTab('channels')}
+              className={`py-2 text-xs font-semibold rounded-2xl transition-all duration-300 ${
+                activeSubTab === 'channels' ? "bg-surface text-text-primary shadow-sm" : "text-text-muted hover:text-text-secondary bg-bg-sidebar"
+              }`}
+            >
+              <span className="flex items-center justify-center gap-2"><span className="text-[10px]">#</span> Channels</span>
+            </button>
+          )}
+          {isGroup && (group && ["owner", "admin"].includes(getGroupRole())) && (
+            <button 
+              onClick={() => setActiveSubTab('requests')}
+              className={`py-2 text-xs font-semibold rounded-2xl transition-all duration-300 ${
+                activeSubTab === 'requests' ? "bg-surface text-text-primary shadow-sm" : "text-text-muted hover:text-text-secondary bg-bg-sidebar"
+              }`}
+            >
+              <span className="flex items-center justify-center gap-2"><FaUserShield className="text-[11px]" /> Requests</span>
+            </button>
+          )}
+          <button 
+            onClick={() => setActiveSubTab('media')}
+            className={`py-2 text-xs font-semibold rounded-2xl transition-all duration-300 ${
+              activeSubTab === 'media' ? "bg-surface text-text-primary shadow-sm" : "text-text-muted hover:text-text-secondary bg-bg-sidebar"
+            }`}
+          >
+            <span className="flex items-center justify-center gap-2"><FaImages className="text-[11px]" /> Media</span>
+          </button>
+          <button 
+            onClick={() => setActiveSubTab('files')}
+            className={`py-2 text-xs font-semibold rounded-2xl transition-all duration-300 ${
+              activeSubTab === 'files' ? "bg-surface text-text-primary shadow-sm" : "text-text-muted hover:text-text-secondary bg-bg-sidebar"
+            }`}
+          >
+            <span className="flex items-center justify-center gap-2"><FaFileAlt className="text-[11px]" /> Files</span>
+          </button>
+        </div>
+
+        {/* Lists contents */}
+        <div className="flex-1 overflow-y-auto p-4 scrollbar-thin">
         
         {/* Group members list */}
         {isGroup && activeSubTab === 'members' && group && (

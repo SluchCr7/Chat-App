@@ -157,7 +157,7 @@ const SideBar = () => {
     };
 
     return (
-        <aside className="w-full md:w-[28%] min-h-[90vh] bg-bg-sidebar border-r border-border flex flex-col overflow-hidden transition-all duration-300">
+        <aside className="w-full md:w-[28%] min-h-[75vh] md:min-h-[90vh] bg-bg-sidebar border-r border-border flex flex-col overflow-hidden transition-all duration-300 md:sticky md:top-0 md:self-start">
             {/* Sidebar header */}
             <div className="p-5 border-b border-border space-y-4">
                 <div className="flex items-center justify-between gap-3">

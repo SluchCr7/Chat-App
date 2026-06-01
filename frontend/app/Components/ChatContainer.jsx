@@ -101,7 +101,7 @@ const ChatContainer = () => {
     .map(([_, data]) => data.senderName);
 
   return (
-    <div className="flex-1 h-[90vh] bg-bg-primary border border-border rounded-2xl overflow-hidden shadow-xl flex flex-col transition-all duration-300">
+    <div className="flex-1 min-h-[70vh] md:min-h-[90vh] bg-bg-primary border border-border rounded-2xl overflow-hidden shadow-xl flex flex-col transition-all duration-300">
       <Chatheader />
 
       {/* Messages Scroll Area */}

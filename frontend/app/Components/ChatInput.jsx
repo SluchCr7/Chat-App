@@ -195,7 +195,7 @@ const ChatInput = () => {
       )}
 
       {/* Input controls row */}
-      <div className="flex items-center gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         {/* Attachment buttons */}
         <div className="flex items-center gap-1.5 font-bold">
           <input 

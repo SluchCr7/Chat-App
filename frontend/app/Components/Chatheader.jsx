@@ -65,9 +65,9 @@ const Chatheader = () => {
   };
 
   return (
-    <header className="w-full p-4 border-b border-border bg-surface flex items-center justify-between shadow-sm transition-all duration-300">
+    <header className="w-full p-4 border-b border-border bg-surface flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between shadow-sm transition-all duration-300">
       {/* Target details */}
-      <div className="flex items-center gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
         <div className="relative flex items-center">
           <Image
             src={
@@ -105,7 +105,7 @@ const Chatheader = () => {
       </div>
 
       {/* Action triggers */}
-      <div className="flex items-center gap-3.5">
+      <div className="flex flex-wrap items-center gap-3.5 justify-end">
         {/* Channel dropdown button */}
         {isGroup && canCreateChannel && (
           <button 

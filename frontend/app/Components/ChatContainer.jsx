@@ -39,7 +39,7 @@ const ChatContainer = () => {
       ScrollContainerRef.current.scrollTop = currentScrollHeight - previousScrollHeight;
       setPreviousScrollHeight(0);
     }
-  }, [messages, typingUsers, shouldAutoScroll]);
+  }, [messages, typingUsers, shouldAutoScroll, previousScrollHeight]);
 
   // Reset scroll state on chat target change
   useEffect(() => {

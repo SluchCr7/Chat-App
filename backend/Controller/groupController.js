@@ -262,6 +262,10 @@ const createChannel = asyncHandler(async (req, res) => {
         creator: req.user._id
     });
 
+    if (newChannel.type === "private") {
+        newChannel.members.push(req.user._id);
+    }
+
     await newChannel.save();
     res.status(201).json(newChannel);
 });
@@ -317,10 +321,11 @@ const searchGroups = asyncHandler(async (req, res) => {
         ]
     })
     .populate("creator", "username profileName")
-    .select("name description avatar creator members isPrivate lastActivity inviteLink");
+    .select("name description avatar creator members isPrivate lastActivity inviteLink joinRequests");
 
     const result = matchingGroups.map(grp => {
         const isJoined = grp.members.some(m => m.user.toString() === loggedUserId.toString());
+        const isPending = grp.joinRequests.some(reqId => reqId.toString() === loggedUserId.toString());
         return {
             _id: grp._id,
             name: grp.name,
@@ -330,6 +335,7 @@ const searchGroups = asyncHandler(async (req, res) => {
             membersCount: grp.members.length,
             isPrivate: grp.isPrivate,
             isJoined,
+            isPending,
             inviteLink: grp.inviteLink
         };
     });

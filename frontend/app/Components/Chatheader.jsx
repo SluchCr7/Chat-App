@@ -28,8 +28,15 @@ const Chatheader = () => {
 
   const activeTarget = selectedChannel || selectedGroup || selectedUser;
   const isDirect = !!selectedUser;
-  const isGroup = !!selectedGroup;
+  const isGroup = !!selectedGroup || !!selectedChannel;
   const isChannel = !!selectedChannel;
+  const currentGroup = selectedGroup || selectedChannel?.group;
+
+  const groupRole = currentGroup?.members?.find(m => {
+    const userId = m.user?._id ? m.user._id.toString() : m.user?.toString();
+    return userId === authUser._id.toString();
+  })?.role;
+  const canCreateChannel = isGroup && ["owner", "admin", "moderator"].includes(groupRole);
 
   // Determine presence
   const isOnline = isDirect && (onlineUsers.includes(selectedUser._id) || selectedUser.isOnline);
@@ -49,7 +56,7 @@ const Chatheader = () => {
   const handleCreateChannelSubmit = async (e) => {
     e.preventDefault();
     if (!newChannelName.trim()) return;
-    const groupId = selectedGroup ? selectedGroup._id : selectedChannel.group;
+    const groupId = selectedGroup ? selectedGroup._id : (selectedChannel.group?._id || selectedChannel.group);
     await CreateChannel(groupId, newChannelName, newChannelDesc, newChannelType);
     setNewChannelName('');
     setNewChannelDesc('');
@@ -100,10 +107,19 @@ const Chatheader = () => {
       {/* Action triggers */}
       <div className="flex items-center gap-3.5">
         {/* Channel dropdown button */}
-        {isGroup && (
+        {isGroup && canCreateChannel && (
           <button 
             onClick={() => setShowChannelModal(true)}
             className="px-3 py-1.5 rounded-xl bg-bg-primary hover:bg-surface border border-border hover:border-border-hover text-primary hover:text-primary-hover font-bold text-xs transition duration-300 flex items-center gap-1.5"
+          >
+            <FaPlus className="text-[9px]" /> Channel
+          </button>
+        )}
+        {isGroup && !canCreateChannel && (
+          <button 
+            disabled
+            className="px-3 py-1.5 rounded-xl bg-surface border border-border text-text-disabled font-bold text-xs transition duration-300 flex items-center gap-1.5"
+            title="Only owners, admins, or moderators can create channels"
           >
             <FaPlus className="text-[9px]" /> Channel
           </button>

@@ -46,7 +46,7 @@ const ChatInput = () => {
       const activeDM = directChats.find(c => c.recipient?._id === targetId || c._id === targetId);
       if (activeDM?.draft) setMessage(activeDM.draft);
     }
-  }, [selectedUser, selectedGroup, selectedChannel]);
+  }, [selectedUser, selectedGroup, selectedChannel, directChats, groupChats, setReplyMessage, targetId, type]);
 
   // --- 2. Save draft automatically with debounce ---
   const triggerDraftSave = (text) => {

@@ -16,7 +16,10 @@ const RightSidebar = () => {
     messages,
     setSelectedChannel,
     setShowRightSidebar,
-    fetchGroups
+    fetchSidebarData,
+    fetchGroupDetails,
+    groupChannels,
+    isGroupDetailsLoading
   } = useContext(MessageContext);
 
   const { authUser } = useContext(AuthContext);
@@ -26,7 +29,8 @@ const RightSidebar = () => {
 
   const isDirect = !!selectedUser;
   const isGroup = !!selectedGroup || !!selectedChannel;
-  const group = selectedGroup || selectedChannel?.group;
+  const groupId = selectedGroup?._id || (typeof selectedChannel?.group === 'object' ? selectedChannel.group?._id : selectedChannel?.group);
+  const group = selectedGroup || (typeof selectedChannel?.group === 'object' ? selectedChannel.group : null);
 
   // Extract shared media and files from the active messages list
   const sharedMedia = messages.filter(m => Array.isArray(m.Photos) && m.Photos.length > 0)
@@ -45,12 +49,13 @@ const RightSidebar = () => {
   const handlePromoteAdmin = async (targetUserId) => {
     try {
       const token = localStorage.getItem("userToken");
-      await axios.put(`${process.env.NEXT_PUBLIC_SOCKET_URL}/api/group/${group._id}/role`, {
+      await axios.put(`${process.env.NEXT_PUBLIC_SOCKET_URL}/api/group/${groupId}/role`, {
         targetUserId,
         newRole: "admin"
       }, { headers: { authorization: `Bearer ${token}` } });
       toast.success("Member promoted to Admin");
-      fetchGroups();
+      await fetchGroupDetails(groupId);
+      fetchSidebarData();
     } catch (err) {
       toast.error(err.response?.data?.message || "Failed to promote member");
     }
@@ -60,13 +65,14 @@ const RightSidebar = () => {
     if (!window.confirm("Are you sure you want to kick this member?")) return;
     try {
       const token = localStorage.getItem("userToken");
-      await axios.post(`${process.env.NEXT_PUBLIC_SOCKET_URL}/api/group/${group._id}/kick`, {
+      await axios.post(`${process.env.NEXT_PUBLIC_SOCKET_URL}/api/group/${groupId}/kick`, {
         targetUserId
       }, { headers: { authorization: `Bearer ${token}` } });
       toast.success("Member kicked successfully");
-      fetchGroups();
+      await fetchGroupDetails(groupId);
+      fetchSidebarData();
     } catch (err) {
-      toast.error("Failed to kick member");
+      toast.error(err.response?.data?.message || "Failed to kick member");
     }
   };
 
@@ -119,6 +125,26 @@ const RightSidebar = () => {
             <FaUsers className="text-[10px]" /> Members
           </button>
         )}
+        {isGroup && (
+          <button 
+            onClick={() => setActiveSubTab('channels')}
+            className={`flex-1 py-2 text-xs font-semibold rounded-lg flex items-center justify-center gap-1.5 transition-all duration-300 ${
+              activeSubTab === 'channels' ? "bg-surface text-text-primary shadow-sm" : "text-text-muted hover:text-text-secondary"
+            }`}
+          >
+            <span className="text-[10px]">#</span> Channels
+          </button>
+        )}
+        {isGroup && (group && ["owner", "admin"].includes(getGroupRole())) && (
+          <button 
+            onClick={() => setActiveSubTab('requests')}
+            className={`flex-1 py-2 text-xs font-semibold rounded-lg flex items-center justify-center gap-1.5 transition-all duration-300 ${
+              activeSubTab === 'requests' ? "bg-surface text-text-primary shadow-sm" : "text-text-muted hover:text-text-secondary"
+            }`}
+          >
+            <FaUserShield className="text-[10px]" /> Requests
+          </button>
+        )}
         <button 
           onClick={() => setActiveSubTab('media')}
           className={`flex-1 py-2 text-xs font-semibold rounded-lg flex items-center justify-center gap-1.5 transition-all duration-300 ${
@@ -153,10 +179,13 @@ const RightSidebar = () => {
               return (
                 <div key={i} className="flex items-center justify-between p-2.5 rounded-xl bg-surface border border-border hover:bg-surface-hover transition duration-300">
                   <div className="flex items-center gap-2.5">
-                    <img 
-                      src={u.profilePic?.url} 
-                      alt="avatar" 
-                      className="w-7.5 h-7.5 rounded-full object-cover border border-border" 
+                    <Image
+                      src={u.profilePic?.url || "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png"}
+                      alt="avatar"
+                      width={30}
+                      height={30}
+                      unoptimized
+                      className="w-7.5 h-7.5 rounded-full object-cover border border-border"
                     />
                     <div className="flex flex-col text-left">
                       <span className="text-xs font-semibold text-text-primary leading-tight">{u.username}</span>
@@ -193,6 +222,81 @@ const RightSidebar = () => {
           </div>
         )}
 
+        {/* Group channels list */}
+        {isGroup && activeSubTab === 'channels' && (
+          <div className="space-y-2">
+            {isGroupDetailsLoading ? (
+              <p className="text-xs text-text-muted text-center py-6">Loading channels…</p>
+            ) : groupChannels.length > 0 ? (
+              groupChannels.map((channel) => {
+                const isSelectedChannel = selectedChannel && selectedChannel._id === channel._id;
+                const isPrivate = channel.type === "private";
+                const isAnnouncement = channel.type === "announcement";
+
+                return (
+                  <button
+                    key={channel._id}
+                    onClick={() => setSelectedChannel(channel)}
+                    className={`w-full text-left p-3 rounded-xl border transition-all duration-300 ${
+                      isSelectedChannel ? "bg-primary/10 border-primary/20 text-primary shadow-sm" : "bg-surface border-border hover:bg-surface-hover"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <div>
+                        <p className="text-sm font-semibold text-text-primary">#{channel.name}</p>
+                        <p className="text-[10px] text-text-muted truncate">{channel.description || "No channel description"}</p>
+                      </div>
+                      <span className={`text-[10px] px-2 py-1 rounded-full font-bold ${isAnnouncement ? "bg-warning/10 text-warning" : isPrivate ? "bg-error/10 text-error" : "bg-success/10 text-success"}`}>
+                        {channel.type}
+                      </span>
+                    </div>
+                  </button>
+                );
+              })
+            ) : (
+              <p className="text-xs text-text-muted text-center py-6">No channels created yet. Open the group header to add one.</p>
+            )}
+          </div>
+        )}
+
+        {isGroup && activeSubTab === 'requests' && (
+          <div className="space-y-3">
+            {group?.joinRequests && group.joinRequests.length > 0 ? (
+              group.joinRequests.map((requestUser) => (
+                <div key={requestUser._id} className="p-3 rounded-xl bg-surface border border-border flex flex-col gap-3">
+                  <div className="flex items-center gap-3">
+                    <Image
+                      src={requestUser.profilePic?.url || "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png"}
+                      alt={requestUser.username}
+                      width={44}
+                      height={44}
+                      unoptimized
+                      className="w-11 h-11 rounded-full object-cover border border-border"
+                    />
+                    <div className="flex-1 text-left">
+                      <p className="text-sm font-semibold text-text-primary">{requestUser.username}</p>
+                      <p className="text-[10px] text-text-muted">@{requestUser.profileName.replace(/^@/, '')}</p>
+                    </div>
+                    <span className="text-[10px] font-bold uppercase px-2.5 py-1 rounded-full bg-warning/10 text-warning border border-warning/20">Pending</span>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleGroupRequestResponse(group._id, requestUser._id, 'approve')}
+                      className="flex-1 px-3 py-2 rounded-xl bg-success text-white text-[11px] font-semibold"
+                    >Approve</button>
+                    <button
+                      onClick={() => handleGroupRequestResponse(group._id, requestUser._id, 'reject')}
+                      className="flex-1 px-3 py-2 rounded-xl bg-surface border border-border text-text-primary text-[11px] font-semibold"
+                    >Reject</button>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p className="text-xs text-text-muted text-center py-6">No pending requests right now. Group requests will appear here for admin review.</p>
+            )}
+          </div>
+        )}
+
         {/* Media elements */}
         {activeSubTab === 'media' && (
           sharedMedia.length > 0 ? (
@@ -205,7 +309,7 @@ const RightSidebar = () => {
                   key={i} 
                   className="aspect-square rounded-lg overflow-hidden border border-border bg-bg-primary hover:scale-105 transition-all duration-300 flex items-center justify-center"
                 >
-                  <img src={photo.url} alt="media" className="object-cover w-full h-full" />
+                  <Image src={photo.url} alt="media" width={200} height={200} unoptimized className="object-cover w-full h-full" />
                 </a>
               ))}
             </div>

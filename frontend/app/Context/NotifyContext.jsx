@@ -1,7 +1,7 @@
 'use client';
 
 import axios from "axios";
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState, useCallback } from "react";
 import { toast } from "react-toastify";
 import { MessageContext } from "./MessageContext";
 import { AuthContext } from "./AuthContext";
@@ -18,7 +18,7 @@ const NotifyContextProvider = ({ children }) => {
     const mentionSoundUrl = "https://assets.mixkit.co/active_storage/sfx/911/911-700.wav"; // Alert chime sound
 
     // Fetch notifications on load
-    const fetchNotifications = async () => {
+    const fetchNotifications = useCallback(async () => {
         try {
             const token = localStorage.getItem("userToken") || authUser?.token;
             if (!token) return;
@@ -30,7 +30,7 @@ const NotifyContextProvider = ({ children }) => {
         } catch (err) {
             console.error("Error fetching notifications:", err);
         }
-    };
+    }, [authUser]);
 
     useEffect(() => {
         if (authUser) {
@@ -44,7 +44,7 @@ const NotifyContextProvider = ({ children }) => {
         } else {
             setNotifications([]);
         }
-    }, [authUser]);
+    }, [authUser, fetchNotifications]);
 
     // Send a new notification and append it locally
     const AddNotify = async (content) => {

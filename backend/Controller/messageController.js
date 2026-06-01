@@ -32,8 +32,28 @@ const getMessages = asyncHandler(async (req, res) => {
 
     let query = {};
     if (type === "group") {
+        const group = await Group.findById(targetId);
+        if (!group) return res.status(404).json({ message: "Group not found" });
+
+        const isMember = group.members.some(m => m.user.toString() === sender.toString());
+        if (!isMember) return res.status(403).json({ message: "You are not a member of this group" });
+
         query = { group: targetId };
     } else if (type === "channel") {
+        const channel = await Channel.findById(targetId).populate("group");
+        if (!channel) return res.status(404).json({ message: "Channel not found" });
+
+        const group = channel.group;
+        if (!group) return res.status(404).json({ message: "Channel parent group not found" });
+
+        const isGroupMember = group.members.some(m => m.user.toString() === sender.toString());
+        if (!isGroupMember) return res.status(403).json({ message: "You are not a member of this channel's group" });
+
+        if (channel.type === "private") {
+            const isChannelMember = channel.members.some(m => m.toString() === sender.toString());
+            if (!isChannelMember) return res.status(403).json({ message: "You do not have permission to read messages in this private channel" });
+        }
+
         query = { channel: targetId };
     } else {
         // Direct messages: support fetching by conversationId or recipientId
@@ -139,11 +159,13 @@ const sendMessage = asyncHandler(async (req, res) => {
         const group = await Group.findById(targetId);
         if (!group) return res.status(404).json({ message: "Group not found" });
 
-        // Update group activity
+        const isMember = group.members.some(m => m.user.toString() === sender.toString());
+        if (!isMember) return res.status(403).json({ message: "You are not a member of this group" });
+
+        // Update group activity and unread counters for group members
         group.lastActivity = Date.now();
         await group.save();
 
-        // Increment unread counter for other members
         const otherMembers = group.members
             .map(m => m.user.toString())
             .filter(id => id !== sender.toString());
@@ -157,8 +179,41 @@ const sendMessage = asyncHandler(async (req, res) => {
         }));
     } else if (type === "channel") {
         messageData.channel = targetId;
-        const channel = await Channel.findById(targetId);
+        const channel = await Channel.findById(targetId).populate("group");
         if (!channel) return res.status(404).json({ message: "Channel not found" });
+
+        const group = channel.group;
+        if (!group) return res.status(404).json({ message: "Channel parent group not found" });
+
+        const isGroupMember = group.members.some(m => m.user.toString() === sender.toString());
+        if (!isGroupMember) return res.status(403).json({ message: "You are not a member of this channel's group" });
+
+        if (channel.type === "private") {
+            const isChannelMember = channel.members.some(m => m.toString() === sender.toString());
+            if (!isChannelMember) return res.status(403).json({ message: "You do not have permission to post in this private channel" });
+        }
+
+        if (channel.type === "announcement") {
+            const membership = group.members.find(m => m.user.toString() === sender.toString());
+            if (!membership || !["owner", "admin", "moderator"].includes(membership.role)) {
+                return res.status(403).json({ message: "Only moderators or admins can send messages in announcement channels" });
+            }
+        }
+
+        group.lastActivity = Date.now();
+        await group.save();
+
+        const otherMembers = group.members
+            .map(m => m.user.toString())
+            .filter(id => id !== sender.toString());
+
+        await Promise.all(otherMembers.map(async (uid) => {
+            await UnreadCounter.findOneAndUpdate(
+                { user: uid, group: group._id },
+                { $inc: { unreadCount: 1 } },
+                { upsert: true }
+            );
+        }));
     } else {
         // Direct message
         messageData.receiver = targetId;

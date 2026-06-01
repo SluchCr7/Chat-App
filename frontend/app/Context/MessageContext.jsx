@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState, useCallback } from "react";
 import { toast } from "react-toastify";
 import axios from "axios";
 import { AuthContext } from "./AuthContext";
@@ -43,6 +43,8 @@ const MessageContextProvider = ({ children }) => {
     // Group global search results
     const [groupSearchResults, setGroupSearchResults] = useState([]);
     const [isGroupSearching, setIsGroupSearching] = useState(false);
+    const [groupChannels, setGroupChannels] = useState([]);
+    const [isGroupDetailsLoading, setIsGroupDetailsLoading] = useState(false);
 
     // Reply tracking state
     const [replyMessage, setReplyMessage] = useState(null);
@@ -51,7 +53,7 @@ const MessageContextProvider = ({ children }) => {
     const [totalUnread, setTotalUnread] = useState(0);
 
     // --- 1. Fetch Conversations, Groups, Requests & Contacts ---
-    const fetchSidebarData = async () => {
+    const fetchSidebarData = useCallback(async () => {
         try {
             const token = localStorage.getItem("userToken") || authUser?.token;
             if (!token) return;
@@ -74,9 +76,9 @@ const MessageContextProvider = ({ children }) => {
         } finally {
             setIsSidebarLoading(false);
         }
-    };
+    }, [authUser]);
 
-    const fetchContacts = async () => {
+    const fetchContacts = useCallback(async () => {
         try {
             const token = localStorage.getItem("userToken") || authUser?.token;
             if (!token) return;
@@ -88,14 +90,14 @@ const MessageContextProvider = ({ children }) => {
         } catch (err) {
             console.error("Error fetching contacts:", err);
         }
-    };
+    }, [authUser]);
 
     useEffect(() => {
         if (authUser) {
             fetchSidebarData();
             fetchContacts();
         }
-    }, [authUser]);
+    }, [authUser, fetchSidebarData, fetchContacts]);
 
     // --- 2. Global User search suggestions (debounced API lookup) ---
     useEffect(() => {
@@ -122,8 +124,58 @@ const MessageContextProvider = ({ children }) => {
         return () => clearTimeout(delayDebounceFn);
     }, [searchQuery]);
 
-    // --- 3. Fetch Messages with infinite scroll support ---
-    const fetchConversationMessages = async (page = 1, append = false) => {
+    // --- 3. Mark Chat as Read & Sync Counters ---
+    const handleMarkChatAsRead = useCallback(async () => {
+        const token = localStorage.getItem("userToken") || authUser?.token;
+        if (!token) return;
+
+        let url = `${process.env.NEXT_PUBLIC_SOCKET_URL}/api/conversations/read/`;
+        let params = {};
+
+        if (selectedGroup) {
+            url += selectedGroup._id;
+            params.type = "group";
+        } else if (selectedUser) {
+            const activeDM = directChats.find(c => c.recipient?._id === selectedUser._id);
+            if (activeDM) {
+                url += activeDM._id;
+                params.type = "direct";
+            } else {
+                return;
+            }
+        } else {
+            return;
+        }
+
+        try {
+            await axios.post(url, {}, {
+                headers: { authorization: `Bearer ${token}` },
+                params
+            });
+
+            if (selectedGroup) {
+                setGroupChats(prev => prev.map(g => g._id === selectedGroup._id ? { ...g, unreadCount: 0 } : g));
+            } else if (selectedUser) {
+                setDirectChats(prev => prev.map(d => d.recipient?._id === selectedUser._id ? { ...d, unreadCount: 0 } : d));
+            }
+
+            fetchSidebarData();
+
+            if (selectedUser && messages.length > 0 && socket) {
+                const unreadIds = messages
+                    .filter(m => m.sender?._id === selectedUser._id && !m.isRead)
+                    .map(m => m._id);
+                if (unreadIds.length > 0) {
+                    socket.emit("markAsSeen", { messageIds: unreadIds, senderId: selectedUser._id });
+                }
+            }
+        } catch (err) {
+            console.error("Mark as read error:", err);
+        }
+    }, [authUser, selectedGroup, selectedUser, directChats, fetchSidebarData, messages, socket]);
+
+    // --- 4. Fetch Messages with infinite scroll support ---
+    const fetchConversationMessages = useCallback(async (page = 1, append = false) => {
         if (page === 1) setIsMessagesLoading(true);
         try {
             const token = localStorage.getItem("userToken") || authUser?.token;
@@ -160,7 +212,6 @@ const MessageContextProvider = ({ children }) => {
             setHasMoreMessages(res.data.length === 30);
             setMessagesPage(page);
 
-            // Mark as read immediately when chat is loaded
             if (page === 1) {
                 handleMarkChatAsRead();
             }
@@ -169,70 +220,16 @@ const MessageContextProvider = ({ children }) => {
         } finally {
             if (page === 1) setIsMessagesLoading(false);
         }
-    };
+    }, [authUser, selectedChannel, selectedGroup, selectedUser, handleMarkChatAsRead]);
 
     useEffect(() => {
         fetchConversationMessages(1, false);
-    }, [selectedUser, selectedGroup, selectedChannel]);
+    }, [selectedUser, selectedGroup, selectedChannel, fetchConversationMessages]);
 
     // Load next page of messages (Infinite Scroll)
     const loadMoreMessages = () => {
         if (!isMessagesLoading && hasMoreMessages) {
             fetchConversationMessages(messagesPage + 1, true);
-        }
-    };
-
-    // --- 4. Mark Chat as Read & Sync Counters ---
-    const handleMarkChatAsRead = async () => {
-        const token = localStorage.getItem("userToken") || authUser?.token;
-        if (!token) return;
-
-        let url = `${process.env.NEXT_PUBLIC_SOCKET_URL}/api/conversations/read/`;
-        let params = {};
-
-        if (selectedGroup) {
-            url += selectedGroup._id;
-            params.type = "group";
-        } else if (selectedUser) {
-            // Find active conversation matching selectedUser
-            const activeDM = directChats.find(c => c.recipient?._id === selectedUser._id);
-            if (activeDM) {
-                url += activeDM._id;
-                params.type = "direct";
-            } else {
-                return; // No active conversation created yet
-            }
-        } else {
-            return;
-        }
-
-        try {
-            await axios.post(url, {}, {
-                headers: { authorization: `Bearer ${token}` },
-                params
-            });
-
-            // Update local unread counter states
-            if (selectedGroup) {
-                setGroupChats(prev => prev.map(g => g._id === selectedGroup._id ? { ...g, unreadCount: 0 } : g));
-            } else if (selectedUser) {
-                setDirectChats(prev => prev.map(d => d.recipient?._id === selectedUser._id ? { ...d, unreadCount: 0 } : d));
-            }
-
-            // Sync global unread count
-            fetchSidebarData();
-
-            // Emit read seen receipt via Socket.IO
-            if (selectedUser && messages.length > 0 && socket) {
-                const unreadIds = messages
-                    .filter(m => m.sender?._id === selectedUser._id && !m.isRead)
-                    .map(m => m._id);
-                if (unreadIds.length > 0) {
-                    socket.emit("markAsSeen", { messageIds: unreadIds, senderId: selectedUser._id });
-                }
-            }
-        } catch (err) {
-            console.error("Mark as read error:", err);
         }
     };
 
@@ -287,12 +284,35 @@ const MessageContextProvider = ({ children }) => {
             });
             toast.success(`Request ${action === "approve" ? "approved" : "rejected"} successfully`);
             fetchSidebarData();
+            if (selectedGroup?._id === groupId || (selectedChannel?.group?._id === groupId || selectedChannel?.group === groupId)) {
+                await fetchGroupDetails(groupId);
+            }
         } catch (err) {
             toast.error(err.response?.data?.message || "Failed to process join request");
         }
     };
 
-    const handleSearchGroups = async (groupName) => {
+    const fetchGroupDetails = async (groupId) => {
+        try {
+            setIsGroupDetailsLoading(true);
+            const token = localStorage.getItem("userToken") || authUser?.token;
+            if (!token) return null;
+
+            const res = await axios.get(`${process.env.NEXT_PUBLIC_SOCKET_URL}/api/group/${groupId}`, {
+                headers: { authorization: `Bearer ${token}` }
+            });
+
+            setGroupChannels(res.data.channels || []);
+            return res.data.group;
+        } catch (err) {
+            console.error("Fetch group details error:", err);
+            return null;
+        } finally {
+            setIsGroupDetailsLoading(false);
+        }
+    };
+
+    const handleSearchGroups = useCallback(async (groupName) => {
         if (!groupName || groupName.trim() === "") {
             setGroupSearchResults([]);
             return;
@@ -309,7 +329,7 @@ const MessageContextProvider = ({ children }) => {
         } finally {
             setIsGroupSearching(false);
         }
-    };
+    }, [authUser]);
 
     const handleJoinGroup = async (inviteLink) => {
         try {
@@ -322,6 +342,11 @@ const MessageContextProvider = ({ children }) => {
             } else {
                 toast.success("Join request submitted successfully");
             }
+            setGroupSearchResults(prev => prev.map(group => group.inviteLink === inviteLink ? {
+                ...group,
+                isPending: res.data.status === "pending",
+                isJoined: res.data.status === "joined"
+            } : group));
             fetchSidebarData();
         } catch (err) {
             toast.error(err.response?.data?.message || "Failed to join group");
@@ -803,14 +828,46 @@ const MessageContextProvider = ({ children }) => {
         }
     };
 
-    const handleSelectChat = (type, target) => {
+    const handleSelectChat = async (type, target) => {
         setSelectedUser(null);
         setSelectedGroup(null);
         setSelectedChannel(null);
-        
-        if (type === "user") setSelectedUser(target);
-        if (type === "group") setSelectedGroup(target);
-        if (type === "channel") setSelectedChannel(target);
+        setGroupChannels([]);
+
+        if (type === "user") {
+            setSelectedUser(target);
+            return;
+        }
+
+        if (type === "group") {
+            const groupDetails = await fetchGroupDetails(target._id);
+            if (groupDetails) {
+                setSelectedGroup(groupDetails);
+            } else {
+                setSelectedGroup(target);
+            }
+            return;
+        }
+
+        if (type === "channel") {
+            let groupId = null;
+            if (typeof target.group === "string") {
+                groupId = target.group;
+            } else if (target.group && target.group._id) {
+                groupId = target.group._id;
+            }
+
+            if (groupId) {
+                const groupDetails = await fetchGroupDetails(groupId);
+                if (groupDetails) {
+                    setSelectedGroup(groupDetails);
+                    setSelectedChannel({ ...target, group: groupDetails });
+                    return;
+                }
+            }
+
+            setSelectedChannel(target);
+        }
     };
 
     return (
@@ -861,6 +918,9 @@ const MessageContextProvider = ({ children }) => {
                 ToggleStar,
                 CreateGroup,
                 CreateChannel,
+                groupChannels,
+                isGroupDetailsLoading,
+                fetchGroupDetails,
                 typingUsers,
                 setTypingUsers,
                 showRightSidebar,

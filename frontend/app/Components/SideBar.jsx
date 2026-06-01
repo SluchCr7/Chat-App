@@ -53,10 +53,8 @@ const SideBar = () => {
         }, 300);
 
         return () => clearTimeout(timer);
-    }, [groupSearchQuery]);
-
-    if (isSidebarLoading) return <SideBarSkeleton />;
-
+    }, [groupSearchQuery, handleSearchGroups]);
+    };
     const handleCreateGroupSubmit = async (e) => {
         e.preventDefault();
         if (!newGroupName.trim()) return;
@@ -281,10 +279,10 @@ const SideBar = () => {
                                             <button
                                                 type="button"
                                                 onClick={() => handleJoinGroup(group.inviteLink)}
-                                                disabled={group.isJoined}
-                                                className={`px-3 py-2 rounded-xl text-text-inverse text-xs font-semibold ${group.isJoined ? 'bg-text-disabled cursor-not-allowed' : 'bg-primary hover:bg-primary-hover'}`}
+                                                disabled={group.isJoined || group.isPending}
+                                                className={`px-3 py-2 rounded-xl text-text-inverse text-xs font-semibold ${group.isJoined || group.isPending ? 'bg-text-disabled cursor-not-allowed' : 'bg-primary hover:bg-primary-hover'}`}
                                             >
-                                                {group.isJoined ? 'Joined' : group.isPrivate ? 'Request access' : 'Join'}
+                                                {group.isJoined ? 'Joined' : group.isPending ? 'Requested' : group.isPrivate ? 'Request access' : 'Join'}
                                             </button>
                                         </div>
                                     ))

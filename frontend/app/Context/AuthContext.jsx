@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useEffect, useState } from "react";
+import { createContext, useCallback, useEffect, useState } from "react";
 import { ToastContainer, toast, Slide } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import api from "../lib/axios";
@@ -104,7 +104,7 @@ const AuthContextProvider = ({ children }) => {
         }
     };
 
-    const connectSocket = (authUser) => {
+    const connectSocket = useCallback((authUser) => {
         if (!authUser || socket?.connected) return;
 
         setSocketStatus("connecting");
@@ -143,7 +143,7 @@ const AuthContextProvider = ({ children }) => {
         });
 
         setSocket(Newsocket);
-    };
+    }, [socket]);
 
 
     const disconnectSocket = () => {
@@ -157,7 +157,7 @@ const AuthContextProvider = ({ children }) => {
             setAuthUser(parsedUser);
             connectSocket(parsedUser);
         }
-    }, []);
+    }, [connectSocket]);
 
     const handleUpdateProfile = async (username, profileName, description, status = null, socialLinks = null) => {
         try {

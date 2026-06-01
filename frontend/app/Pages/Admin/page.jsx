@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState, useCallback } from 'react';
 import { AuthContext } from '@/app/Context/AuthContext';
 import Logo from '@/app/Components/Logo';
 import { FaUserShield, FaUsers, FaDatabase, FaServer, FaCheck, FaTimes, FaTrashAlt, FaClock } from "react-icons/fa";
@@ -16,7 +16,7 @@ const AdminDashboard = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [totalUsersCount, setTotalUsersCount] = useState(0);
 
-  const fetchStats = async () => {
+  const fetchStats = useCallback(async () => {
     try {
       const token = localStorage.getItem("userToken");
       const res = await axios.get(`${process.env.NEXT_PUBLIC_SOCKET_URL}/api/admin/stats`, {
@@ -27,9 +27,9 @@ const AdminDashboard = () => {
       console.error(err);
       toast.error("Failed to load admin metrics");
     }
-  };
+  }, []);
 
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     try {
       const token = localStorage.getItem("userToken");
       const res = await axios.get(`${process.env.NEXT_PUBLIC_SOCKET_URL}/api/admin/users?page=${page}&limit=8`, {
@@ -41,7 +41,7 @@ const AdminDashboard = () => {
     } catch (err) {
       console.error(err);
     }
-  };
+  }, [page]);
 
   useEffect(() => {
     if (authUser && authUser.isAdmin) {
@@ -51,7 +51,7 @@ const AdminDashboard = () => {
     } else {
       setLoading(false);
     }
-  }, [authUser, page]);
+  }, [authUser, fetchStats, fetchUsers]);
 
   const handleToggleAdmin = async (userId) => {
     try {

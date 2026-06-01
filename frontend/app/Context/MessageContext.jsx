@@ -847,6 +847,8 @@ const MessageContextProvider = ({ children }) => {
             const groupDetails = await fetchGroupDetails(target._id);
             if (groupDetails) {
                 setSelectedGroup(groupDetails);
+                // Sync fetched group details back to groupChats for sidebar consistency
+                setGroupChats(prev => prev.map(g => g._id === groupDetails._id ? groupDetails : g));
             } else {
                 setSelectedGroup(target);
             }
@@ -866,6 +868,8 @@ const MessageContextProvider = ({ children }) => {
                 if (groupDetails) {
                     setSelectedGroup(groupDetails);
                     setSelectedChannel({ ...target, group: groupDetails });
+                    // Sync fetched group details back to groupChats for sidebar consistency
+                    setGroupChats(prev => prev.map(g => g._id === groupDetails._id ? groupDetails : g));
                     return;
                 }
             }

@@ -117,7 +117,7 @@ const RightSidebar = () => {
               </span>
               {!isDirect && (
                 <span className="rounded-full bg-surface px-3 py-1 text-[10px] font-semibold text-text-primary border border-border">
-                  {group?.members?.length || 0} members
+                  {group?.membersCount || group?.members?.length || 0} members
                 </span>
               )}
             </div>

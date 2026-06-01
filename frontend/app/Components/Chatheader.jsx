@@ -98,7 +98,7 @@ const Chatheader = () => {
             {isDirect 
               ? (isOnline ? `Online (${userStatus})` : "Offline") 
               : isGroup 
-                ? `${selectedGroup.members?.length || 0} members`
+                ? `${selectedGroup.membersCount || selectedGroup.members?.length || 0} members`
                 : selectedChannel.description || "No description added"}
           </span>
         </div>

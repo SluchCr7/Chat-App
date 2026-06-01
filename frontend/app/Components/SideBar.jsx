@@ -148,7 +148,7 @@ const SideBar = () => {
                     </div>
                     <div className="flex flex-col items-start text-left">
                         <span className={`text-sm leading-tight ${isSelected ? "text-primary-light" : "text-text-primary"}`}>{group.name}</span>
-                        <span className="text-[11px] text-text-muted font-medium">{group.members?.length || 0} members</span>
+                        <span className="text-[11px] text-text-muted font-medium">{group?.membersCount || group?.members?.length || 0} members</span>
                     </div>
                 </div>
                 {isSelected && <FaChevronRight className="text-[10px] text-primary animate-pulse" />}
@@ -157,7 +157,7 @@ const SideBar = () => {
     };
 
     return (
-        <aside className="w-full md:w-[28%] min-h-[75vh] md:min-h-[90vh] bg-bg-sidebar border-r border-border flex flex-col overflow-hidden transition-all duration-300 md:sticky md:top-0 md:self-start">
+        <aside className="w-full fixed md:w-[28%] min-h-[75vh] md:min-h-[90vh] bg-bg-sidebar border-r border-border flex flex-col overflow-hidden transition-all duration-300 md:sticky md:top-0 md:self-start">
             {/* Sidebar header */}
             <div className="p-5 border-b border-border space-y-4">
                 <div className="flex items-center justify-between gap-3">

@@ -66,17 +66,15 @@ const SideBar = () => {
 
     // Filter Logic
     const filteredUsers = contacts.filter(user => 
-        user.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        user.profileName.toLowerCase().includes(searchQuery.toLowerCase())
+        (user.username && user.username.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (user.profileName && user.profileName.toLowerCase().includes(searchQuery.toLowerCase()))
     );
 
     const filteredGroups = groupChats.filter(g => 
         g.name.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
-    const suggestionContacts = searchSuggestions.filter(suggestion => 
-        !contacts.some(contact => contact._id === suggestion._id)
-    );
+    const suggestionContacts = searchSuggestions;
 
     const activeGroupRequests = requests?.joinRequests || [];
     const incomingGroupInvites = requests?.invites || [];
@@ -115,7 +113,7 @@ const SideBar = () => {
                     </div>
                     <div className="flex flex-col items-start text-left">
                         <span className={`text-sm leading-tight ${isSelected ? "text-primary-light" : "text-text-primary"}`}>{user.username}</span>
-                        <span className="text-[11px] text-text-muted font-medium">@{user.profileName.replace('@', '')}</span>
+                        <span className="text-[11px] text-text-muted font-medium">@{(user.profileName || '').replace('@', '')}</span>
                     </div>
                 </div>
                 {isSelected && <FaChevronRight className="text-[10px] text-primary animate-pulse" />}
@@ -229,15 +227,25 @@ const SideBar = () => {
                                 <div key={suggestion._id} className="flex items-center justify-between gap-3 py-2 border-b border-border last:border-b-0">
                                     <div className="text-left">
                                         <p className="text-sm text-text-primary font-semibold">{suggestion.username}</p>
-                                        <p className="text-[11px] text-text-muted">@{suggestion.profileName.replace(/^@/, '')}</p>
+                                        <p className="text-[11px] text-text-muted">@{(suggestion.profileName || '').replace(/^@/, '')}</p>
                                     </div>
-                                    <button
-                                        type="button"
-                                        onClick={() => handleAddContact(suggestion._id)}
-                                        className="px-3 py-1.5 rounded-xl bg-primary text-text-inverse text-[11px] font-semibold transition-all duration-300"
-                                    >
-                                        Add
-                                    </button>
+                                    {contacts.some(contact => contact._id === suggestion._id) ? (
+                                        <button
+                                            type="button"
+                                            onClick={() => setSelectedUser(suggestion)}
+                                            className="px-3 py-1.5 rounded-xl bg-surface border border-border text-text-primary text-[11px] font-semibold transition-all duration-300"
+                                        >
+                                            Chat
+                                        </button>
+                                    ) : (
+                                        <button
+                                            type="button"
+                                            onClick={() => handleAddContact(suggestion._id)}
+                                            className="px-3 py-1.5 rounded-xl bg-primary text-text-inverse text-[11px] font-semibold transition-all duration-300"
+                                        >
+                                            Add
+                                        </button>
+                                    )}
                                 </div>
                             ))
                         ) : (
@@ -267,7 +275,9 @@ const SideBar = () => {
                         />
                         {groupSearchQuery.trim() !== '' && (
                             <div className="space-y-3">
-                                {groupSearchResults.length > 0 ? (
+                                {isGroupSearching ? (
+                                    <p className="text-[11px] text-text-muted">Searching public groups...</p>
+                                ) : groupSearchResults.length > 0 ? (
                                     groupSearchResults.map(group => (
                                         <div key={group._id} className="flex items-center justify-between gap-3 p-3 rounded-xl border border-border bg-surface">
                                             <div>
@@ -286,7 +296,7 @@ const SideBar = () => {
                                         </div>
                                     ))
                                 ) : (
-                                    <p className="text-[11px] text-text-muted">Enter a group name to start searching.</p>
+                                    <p className="text-[11px] text-text-muted">No groups found matching your search.</p>
                                 )}
                             </div>
                         )}
@@ -334,7 +344,7 @@ const SideBar = () => {
                                 <div className="flex items-center justify-between gap-3">
                                     <div>
                                         <p className="text-sm font-semibold text-text-primary">{req.group.name}</p>
-                                        <p className="text-[11px] text-text-muted">Request from {req.user.username} (@{req.user.profileName.replace(/^@/, '')})</p>
+                                        <p className="text-[11px] text-text-muted">Request from {req.user.username} (@{(req.user.profileName || '').replace(/^@/, '')})</p>
                                     </div>
                                 </div>
                                 <div className="flex gap-2">
@@ -364,7 +374,7 @@ const SideBar = () => {
                             <div key={invite._id} className="mb-2 p-3 rounded-xl border border-border bg-surface flex flex-col gap-3">
                                 <div>
                                     <p className="text-sm font-semibold text-text-primary">{invite.group.name}</p>
-                                    <p className="text-[11px] text-text-muted">Invited by {invite.inviter.username} (@{invite.inviter.profileName.replace(/^@/, '')})</p>
+                                    <p className="text-[11px] text-text-muted">Invited by {invite.inviter.username} (@{(invite.inviter.profileName || '').replace(/^@/, '')})</p>
                                 </div>
                                 <div className="flex gap-2">
                                     <button

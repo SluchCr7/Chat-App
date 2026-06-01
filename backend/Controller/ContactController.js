@@ -12,6 +12,7 @@ const searchUsers = asyncHandler(async (req, res) => {
     }
 
     const queryStr = q.trim().toLowerCase().replace(/^@/, "");
+    const escapedQuery = queryStr.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
     // Find users we blocked or who blocked us
     const me = await User.findById(loggedUserId);
@@ -24,8 +25,8 @@ const searchUsers = asyncHandler(async (req, res) => {
     const matchingUsers = await User.find({
         _id: { $nin: excludedIds },
         $or: [
-            { profileName: { $regex: queryStr, $options: "i" } },
-            { username: { $regex: queryStr, $options: "i" } }
+            { profileName: { $regex: escapedQuery, $options: "i" } },
+            { username: { $regex: escapedQuery, $options: "i" } }
         ]
     })
     .select("username profileName profilePic status isOnline description")

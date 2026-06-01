@@ -275,7 +275,7 @@ const RightSidebar = () => {
                     />
                     <div className="flex-1 text-left">
                       <p className="text-sm font-semibold text-text-primary">{requestUser.username}</p>
-                      <p className="text-[10px] text-text-muted">@{requestUser.profileName.replace(/^@/, '')}</p>
+                      <p className="text-[10px] text-text-muted">@{(requestUser.profileName || '').replace(/^@/, '')}</p>
                     </div>
                     <span className="text-[10px] font-bold uppercase px-2.5 py-1 rounded-full bg-warning/10 text-warning border border-warning/20">Pending</span>
                   </div>

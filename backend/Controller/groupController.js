@@ -311,10 +311,13 @@ const searchGroups = asyncHandler(async (req, res) => {
     const queryStr = q.trim();
 
     const matchingGroups = await Group.find({
-        name: { $regex: queryStr, $options: "i" }
+        $or: [
+            { name: { $regex: queryStr, $options: "i" } },
+            { description: { $regex: queryStr, $options: "i" } }
+        ]
     })
     .populate("creator", "username profileName")
-    .select("name description avatar creator members isPrivate lastActivity");
+    .select("name description avatar creator members isPrivate lastActivity inviteLink");
 
     const result = matchingGroups.map(grp => {
         const isJoined = grp.members.some(m => m.user.toString() === loggedUserId.toString());
@@ -326,7 +329,8 @@ const searchGroups = asyncHandler(async (req, res) => {
             creator: grp.creator,
             membersCount: grp.members.length,
             isPrivate: grp.isPrivate,
-            isJoined
+            isJoined,
+            inviteLink: grp.inviteLink
         };
     });
 

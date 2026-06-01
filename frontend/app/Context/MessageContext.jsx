@@ -279,6 +279,19 @@ const MessageContextProvider = ({ children }) => {
         }
     };
 
+    const handleGroupRequestResponse = async (groupId, userId, action) => {
+        try {
+            const token = localStorage.getItem("userToken") || authUser?.token;
+            await axios.post(`${process.env.NEXT_PUBLIC_SOCKET_URL}/api/group/${groupId}/requests`, { action, userId }, {
+                headers: { authorization: `Bearer ${token}` }
+            });
+            toast.success(`Request ${action === "approve" ? "approved" : "rejected"} successfully`);
+            fetchSidebarData();
+        } catch (err) {
+            toast.error(err.response?.data?.message || "Failed to process join request");
+        }
+    };
+
     const handleSearchGroups = async (groupName) => {
         if (!groupName || groupName.trim() === "") {
             setGroupSearchResults([]);
@@ -837,6 +850,8 @@ const MessageContextProvider = ({ children }) => {
                 handleSaveDraft,
                 handleForwardMessage,
                 totalUnread,
+                requests,
+                handleGroupRequestResponse,
                 AddNewMessage,
                 EditMessage,
                 DeleteMessage,

@@ -200,9 +200,10 @@ const sendMessage = asyncHandler(async (req, res) => {
 
     // Link last message to Conversation if direct
     if (conv) {
-        conv.lastMessage = message._id;
-        conv.lastActivity = Date.now();
-        await conv.save();
+        await Conversation.findByIdAndUpdate(conv._id, {
+            lastMessage: message._id,
+            lastActivity: Date.now()
+        }, { new: true });
     }
 
     const populatedMessage = await Message.findById(message._id)

@@ -23,7 +23,10 @@ const searchUsers = asyncHandler(async (req, res) => {
 
     const matchingUsers = await User.find({
         _id: { $nin: excludedIds },
-        profileName: { $regex: queryStr, $options: "i" }
+        $or: [
+            { profileName: { $regex: queryStr, $options: "i" } },
+            { username: { $regex: queryStr, $options: "i" } }
+        ]
     })
     .select("username profileName profilePic status isOnline description")
     .limit(20);

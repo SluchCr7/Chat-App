@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useContext, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import SideBarSkeleton from '../Skeletons/SideBarSkeleton';
 import { FaUser, FaUsers, FaPlus, FaSearch, FaChevronRight } from "react-icons/fa";
 import Image from 'next/image';
@@ -10,10 +10,9 @@ import Logo from './Logo';
 
 const SideBar = () => {
     const { 
-        isUserLoading, 
+        isSidebarLoading,
         contacts, 
         groupChats, 
-        isGroupsLoading,
         selectedUser, 
         selectedGroup, 
         selectedChannel,
@@ -21,19 +20,42 @@ const SideBar = () => {
         setSelectedGroup,
         setSelectedChannel,
         totalUnread,
+        requests,
+        searchQuery,
+        setSearchQuery,
+        searchSuggestions,
+        isSearching,
+        groupSearchResults,
+        isGroupSearching,
+        handleSearchGroups,
+        handleAddContact,
+        handleJoinGroup,
+        handleRespondInvite,
+        handleGroupRequestResponse,
         CreateGroup
     } = useContext(MessageContext);
 
     const { authUser, onlineUsers } = useContext(AuthContext);
     
-    const [searchQuery, setSearchQuery] = useState('');
+    const [groupSearchQuery, setGroupSearchQuery] = useState('');
     const [activeTab, setActiveTab] = useState('all'); // 'all', 'direct', 'groups'
+    const [showGroupDiscovery, setShowGroupDiscovery] = useState(false);
     const [showGroupModal, setShowGroupModal] = useState(false);
     const [newGroupName, setNewGroupName] = useState('');
     const [newGroupDesc, setNewGroupDesc] = useState('');
     const [newGroupPrivate, setNewGroupPrivate] = useState(false);
 
-    if (isUserLoading || isGroupsLoading) return <SideBarSkeleton />;
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            if (groupSearchQuery.trim() !== '') {
+                handleSearchGroups(groupSearchQuery.trim());
+            }
+        }, 300);
+
+        return () => clearTimeout(timer);
+    }, [groupSearchQuery]);
+
+    if (isSidebarLoading) return <SideBarSkeleton />;
 
     const handleCreateGroupSubmit = async (e) => {
         e.preventDefault();
@@ -54,6 +76,13 @@ const SideBar = () => {
     const filteredGroups = groupChats.filter(g => 
         g.name.toLowerCase().includes(searchQuery.toLowerCase())
     );
+
+    const suggestionContacts = searchSuggestions.filter(suggestion => 
+        !contacts.some(contact => contact._id === suggestion._id)
+    );
+
+    const activeGroupRequests = requests?.joinRequests || [];
+    const incomingGroupInvites = requests?.invites || [];
 
     const renderUserItem = (user) => {
         const isSelected = selectedUser && selectedUser._id === user._id;
@@ -136,7 +165,7 @@ const SideBar = () => {
         <aside className="w-full md:w-[28%] min-h-[90vh] bg-bg-sidebar border-r border-border flex flex-col overflow-hidden transition-all duration-300">
             {/* Sidebar header */}
             <div className="p-5 border-b border-border space-y-4">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between gap-3">
                     <div className="flex items-center gap-2">
                         <Logo compact />
                         {totalUnread > 0 && (
@@ -145,13 +174,22 @@ const SideBar = () => {
                             </span>
                         )}
                     </div>
-                    <button 
-                        onClick={() => setShowGroupModal(true)}
-                        className="p-2.5 rounded-xl border border-border bg-surface hover:bg-surface-hover text-primary hover:text-primary-hover shadow-sm transition-all duration-300 flex items-center justify-center"
-                        title="Create Group"
-                    >
-                        <FaPlus className="text-xs" />
-                    </button>
+                    <div className="flex items-center gap-2">
+                        <button
+                            type="button"
+                            onClick={() => setShowGroupDiscovery(prev => !prev)}
+                            className="px-3 py-2 rounded-xl border border-border bg-surface hover:bg-surface-hover text-text-primary hover:text-primary-hover shadow-sm transition-all duration-300 text-xs font-semibold"
+                        >
+                            {showGroupDiscovery ? 'Hide discovery' : 'Discover Groups'}
+                        </button>
+                        <button 
+                            onClick={() => setShowGroupModal(true)}
+                            className="p-2.5 rounded-xl border border-border bg-surface hover:bg-surface-hover text-primary hover:text-primary-hover shadow-sm transition-all duration-300 flex items-center justify-center"
+                            title="Create Group"
+                        >
+                            <FaPlus className="text-xs" />
+                        </button>
+                    </div>
                 </div>
 
                 {/* Search Bar */}
@@ -159,7 +197,7 @@ const SideBar = () => {
                     <FaSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-text-muted text-sm" />
                     <input 
                         type="text"
-                        placeholder="Search chats, groups..."
+                        placeholder="Search contacts, profile names..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         className="w-full pl-10 pr-4 py-2.5 text-sm bg-bg-primary border border-border focus:border-primary rounded-xl focus:outline-none text-text-primary placeholder:text-text-muted transition-all duration-300 outline-none"
@@ -182,10 +220,82 @@ const SideBar = () => {
                         </button>
                     ))}
                 </div>
+
+                {searchQuery.trim() !== '' && (
+                    <div className="bg-bg-primary border border-border rounded-xl p-3">
+                        <div className="flex items-center justify-between mb-2">
+                            <span className="text-xs font-semibold uppercase tracking-widest text-text-muted">Search Suggestions</span>
+                            {isSearching && <span className="text-[10px] text-text-secondary">Searching...</span>}
+                        </div>
+                        {suggestionContacts.length > 0 ? (
+                            suggestionContacts.map((suggestion) => (
+                                <div key={suggestion._id} className="flex items-center justify-between gap-3 py-2 border-b border-border last:border-b-0">
+                                    <div className="text-left">
+                                        <p className="text-sm text-text-primary font-semibold">{suggestion.username}</p>
+                                        <p className="text-[11px] text-text-muted">@{suggestion.profileName.replace(/^@/, '')}</p>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => handleAddContact(suggestion._id)}
+                                        className="px-3 py-1.5 rounded-xl bg-primary text-text-inverse text-[11px] font-semibold transition-all duration-300"
+                                    >
+                                        Add
+                                    </button>
+                                </div>
+                            ))
+                        ) : (
+                            <p className="text-[11px] text-text-muted">No nearby profile-name matches yet. Try another keyword.</p>
+                        )}
+                    </div>
+                )}
             </div>
 
             {/* Chats Scroller */}
             <div className="flex-1 overflow-y-auto p-4 scrollbar-thin">
+                {showGroupDiscovery && (
+                    <div className="mb-6 p-4 bg-bg-primary border border-border rounded-3xl space-y-4">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <h3 className="text-sm font-semibold text-text-primary">Discover Groups</h3>
+                                <p className="text-[11px] text-text-muted">Search public and private communities. Join open groups or request access to private ones.</p>
+                            </div>
+                            {isGroupSearching && <span className="text-[10px] text-primary font-semibold">Searching…</span>}
+                        </div>
+                        <input
+                            type="text"
+                            placeholder="Search groups by name or description..."
+                            value={groupSearchQuery}
+                            onChange={(e) => setGroupSearchQuery(e.target.value)}
+                            className="w-full px-4 py-2.5 text-sm bg-bg-primary border border-border rounded-xl focus:border-primary focus:outline-none text-text-primary placeholder:text-text-muted"
+                        />
+                        {groupSearchQuery.trim() !== '' && (
+                            <div className="space-y-3">
+                                {groupSearchResults.length > 0 ? (
+                                    groupSearchResults.map(group => (
+                                        <div key={group._id} className="flex items-center justify-between gap-3 p-3 rounded-xl border border-border bg-surface">
+                                            <div>
+                                                <p className="text-sm font-semibold text-text-primary">{group.name}</p>
+                                                <p className="text-[11px] text-text-muted">{group.description || 'No description provided'}</p>
+                                                <p className="text-[10px] text-text-secondary mt-1">{group.membersCount} members • {group.isPrivate ? 'Private' : 'Open'}</p>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={() => handleJoinGroup(group.inviteLink)}
+                                                disabled={group.isJoined}
+                                                className={`px-3 py-2 rounded-xl text-text-inverse text-xs font-semibold ${group.isJoined ? 'bg-text-disabled cursor-not-allowed' : 'bg-primary hover:bg-primary-hover'}`}
+                                            >
+                                                {group.isJoined ? 'Joined' : group.isPrivate ? 'Request access' : 'Join'}
+                                            </button>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <p className="text-[11px] text-text-muted">Enter a group name to start searching.</p>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                )}
+
                 {/* DMs Section */}
                 {(activeTab === 'all' || activeTab === 'direct') && (
                     <div className="mb-6">
@@ -196,7 +306,7 @@ const SideBar = () => {
                         {filteredUsers.length > 0 ? (
                             filteredUsers.map(renderUserItem)
                         ) : (
-                            <p className="text-xs text-text-muted px-2 py-2 font-medium">No contacts found</p>
+                            <p className="text-xs text-text-muted px-2 py-2 font-medium">No contacts found in your list. Use the search field above to find users by profile name.</p>
                         )}
                     </div>
                 )}
@@ -211,8 +321,68 @@ const SideBar = () => {
                         {filteredGroups.length > 0 ? (
                             filteredGroups.map(renderGroupItem)
                         ) : (
-                            <p className="text-xs text-text-muted px-2 py-2 font-medium">No groups joined yet</p>
+                            <p className="text-xs text-text-muted px-2 py-2 font-medium">No groups joined yet — try discovering a new community above.</p>
                         )}
+                    </div>
+                )}
+
+                {(activeTab === 'all' || activeTab === 'direct') && activeGroupRequests.length > 0 && (
+                    <div className="mb-6">
+                        <div className="px-2 mb-2 flex items-center justify-between">
+                            <span className="text-[10px] uppercase font-bold tracking-widest text-text-muted">Pending Group Requests</span>
+                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-surface border border-border text-text-secondary font-bold">{activeGroupRequests.length}</span>
+                        </div>
+                        {activeGroupRequests.map((req) => (
+                            <div key={req._id} className="mb-2 p-3 rounded-xl border border-border bg-surface flex flex-col gap-3">
+                                <div className="flex items-center justify-between gap-3">
+                                    <div>
+                                        <p className="text-sm font-semibold text-text-primary">{req.group.name}</p>
+                                        <p className="text-[11px] text-text-muted">Request from {req.user.username} (@{req.user.profileName.replace(/^@/, '')})</p>
+                                    </div>
+                                </div>
+                                <div className="flex gap-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => handleGroupRequestResponse(req.group._id, req.user._id, 'approve')}
+                                        className="flex-1 px-3 py-2 rounded-xl bg-success text-white text-xs font-semibold"
+                                    >Approve</button>
+                                    <button
+                                        type="button"
+                                        onClick={() => handleGroupRequestResponse(req.group._id, req.user._id, 'reject')}
+                                        className="flex-1 px-3 py-2 rounded-xl bg-error text-white text-xs font-semibold"
+                                    >Reject</button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
+
+                {(activeTab === 'all' || activeTab === 'direct') && incomingGroupInvites.length > 0 && (
+                    <div className="mb-6">
+                        <div className="px-2 mb-2 flex items-center justify-between">
+                            <span className="text-[10px] uppercase font-bold tracking-widest text-text-muted">Incoming Group Invites</span>
+                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-surface border border-border text-text-secondary font-bold">{incomingGroupInvites.length}</span>
+                        </div>
+                        {incomingGroupInvites.map((invite) => (
+                            <div key={invite._id} className="mb-2 p-3 rounded-xl border border-border bg-surface flex flex-col gap-3">
+                                <div>
+                                    <p className="text-sm font-semibold text-text-primary">{invite.group.name}</p>
+                                    <p className="text-[11px] text-text-muted">Invited by {invite.inviter.username} (@{invite.inviter.profileName.replace(/^@/, '')})</p>
+                                </div>
+                                <div className="flex gap-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => handleRespondInvite(invite._id, 'accept')}
+                                        className="flex-1 px-3 py-2 rounded-xl bg-primary text-white text-xs font-semibold"
+                                    >Accept</button>
+                                    <button
+                                        type="button"
+                                        onClick={() => handleRespondInvite(invite._id, 'reject')}
+                                        className="flex-1 px-3 py-2 rounded-xl bg-surface border border-border text-text-primary text-xs font-semibold"
+                                    >Decline</button>
+                                </div>
+                            </div>
+                        ))}
                     </div>
                 )}
             </div>

@@ -17,7 +17,10 @@ const userSchema = new mongoose.Schema({
     },
     profileName: {
         type: String,
-        default : "@_Sluch"
+        required: true,
+        unique: true,
+        lowercase: true,
+        trim: true
     },
     profilePic: {
         type: Object,
@@ -71,6 +74,7 @@ const User = mongoose.model("User", userSchema);
 const validateUser = (user) => {
     const schema = Joi.object({
         username: Joi.string().required(),
+        profileName: Joi.string().pattern(/^@?[a-zA-Z0-9_]+$/).required(),
         email: Joi.string().email().required(),
         password: Joi.string().required(),
     });
@@ -90,7 +94,7 @@ const validateUpdate = (user) => {
         username: Joi.string().allow('', null),
         email: Joi.string().email().allow('', null),
         password: Joi.string().allow('', null),
-        profileName: Joi.string().allow('', null),
+        profileName: Joi.string().pattern(/^@?[a-zA-Z0-9_]+$/).allow('', null),
         description: Joi.string().allow('', null),
         status: Joi.string().valid("online", "offline", "away", "busy", "invisible").allow('', null),
         socialLinks: Joi.object({

@@ -35,10 +35,10 @@ const AuthContextProvider = ({ children }) => {
         }
     };
 
-    const register = async (email, password, username) => {
+    const register = async (email, password, username, profileName) => {
         setIsSigningUp(true);
         try {
-            const res = await axios.post(`${process.env.NEXT_PUBLIC_SOCKET_URL}/api/auth/register`, { email, password, username });
+            const res = await axios.post(`${process.env.NEXT_PUBLIC_SOCKET_URL}/api/auth/register`, { email, password, username, profileName });
             toast.success("Registered successfully");
             setIsSigningUp(false);
             window.location.href = "/Pages/Login";

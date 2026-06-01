@@ -11,17 +11,17 @@ import { toast } from 'react-toastify';
 import { AuthContext } from '@/app/Context/AuthContext';
 
 const Page = () => {
-  const [user, setUser] = useState({ email: '', password: '', Name: '' });
+  const [user, setUser] = useState({ email: '', password: '', username: '', profileName: '' });
   const [show, setShow] = useState(false);
   const { register } = useContext(AuthContext);
 
   const handleRegister = (e) => {
     e.preventDefault();
-    if (user.email && user.password && user.Name) {
-      register(user.email, user.password, user.Name);
+    if (user.email && user.password && user.username && user.profileName) {
+      register(user.email, user.password, user.username, user.profileName);
       return;
     }
-    toast.error('Please fill in all target fields');
+    toast.error('Please fill in all required fields');
   };
 
   return (
@@ -86,17 +86,32 @@ const Page = () => {
             </div>
 
             <div className="space-y-2">
-              <label className="text-xs font-bold text-text-secondary uppercase tracking-wider">Full Name</label>
+              <label className="text-xs font-bold text-text-secondary uppercase tracking-wider">Display Name</label>
               <div className="flex items-center gap-3 rounded-xl border border-border bg-bg-primary focus-within:border-primary px-4 py-3 transition duration-300">
                 <FaUser className="text-text-muted" />
                 <input
                   type="text"
-                  placeholder="Enter your full name"
-                  value={user.Name}
-                  onChange={(e) => setUser({ ...user, Name: e.target.value })}
+                  placeholder="Enter your display name"
+                  value={user.username}
+                  onChange={(e) => setUser({ ...user, username: e.target.value })}
                   className="w-full bg-transparent text-text-primary outline-none placeholder:text-text-muted text-sm font-medium"
                 />
               </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-text-secondary uppercase tracking-wider">Profile Name</label>
+              <div className="flex items-center gap-3 rounded-xl border border-border bg-bg-primary focus-within:border-primary px-4 py-3 transition duration-300">
+                <span className="text-text-muted">@</span>
+                <input
+                  type="text"
+                  placeholder="Choose a unique profile name"
+                  value={user.profileName}
+                  onChange={(e) => setUser({ ...user, profileName: e.target.value })}
+                  className="w-full bg-transparent text-text-primary outline-none placeholder:text-text-muted text-sm font-medium"
+                />
+              </div>
+              <p className="text-[10px] text-text-muted">Your profile name must be unique and can include letters, numbers, and underscores.</p>
             </div>
 
             <button className="w-full rounded-xl bg-primary hover:bg-primary-hover px-5 py-3 text-sm font-bold text-text-inverse shadow-md transition duration-300 active:scale-95">

@@ -13,15 +13,20 @@ const signup = asynchandler(async (req, res) => {
 
     if (error) return res.status(400).json({ message: error.details[0].message });
     
-    const user = await User.findOne({ email : req.body.email });
+    const normalizedProfileName = req.body.profileName.toLowerCase().replace(/^@/, '');
 
-    if (user) return res.status(400).json({ message: "Email already exists" });
+    const emailExists = await User.findOne({ email: req.body.email });
+    if (emailExists) return res.status(400).json({ message: "Email already exists" });
+
+    const profileNameExists = await User.findOne({ profileName: normalizedProfileName });
+    if (profileNameExists) return res.status(400).json({ message: "Profile name already exists" });
 
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(req.body.password, salt);
 
     const newUser = new User({
       username : req.body.username,
+      profileName: normalizedProfileName,
       email : req.body.email,
       password: hashedPassword,
     });
@@ -34,7 +39,6 @@ const signup = asynchandler(async (req, res) => {
         maxAge: 30 * 24 * 60 * 60 * 1000
     })
     if (newUser) {
-      // generate jwt token here
       await newUser.save();
       res.status(201).json({ ...others, token });
     }
@@ -120,7 +124,12 @@ const updateUser = asynchandler(async (req, res) => {
   const updateData = {};
   if (req.body.username) updateData.username = req.body.username;
   if (req.body.email) updateData.email = req.body.email;
-  if (req.body.profileName) updateData.profileName = req.body.profileName;
+  if (req.body.profileName) {
+    const normalizedProfileName = req.body.profileName.toLowerCase().replace(/^@/, '');
+    const profileNameExists = await User.findOne({ profileName: normalizedProfileName, _id: { $ne: req.params.id } });
+    if (profileNameExists) return res.status(400).json({ message: 'Profile name already exists' });
+    updateData.profileName = normalizedProfileName;
+  }
   if (req.body.description) updateData.description = req.body.description;
   
   if (req.body.password) {

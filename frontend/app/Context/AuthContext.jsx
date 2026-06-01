@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useCallback, useEffect, useState } from "react";
+import { createContext, useCallback, useEffect, useState, useRef } from "react";
 import { ToastContainer, toast, Slide } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import api from "../lib/axios";
@@ -15,6 +15,7 @@ const AuthContextProvider = ({ children }) => {
     const [isLoggingIn, setIsLoggingIn] = useState(false);
     const [isSigningUp, setIsSigningUp] = useState(false);
     const [socket, setSocket] = useState(null);
+    const socketRef = useRef(null);
     const [onlineUsers, setOnlineUsers] = useState([]);
     const [socketStatus, setSocketStatus] = useState("disconnected");
     const [allUsers , setAllUsers] = useState([])
@@ -105,7 +106,7 @@ const AuthContextProvider = ({ children }) => {
     };
 
     const connectSocket = useCallback((authUser) => {
-        if (!authUser || socket?.connected) return;
+        if (!authUser || socketRef.current?.connected) return;
 
         setSocketStatus("connecting");
         const token = localStorage.getItem("userToken") || authUser.token;
@@ -142,13 +143,18 @@ const AuthContextProvider = ({ children }) => {
             setOnlineUsers(userIds);
         });
 
+        socketRef.current = Newsocket;
         setSocket(Newsocket);
-    }, [socket]);
+    }, []);
 
 
-    const disconnectSocket = () => {
-        if (socket?.connected) socket.disconnect();
-    };
+    const disconnectSocket = useCallback(() => {
+        if (socketRef.current?.connected) {
+            socketRef.current.disconnect();
+            socketRef.current = null;
+        }
+        setSocket(null);
+    }, []);
 
     useEffect(() => {
         const storedUser = localStorage.getItem("userAuth");

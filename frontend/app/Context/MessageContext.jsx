@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState, useCallback } from "react";
+import { createContext, useContext, useEffect, useState, useCallback, useRef } from "react";
 import { toast } from "react-toastify";
 import axios from "axios";
 import { AuthContext } from "./AuthContext";
@@ -12,6 +12,10 @@ const MessageContextProvider = ({ children }) => {
 
     // Sidebar lists
     const [directChats, setDirectChats] = useState([]);
+    const directChatsRef = useRef([]);
+    useEffect(() => {
+        directChatsRef.current = directChats;
+    }, [directChats]);
     const [groupChats, setGroupChats] = useState([]);
     const [archivedChats, setArchivedChats] = useState([]);
     const [requests, setRequests] = useState({ invites: [], joinRequests: [] });
@@ -125,7 +129,7 @@ const MessageContextProvider = ({ children }) => {
     }, [searchQuery]);
 
     // --- 3. Mark Chat as Read & Sync Counters ---
-    const handleMarkChatAsRead = useCallback(async () => {
+    const handleMarkChatAsRead = useCallback(async (currentMessages = []) => {
         const token = localStorage.getItem("userToken") || authUser?.token;
         if (!token) return;
 
@@ -136,7 +140,7 @@ const MessageContextProvider = ({ children }) => {
             url += selectedGroup._id;
             params.type = "group";
         } else if (selectedUser) {
-            const activeDM = directChats.find(c => c.recipient?._id === selectedUser._id);
+            const activeDM = directChatsRef.current.find(c => c.recipient?._id === selectedUser._id);
             if (activeDM) {
                 url += activeDM._id;
                 params.type = "direct";
@@ -161,8 +165,8 @@ const MessageContextProvider = ({ children }) => {
 
             fetchSidebarData();
 
-            if (selectedUser && messages.length > 0 && socket) {
-                const unreadIds = messages
+            if (selectedUser && currentMessages.length > 0 && socket) {
+                const unreadIds = currentMessages
                     .filter(m => m.sender?._id === selectedUser._id && !m.isRead)
                     .map(m => m._id);
                 if (unreadIds.length > 0) {
@@ -172,7 +176,7 @@ const MessageContextProvider = ({ children }) => {
         } catch (err) {
             console.error("Mark as read error:", err);
         }
-    }, [authUser, selectedGroup, selectedUser, directChats, fetchSidebarData, messages, socket]);
+    }, [authUser, selectedGroup, selectedUser, fetchSidebarData, socket]);
 
     // --- 4. Fetch Messages with infinite scroll support ---
     const fetchConversationMessages = useCallback(async (page = 1, append = false) => {
@@ -213,7 +217,7 @@ const MessageContextProvider = ({ children }) => {
             setMessagesPage(page);
 
             if (page === 1) {
-                handleMarkChatAsRead();
+                handleMarkChatAsRead(res.data);
             }
         } catch (err) {
             console.error("Error fetching messages:", err);

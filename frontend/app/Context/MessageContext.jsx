@@ -150,7 +150,25 @@ const MessageContextProvider = ({ children }) => {
             const isForActiveChannel = selectedChannel && msg.channel === selectedChannel._id;
 
             if (isForActiveDirect || isForActiveGroup || isForActiveChannel) {
-                setMessages((prev) => [...prev, msg]);
+                setMessages((prev) => {
+                    // 1. De-duplication check: if we already have this message by server ID
+                    if (prev.some((m) => m._id === msg._id)) {
+                        return prev;
+                    }
+
+                    // 2. Race condition check: if it's sent by current user, reconcile with 'sending' optimistic message
+                    const isMyMessage = msg.sender?._id === authUser._id || msg.sender === authUser._id;
+                    if (isMyMessage) {
+                        const sendingIndex = prev.findIndex(m => m.status === 'sending' && m.text === msg.text);
+                        if (sendingIndex !== -1) {
+                            const reconciled = [...prev];
+                            reconciled[sendingIndex] = { ...msg, status: 'sent' };
+                            return reconciled;
+                        }
+                    }
+
+                    return [...prev, { ...msg, status: 'sent' }];
+                });
 
                 // Emit seen receipt if received direct message
                 if (selectedUser && msg.sender?._id === selectedUser._id) {
@@ -214,6 +232,35 @@ const MessageContextProvider = ({ children }) => {
         const token = localStorage.getItem("userToken");
         if (!token) return;
 
+        // Generate optimistic temporary ID and message structure
+        const tempId = `temp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        const tempMessage = {
+            _id: tempId,
+            sender: {
+                _id: authUser._id,
+                username: authUser.username,
+                profilePic: authUser.profilePic,
+                profileName: authUser.profileName
+            },
+            text: messageText || '',
+            Photos: images && images.length > 0 ? images.map(img => ({ url: URL.createObjectURL(img) })) : [],
+            attachments: [],
+            isRead: false,
+            status: 'sending', // 'sending' | 'sent' | 'failed'
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+        };
+
+        if (replyToId) {
+            const originalMsg = messages.find(m => m._id === replyToId);
+            if (originalMsg) {
+                tempMessage.replyTo = originalMsg;
+            }
+        }
+
+        // Optimistically add to state instantly
+        setMessages((prev) => [...prev, tempMessage]);
+
         const formData = new FormData();
         if (images && images.length > 0) {
             images.forEach((img) => formData.append('image', img));
@@ -241,38 +288,99 @@ const MessageContextProvider = ({ children }) => {
                     "Content-Type": "multipart/form-data"
                 }
             });
-            // Res contains populated message object. Added to local messages array via socket 'newMessage' broadcast
+            const savedMessage = { ...res.data, status: 'sent' };
+            
+            // Reconcile temporary message with server-saved database record
+            setMessages((prev) => 
+                prev.map((msg) => msg._id === tempId ? savedMessage : msg)
+            );
         } catch (err) {
             console.error("Error sending message:", err);
-            toast.error(err.response?.data?.message || "Failed to send message");
+            // Mark as failed to render retry indicator
+            setMessages((prev) => 
+                prev.map((msg) => msg._id === tempId ? { ...msg, status: 'failed' } : msg)
+            );
+            toast.error("Failed to send message. Tap the retry icon next to the message.");
         }
     };
 
     const EditMessage = async (messageId, newText) => {
+        let previousText = "";
+        
+        // Optimistic UI Update
+        setMessages((prev) => 
+            prev.map((msg) => {
+                if (msg._id === messageId) {
+                    previousText = msg.text;
+                    return { ...msg, text: newText, isEdited: true };
+                }
+                return msg;
+            })
+        );
+
         try {
             const token = localStorage.getItem("userToken");
             await axios.put(`${process.env.NEXT_PUBLIC_SOCKET_URL}/api/message/edit/${messageId}`, { text: newText }, {
                 headers: { authorization: `Bearer ${token}` }
             });
-            toast.success("Message edited");
         } catch (err) {
             console.error("Error editing message:", err);
+            toast.error("Failed to edit message. Reverting changes.");
+            // Rollback on failure
+            setMessages((prev) => 
+                prev.map((msg) => msg._id === messageId ? { ...msg, text: previousText } : msg)
+            );
         }
     };
 
     const DeleteMessage = async (messageId) => {
+        let deletedMsg = null;
+        
+        // Optimistic UI Update
+        setMessages((prev) => {
+            deletedMsg = prev.find(m => m._id === messageId);
+            return prev.filter((msg) => msg._id !== messageId);
+        });
+
         try {
             const token = localStorage.getItem("userToken");
             await axios.delete(`${process.env.NEXT_PUBLIC_SOCKET_URL}/api/message/delete/${messageId}`, {
                 headers: { authorization: `Bearer ${token}` }
             });
-            toast.success("Message deleted");
         } catch (err) {
             console.error("Error deleting message:", err);
+            toast.error("Failed to delete message. Restoring.");
+            // Rollback (Restore) on failure in original sort order
+            if (deletedMsg) {
+                setMessages((prev) => 
+                    [...prev, deletedMsg].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
+                );
+            }
         }
     };
 
     const SendReaction = async (messageId, emoji) => {
+        let previousReactions = [];
+        
+        // Optimistic UI Update
+        setMessages((prev) =>
+            prev.map((msg) => {
+                if (msg._id === messageId) {
+                    previousReactions = msg.reactions || [];
+                    const hasReacted = previousReactions.some(r => r.user?._id === authUser?._id && r.emoji === emoji);
+                    let newReactions;
+                    if (hasReacted) {
+                        newReactions = previousReactions.filter(r => r.user?._id !== authUser?._id);
+                    } else {
+                        newReactions = previousReactions.filter(r => r.user?._id !== authUser?._id);
+                        newReactions.push({ user: { _id: authUser._id, username: authUser.username, profilePic: authUser.profilePic }, emoji });
+                    }
+                    return { ...msg, reactions: newReactions };
+                }
+                return msg;
+            })
+        );
+
         try {
             const token = localStorage.getItem("userToken");
             await axios.post(`${process.env.NEXT_PUBLIC_SOCKET_URL}/api/message/react/${messageId}`, { emoji }, {
@@ -280,6 +388,57 @@ const MessageContextProvider = ({ children }) => {
             });
         } catch (err) {
             console.error("Error sending reaction:", err);
+            // Rollback on failure
+            setMessages((prev) =>
+                prev.map((msg) => msg._id === messageId ? { ...msg, reactions: previousReactions } : msg)
+            );
+        }
+    };
+
+    const RetryMessage = async (failedMessage) => {
+        setMessages((prev) => 
+            prev.map((msg) => msg._id === failedMessage._id ? { ...msg, status: 'sending' } : msg)
+        );
+
+        const token = localStorage.getItem("userToken");
+        if (!token) return;
+
+        let url = `${process.env.NEXT_PUBLIC_SOCKET_URL}/api/message/send/`;
+        let typeParam = "";
+
+        if (selectedChannel) {
+            url += selectedChannel._id;
+            typeParam = "?type=channel";
+        } else if (selectedGroup) {
+            url += selectedGroup._id;
+            typeParam = "?type=group";
+        } else if (selectedUser) {
+            url += selectedUser._id;
+        }
+
+        try {
+            const formData = new FormData();
+            formData.append('text', failedMessage.text || '');
+            if (failedMessage.replyTo) {
+                formData.append('replyTo', failedMessage.replyTo._id);
+            }
+            
+            const res = await axios.post(url + typeParam, formData, {
+                headers: {
+                    authorization: `Bearer ${token}`,
+                    "Content-Type": "multipart/form-data"
+                }
+            });
+            const savedMessage = { ...res.data, status: 'sent' };
+            setMessages((prev) => 
+                prev.map((msg) => msg._id === failedMessage._id ? savedMessage : msg)
+            );
+        } catch (err) {
+            console.error("Retry failed:", err);
+            setMessages((prev) => 
+                prev.map((msg) => msg._id === failedMessage._id ? { ...msg, status: 'failed' } : msg)
+            );
+            toast.error("Failed to resend message.");
         }
     };
 
@@ -370,6 +529,7 @@ const MessageContextProvider = ({ children }) => {
                 EditMessage,
                 DeleteMessage,
                 SendReaction,
+                RetryMessage,
                 TogglePin,
                 ToggleStar,
                 CreateGroup,

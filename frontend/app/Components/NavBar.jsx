@@ -10,11 +10,35 @@ import NotificationComponent from './NotificationComponent';
 import Logo from './Logo'
 
 const NavBar = ({showMenu, setShowMenu, showNotification, setShowNotification}) => {
-  const {authUser, logout} = useContext(AuthContext)
+  const {authUser, logout, socketStatus} = useContext(AuthContext)
   return (
     <nav className="flex items-center justify-between w-full py-4 px-8 border-b border-border bg-bg-navbar shadow-sm transition-all duration-300">
       <div className="flex items-center gap-1">
         <Logo compact />
+        {authUser && (
+          <div className="ml-3 flex items-center gap-2 px-3 py-1 rounded-full border border-border bg-surface/50 text-xs font-semibold shadow-inner transition-all duration-300">
+            <span className={`w-2 h-2 rounded-full transition-all duration-300 ${
+              socketStatus === "connected" 
+                ? "bg-emerald-500 shadow-[0_0_8px_#10b981]" 
+                : socketStatus === "connecting" 
+                  ? "bg-amber-500 animate-pulse shadow-[0_0_8px_#f59e0b]" 
+                  : "bg-rose-500 shadow-[0_0_8px_#ef4444]"
+            }`} />
+            <span className={`text-[10px] font-bold uppercase tracking-wider transition-all duration-300 ${
+              socketStatus === "connected" 
+                ? "text-emerald-500" 
+                : socketStatus === "connecting" 
+                  ? "text-amber-500 animate-pulse" 
+                  : "text-rose-500 animate-bounce"
+            }`}>
+              {socketStatus === "connected" 
+                ? "Online" 
+                : socketStatus === "connecting" 
+                  ? "Connecting" 
+                  : "Offline"}
+            </span>
+          </div>
+        )}
       </div>
       <div className="flex items-center gap-3.5 relative">
         {authUser?.isAdmin && (

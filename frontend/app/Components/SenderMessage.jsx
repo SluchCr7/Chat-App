@@ -6,7 +6,7 @@ import { FaEdit, FaTrashAlt, FaStar, FaThumbtack, FaRegSmile, FaCheck, FaCheckDo
 import { MessageContext } from '../Context/MessageContext';
 
 const SenderMessage = ({ message, user }) => {
-  const { EditMessage, DeleteMessage, SendReaction, TogglePin, ToggleStar } = useContext(MessageContext);
+  const { EditMessage, DeleteMessage, SendReaction, TogglePin, ToggleStar, RetryMessage } = useContext(MessageContext);
   const [showReactions, setShowReactions] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editVal, setEditVal] = useState(message.text);
@@ -107,7 +107,7 @@ const SenderMessage = ({ message, user }) => {
           )}
 
           {/* Main message bubble content */}
-          <div className="bg-primary text-text-inverse px-4 py-3 rounded-2xl rounded-br-none shadow-md text-left">
+          <div className={`bg-primary text-text-inverse px-4 py-3 rounded-2xl rounded-br-none shadow-md text-left transition-all duration-300 ${message.status === 'sending' ? 'opacity-75 animate-pulse' : message.status === 'failed' ? 'border border-rose-500 bg-rose-500/10 text-rose-200' : ''}`}>
             {/* If contains Photo attachments */}
             {Array.isArray(message.Photos) && message.Photos.length > 0 && (
               <div className="flex flex-wrap gap-2 mb-2 justify-end">
@@ -202,7 +202,17 @@ const SenderMessage = ({ message, user }) => {
             <span className="text-[10px] text-text-muted font-bold">
               {new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
             </span>
-            {message.isRead ? (
+            {message.status === 'sending' ? (
+              <span className="w-2.5 h-2.5 border-2 border-white/20 border-t-white rounded-full animate-spin inline-block" title="Sending..." />
+            ) : message.status === 'failed' ? (
+              <button 
+                onClick={() => RetryMessage(message)} 
+                className="text-[10px] text-rose-500 font-extrabold hover:text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded border border-rose-500 animate-pulse transition"
+                title="Tap to resend"
+              >
+                Retry
+              </button>
+            ) : message.isRead ? (
               <FaCheckDouble className="text-[10px] text-sky-400" title="Seen" />
             ) : (
               <FaCheck className="text-[10px] text-text-muted" title="Delivered" />

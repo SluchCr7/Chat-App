@@ -16,6 +16,7 @@ const AuthContextProvider = ({ children }) => {
     const [isSigningUp, setIsSigningUp] = useState(false);
     const [socket, setSocket] = useState(null);
     const [onlineUsers, setOnlineUsers] = useState([]);
+    const [socketStatus, setSocketStatus] = useState("disconnected");
     const [allUsers , setAllUsers] = useState([])
     const login = async (email, password) => {
         setIsLoggingIn(true);
@@ -106,14 +107,35 @@ const AuthContextProvider = ({ children }) => {
     const connectSocket = (authUser) => {
         if (!authUser || socket?.connected) return;
 
+        setSocketStatus("connecting");
+        const token = localStorage.getItem("userToken") || authUser.token;
+
         const Newsocket = io(`${process.env.NEXT_PUBLIC_SOCKET_URL}`, {
+            auth: {
+                token
+            },
             query: {
                 userId: authUser._id,
             },
         });
 
         Newsocket.on("connect", () => {
-            console.log("Socket connected");
+            console.log("Socket connected successfully");
+            setSocketStatus("connected");
+        });
+
+        Newsocket.on("disconnect", (reason) => {
+            console.log("Socket disconnected:", reason);
+            setSocketStatus("disconnected");
+        });
+
+        Newsocket.on("connect_error", (error) => {
+            console.error("Socket connection error:", error);
+            setSocketStatus("disconnected");
+        });
+
+        Newsocket.on("reconnect_attempt", () => {
+            setSocketStatus("connecting");
         });
 
         Newsocket.on("getOnlineUsers", (userIds) => {
@@ -228,6 +250,7 @@ const AuthContextProvider = ({ children }) => {
                     handleUpdateProfile,
                     allUsers,
                     socket,
+                    socketStatus,
                     updatePresenceStatus
                 }}
             >

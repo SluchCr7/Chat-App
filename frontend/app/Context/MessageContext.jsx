@@ -1,8 +1,7 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState } from "react";
-import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { toast } from "react-toastify";
 import axios from "axios";
 import { AuthContext } from "./AuthContext";
 
@@ -10,114 +9,397 @@ export const MessageContext = createContext();
 
 const MessageContextProvider = ({ children }) => {
     const { authUser, socket } = useContext(AuthContext);
-    const [users, setUsers] = useState([]);
-    const [isUserLoading, setIsUserLoading] = useState(true);
+
+    // Sidebar lists
+    const [directChats, setDirectChats] = useState([]);
+    const [groupChats, setGroupChats] = useState([]);
+    const [archivedChats, setArchivedChats] = useState([]);
+    const [requests, setRequests] = useState({ invites: [], joinRequests: [] });
+    const [isSidebarLoading, setIsSidebarLoading] = useState(true);
+
+    // Contacts list
+    const [contacts, setContacts] = useState([]);
+
+    // Selection state
     const [selectedUser, setSelectedUser] = useState(null);
     const [selectedGroup, setSelectedGroup] = useState(null);
     const [selectedChannel, setSelectedChannel] = useState(null);
-    
+
+    // Message loading state
     const [messages, setMessages] = useState([]);
     const [isMessagesLoading, setIsMessagesLoading] = useState(false);
-    
-    const [groups, setGroups] = useState([]);
-    const [isGroupsLoading, setIsGroupsLoading] = useState(true);
-    const [starredMessages, setStarredMessages] = useState([]);
+    const [messagesPage, setMessagesPage] = useState(1);
+    const [hasMoreMessages, setHasMoreMessages] = useState(true);
+
+    // Typing presence
     const [typingUsers, setTypingUsers] = useState({}); // { userId: { senderName, isTyping } }
     const [showRightSidebar, setShowRightSidebar] = useState(false);
 
-    // --- 1. Fetch Users for Sidebar ---
-    const fetchUsers = async () => {
+    // Global search and suggestions
+    const [searchQuery, setSearchQuery] = useState("");
+    const [searchSuggestions, setSearchSuggestions] = useState([]);
+    const [isSearching, setIsSearching] = useState(false);
+
+    // Group global search results
+    const [groupSearchResults, setGroupSearchResults] = useState([]);
+    const [isGroupSearching, setIsGroupSearching] = useState(false);
+
+    // Reply tracking state
+    const [replyMessage, setReplyMessage] = useState(null);
+
+    // Global unread counter
+    const [totalUnread, setTotalUnread] = useState(0);
+
+    // --- 1. Fetch Conversations, Groups, Requests & Contacts ---
+    const fetchSidebarData = async () => {
         try {
-            const token = localStorage.getItem("userToken");
+            const token = localStorage.getItem("userToken") || authUser?.token;
             if (!token) return;
 
-            const res = await axios.get(`${process.env.NEXT_PUBLIC_SOCKET_URL}/api/message/users`, {
+            const res = await axios.get(`${process.env.NEXT_PUBLIC_SOCKET_URL}/api/conversations`, {
                 headers: { authorization: `Bearer ${token}` }
             });
-            setUsers(res.data);
+
+            setDirectChats(res.data.direct || []);
+            setGroupChats(res.data.groups || []);
+            setArchivedChats(res.data.archived || []);
+            setRequests(res.data.requests || { invites: [], joinRequests: [] });
+
+            // Compute global unread total
+            const directUnread = (res.data.direct || []).reduce((acc, curr) => acc + (curr.unreadCount || 0), 0);
+            const groupUnread = (res.data.groups || []).reduce((acc, curr) => acc + (curr.unreadCount || 0), 0);
+            setTotalUnread(directUnread + groupUnread);
         } catch (err) {
-            console.error("Error fetching users:", err);
+            console.error("Error fetching sidebar data:", err);
         } finally {
-            setIsUserLoading(false);
+            setIsSidebarLoading(false);
         }
     };
 
-    // --- 2. Fetch Groups for Sidebar ---
-    const fetchGroups = async () => {
+    const fetchContacts = async () => {
         try {
-            const token = localStorage.getItem("userToken");
+            const token = localStorage.getItem("userToken") || authUser?.token;
             if (!token) return;
 
-            const res = await axios.get(`${process.env.NEXT_PUBLIC_SOCKET_URL}/api/group`, {
+            const res = await axios.get(`${process.env.NEXT_PUBLIC_SOCKET_URL}/api/contacts`, {
                 headers: { authorization: `Bearer ${token}` }
             });
-            setGroups(res.data);
+            setContacts(res.data || []);
         } catch (err) {
-            console.error("Error fetching groups:", err);
-        } finally {
-            setIsGroupsLoading(false);
+            console.error("Error fetching contacts:", err);
         }
     };
 
     useEffect(() => {
         if (authUser) {
-            fetchUsers();
-            fetchGroups();
+            fetchSidebarData();
+            fetchContacts();
         }
     }, [authUser]);
 
-    // --- 3. Fetch Messages (Triggered only when selection changes!) ---
+    // --- 2. Global User search suggestions (debounced API lookup) ---
     useEffect(() => {
-        const fetchConversationMessages = async () => {
-            setIsMessagesLoading(true);
+        if (!searchQuery || searchQuery.trim() === "") {
+            setSearchSuggestions([]);
+            return;
+        }
+
+        const delayDebounceFn = setTimeout(async () => {
+            setIsSearching(true);
             try {
-                const token = localStorage.getItem("userToken");
-                if (!token) return;
-
-                let url = `${process.env.NEXT_PUBLIC_SOCKET_URL}/api/message/`;
-                let params = {};
-
-                if (selectedChannel) {
-                    url += selectedChannel._id;
-                    params.type = "channel";
-                } else if (selectedGroup) {
-                    url += selectedGroup._id;
-                    params.type = "group";
-                } else if (selectedUser) {
-                    url += selectedUser._id;
-                } else {
-                    setMessages([]);
-                    setIsMessagesLoading(false);
-                    return;
-                }
-
-                const res = await axios.get(url, {
-                    headers: { authorization: `Bearer ${token}` },
-                    params
+                const token = localStorage.getItem("userToken") || authUser?.token;
+                const res = await axios.get(`${process.env.NEXT_PUBLIC_SOCKET_URL}/api/contacts/search?q=${searchQuery}`, {
+                    headers: { authorization: `Bearer ${token}` }
                 });
-
-                setMessages(res.data);
-
-                // If opening a direct chat from someone else, trigger seen receipt
-                if (selectedUser && res.data.length > 0) {
-                    const unreadIds = res.data
-                        .filter(m => m.sender?._id === selectedUser._id && !m.isRead)
-                        .map(m => m._id);
-                    if (unreadIds.length > 0 && socket) {
-                        socket.emit("markAsSeen", { messageIds: unreadIds, senderId: selectedUser._id });
-                    }
-                }
+                setSearchSuggestions(res.data || []);
             } catch (err) {
-                console.error("Error fetching messages:", err);
+                console.error("Suggestions error:", err);
             } finally {
-                setIsMessagesLoading(false);
+                setIsSearching(false);
             }
-        };
+        }, 300); // 300ms debounce
 
-        fetchConversationMessages();
-    }, [selectedUser, selectedGroup, selectedChannel, socket]);
+        return () => clearTimeout(delayDebounceFn);
+    }, [searchQuery]);
 
-    // --- 4. Room Subscription Management ---
+    // --- 3. Fetch Messages with infinite scroll support ---
+    const fetchConversationMessages = async (page = 1, append = false) => {
+        if (page === 1) setIsMessagesLoading(true);
+        try {
+            const token = localStorage.getItem("userToken") || authUser?.token;
+            if (!token) return;
+
+            let url = `${process.env.NEXT_PUBLIC_SOCKET_URL}/api/message/`;
+            let params = { page, limit: 30 };
+
+            if (selectedChannel) {
+                url += selectedChannel._id;
+                params.type = "channel";
+            } else if (selectedGroup) {
+                url += selectedGroup._id;
+                params.type = "group";
+            } else if (selectedUser) {
+                url += selectedUser._id;
+                params.type = "direct";
+            } else {
+                setMessages([]);
+                return;
+            }
+
+            const res = await axios.get(url, {
+                headers: { authorization: `Bearer ${token}` },
+                params
+            });
+
+            if (append) {
+                setMessages(prev => [...res.data, ...prev]);
+            } else {
+                setMessages(res.data || []);
+            }
+
+            setHasMoreMessages(res.data.length === 30);
+            setMessagesPage(page);
+
+            // Mark as read immediately when chat is loaded
+            if (page === 1) {
+                handleMarkChatAsRead();
+            }
+        } catch (err) {
+            console.error("Error fetching messages:", err);
+        } finally {
+            if (page === 1) setIsMessagesLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchConversationMessages(1, false);
+    }, [selectedUser, selectedGroup, selectedChannel]);
+
+    // Load next page of messages (Infinite Scroll)
+    const loadMoreMessages = () => {
+        if (!isMessagesLoading && hasMoreMessages) {
+            fetchConversationMessages(messagesPage + 1, true);
+        }
+    };
+
+    // --- 4. Mark Chat as Read & Sync Counters ---
+    const handleMarkChatAsRead = async () => {
+        const token = localStorage.getItem("userToken") || authUser?.token;
+        if (!token) return;
+
+        let url = `${process.env.NEXT_PUBLIC_SOCKET_URL}/api/conversations/read/`;
+        let params = {};
+
+        if (selectedGroup) {
+            url += selectedGroup._id;
+            params.type = "group";
+        } else if (selectedUser) {
+            // Find active conversation matching selectedUser
+            const activeDM = directChats.find(c => c.recipient?._id === selectedUser._id);
+            if (activeDM) {
+                url += activeDM._id;
+                params.type = "direct";
+            } else {
+                return; // No active conversation created yet
+            }
+        } else {
+            return;
+        }
+
+        try {
+            await axios.post(url, {}, {
+                headers: { authorization: `Bearer ${token}` },
+                params
+            });
+
+            // Update local unread counter states
+            if (selectedGroup) {
+                setGroupChats(prev => prev.map(g => g._id === selectedGroup._id ? { ...g, unreadCount: 0 } : g));
+            } else if (selectedUser) {
+                setDirectChats(prev => prev.map(d => d.recipient?._id === selectedUser._id ? { ...d, unreadCount: 0 } : d));
+            }
+
+            // Sync global unread count
+            fetchSidebarData();
+
+            // Emit read seen receipt via Socket.IO
+            if (selectedUser && messages.length > 0 && socket) {
+                const unreadIds = messages
+                    .filter(m => m.sender?._id === selectedUser._id && !m.isRead)
+                    .map(m => m._id);
+                if (unreadIds.length > 0) {
+                    socket.emit("markAsSeen", { messageIds: unreadIds, senderId: selectedUser._id });
+                }
+            }
+        } catch (err) {
+            console.error("Mark as read error:", err);
+        }
+    };
+
+    // --- 5. Add Contact (+ Button) ---
+    const handleAddContact = async (contactId) => {
+        try {
+            const token = localStorage.getItem("userToken") || authUser?.token;
+            const res = await axios.post(`${process.env.NEXT_PUBLIC_SOCKET_URL}/api/contacts`, { contactId }, {
+                headers: { authorization: `Bearer ${token}` }
+            });
+            toast.success("Contact added successfully");
+            fetchContacts();
+            fetchSidebarData();
+            setSearchQuery(""); // Clear search
+            return res.data.contact;
+        } catch (err) {
+            toast.error(err.response?.data?.message || "Failed to add contact");
+        }
+    };
+
+    // --- 6. Group Invitations & Responses ---
+    const handleInviteUser = async (groupId, inviteeId) => {
+        try {
+            const token = localStorage.getItem("userToken") || authUser?.token;
+            await axios.post(`${process.env.NEXT_PUBLIC_SOCKET_URL}/api/group/invite`, { groupId, inviteeId }, {
+                headers: { authorization: `Bearer ${token}` }
+            });
+            toast.success("Invitation sent successfully");
+        } catch (err) {
+            toast.error(err.response?.data?.message || "Failed to invite user");
+        }
+    };
+
+    const handleRespondInvite = async (inviteId, action) => {
+        try {
+            const token = localStorage.getItem("userToken") || authUser?.token;
+            await axios.post(`${process.env.NEXT_PUBLIC_SOCKET_URL}/api/group/invites/${inviteId}/respond`, { action }, {
+                headers: { authorization: `Bearer ${token}` }
+            });
+            toast.success(`Invitation ${action === "accept" ? "accepted" : "rejected"} successfully`);
+            fetchSidebarData();
+        } catch (err) {
+            toast.error(err.response?.data?.message || "Failed to respond to invite");
+        }
+    };
+
+    const handleSearchGroups = async (groupName) => {
+        if (!groupName || groupName.trim() === "") {
+            setGroupSearchResults([]);
+            return;
+        }
+        setIsGroupSearching(true);
+        try {
+            const token = localStorage.getItem("userToken") || authUser?.token;
+            const res = await axios.get(`${process.env.NEXT_PUBLIC_SOCKET_URL}/api/group/search?q=${groupName}`, {
+                headers: { authorization: `Bearer ${token}` }
+            });
+            setGroupSearchResults(res.data || []);
+        } catch (err) {
+            console.error("Group search error:", err);
+        } finally {
+            setIsGroupSearching(false);
+        }
+    };
+
+    const handleJoinGroup = async (inviteLink) => {
+        try {
+            const token = localStorage.getItem("userToken") || authUser?.token;
+            const res = await axios.post(`${process.env.NEXT_PUBLIC_SOCKET_URL}/api/group/invite/${inviteLink}`, {}, {
+                headers: { authorization: `Bearer ${token}` }
+            });
+            if (res.data.status === "joined") {
+                toast.success("Joined group successfully");
+            } else {
+                toast.success("Join request submitted successfully");
+            }
+            fetchSidebarData();
+        } catch (err) {
+            toast.error(err.response?.data?.message || "Failed to join group");
+        }
+    };
+
+    // --- 7. Pin, Archive, Mute, Favorite Chat Actions ---
+    const handleTogglePin = async (id, type) => {
+        try {
+            const token = localStorage.getItem("userToken") || authUser?.token;
+            const res = await axios.put(`${process.env.NEXT_PUBLIC_SOCKET_URL}/api/conversations/pin/${id}?type=${type}`, {}, {
+                headers: { authorization: `Bearer ${token}` }
+            });
+            toast.success(res.data.pinned ? "Chat pinned" : "Chat unpinned");
+            fetchSidebarData();
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    const handleToggleArchive = async (id, type) => {
+        try {
+            const token = localStorage.getItem("userToken") || authUser?.token;
+            const res = await axios.put(`${process.env.NEXT_PUBLIC_SOCKET_URL}/api/conversations/archive/${id}?type=${type}`, {}, {
+                headers: { authorization: `Bearer ${token}` }
+            });
+            toast.success(res.data.archived ? "Chat archived" : "Chat unarchived");
+            fetchSidebarData();
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    const handleToggleMute = async (id, type) => {
+        try {
+            const token = localStorage.getItem("userToken") || authUser?.token;
+            const res = await axios.put(`${process.env.NEXT_PUBLIC_SOCKET_URL}/api/conversations/mute/${id}?type=${type}`, {}, {
+                headers: { authorization: `Bearer ${token}` }
+            });
+            toast.success(res.data.muted ? "Notifications muted" : "Notifications unmuted");
+            fetchSidebarData();
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    const handleToggleFavorite = async (id, type) => {
+        try {
+            const token = localStorage.getItem("userToken") || authUser?.token;
+            const res = await axios.put(`${process.env.NEXT_PUBLIC_SOCKET_URL}/api/conversations/favorite/${id}?type=${type}`, {}, {
+                headers: { authorization: `Bearer ${token}` }
+            });
+            toast.success(res.data.favorite ? "Added to favorites" : "Removed from favorites");
+            fetchSidebarData();
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    const handleSaveDraft = async (id, type, text) => {
+        try {
+            const token = localStorage.getItem("userToken") || authUser?.token;
+            await axios.put(`${process.env.NEXT_PUBLIC_SOCKET_URL}/api/conversations/draft/${id}?type=${type}`, { text }, {
+                headers: { authorization: `Bearer ${token}` }
+            });
+            // Update sidebar drafts locally
+            if (type === "group") {
+                setGroupChats(prev => prev.map(g => g._id === id ? { ...g, draft: text } : g));
+            } else {
+                setDirectChats(prev => prev.map(d => d._id === id ? { ...d, draft: text } : d));
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    // --- 8. Forward Messages ---
+    const handleForwardMessage = async (messageId, targetIds) => {
+        try {
+            const token = localStorage.getItem("userToken") || authUser?.token;
+            await axios.post(`${process.env.NEXT_PUBLIC_SOCKET_URL}/api/message/forward`, { messageId, targetIds }, {
+                headers: { authorization: `Bearer ${token}` }
+            });
+            toast.success("Message forwarded successfully");
+            fetchSidebarData();
+        } catch (err) {
+            toast.error(err.response?.data?.message || "Failed to forward message");
+        }
+    };
+
+    // --- 9. Sockets Subscription Management ---
     useEffect(() => {
         if (!socket) return;
 
@@ -139,7 +421,7 @@ const MessageContextProvider = ({ children }) => {
         };
     }, [selectedGroup, selectedChannel, socket]);
 
-    // --- 5. Event-Driven Socket.io Listeners ---
+    // --- 10. Event-Driven Socket.IO Listeners ---
     useEffect(() => {
         if (!socket) return;
 
@@ -151,12 +433,11 @@ const MessageContextProvider = ({ children }) => {
 
             if (isForActiveDirect || isForActiveGroup || isForActiveChannel) {
                 setMessages((prev) => {
-                    // 1. De-duplication check: if we already have this message by server ID
                     if (prev.some((m) => m._id === msg._id)) {
                         return prev;
                     }
 
-                    // 2. Race condition check: if it's sent by current user, reconcile with 'sending' optimistic message
+                    // Optimistic update reconciliation
                     const isMyMessage = msg.sender?._id === authUser._id || msg.sender === authUser._id;
                     if (isMyMessage) {
                         const sendingIndex = prev.findIndex(m => m.status === 'sending' && m.text === msg.text);
@@ -170,13 +451,13 @@ const MessageContextProvider = ({ children }) => {
                     return [...prev, { ...msg, status: 'sent' }];
                 });
 
-                // Emit seen receipt if received direct message
+                // Clear unreads and emit read status instantly
                 if (selectedUser && msg.sender?._id === selectedUser._id) {
                     socket.emit("markAsSeen", { messageIds: [msg._id], senderId: selectedUser._id });
                 }
             } else {
-                // Background notification badge trigger
-                toast.info(`New message from ${msg.sender?.username || 'user'}`);
+                // Background alert & sidebar count increments
+                fetchSidebarData();
             }
         };
 
@@ -212,11 +493,33 @@ const MessageContextProvider = ({ children }) => {
             );
         };
 
+        const handleConversationCreated = (conv) => {
+            fetchSidebarData();
+        };
+
+        const handleConversationUpdated = (update) => {
+            fetchSidebarData();
+        };
+
+        const handleInviteReceived = (invite) => {
+            fetchSidebarData();
+            toast.info(`Invited to group: ${invite.group?.name}`);
+        };
+
+        const handleGroupJoined = (grp) => {
+            fetchSidebarData();
+            toast.success(`Joined group: ${grp.name}`);
+        };
+
         socket.on("newMessage", handleNewMessage);
         socket.on("messageUpdated", handleMessageUpdated);
         socket.on("messageDeleted", handleMessageDeleted);
         socket.on("typingStatus", handleTypingStatus);
         socket.on("messagesSeen", handleMessagesSeen);
+        socket.on("conversation:created", handleConversationCreated);
+        socket.on("conversation:updated", handleConversationUpdated);
+        socket.on("group:invite_received", handleInviteReceived);
+        socket.on("group:joined", handleGroupJoined);
 
         return () => {
             socket.off("newMessage", handleNewMessage);
@@ -224,15 +527,18 @@ const MessageContextProvider = ({ children }) => {
             socket.off("messageDeleted", handleMessageDeleted);
             socket.off("typingStatus", handleTypingStatus);
             socket.off("messagesSeen", handleMessagesSeen);
+            socket.off("conversation:created", handleConversationCreated);
+            socket.off("conversation:updated", handleConversationUpdated);
+            socket.off("group:invite_received", handleInviteReceived);
+            socket.off("group:joined", handleGroupJoined);
         };
-    }, [selectedUser, selectedGroup, selectedChannel, socket, authUser]);
+    }, [selectedUser, selectedGroup, selectedChannel, socket, authUser, directChats]);
 
-    // --- 6. Send, Edit, Delete, Reactions API wrappers ---
+    // --- 11. Core messaging APIs (Optimistic updates & Rollbacks) ---
     const AddNewMessage = async (messageText, images, replyToId = null) => {
-        const token = localStorage.getItem("userToken");
+        const token = localStorage.getItem("userToken") || authUser?.token;
         if (!token) return;
 
-        // Generate optimistic temporary ID and message structure
         const tempId = `temp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
         const tempMessage = {
             _id: tempId,
@@ -246,19 +552,16 @@ const MessageContextProvider = ({ children }) => {
             Photos: images && images.length > 0 ? images.map(img => ({ url: URL.createObjectURL(img) })) : [],
             attachments: [],
             isRead: false,
-            status: 'sending', // 'sending' | 'sent' | 'failed'
+            status: 'sending',
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString()
         };
 
         if (replyToId) {
             const originalMsg = messages.find(m => m._id === replyToId);
-            if (originalMsg) {
-                tempMessage.replyTo = originalMsg;
-            }
+            if (originalMsg) tempMessage.replyTo = originalMsg;
         }
 
-        // Optimistically add to state instantly
         setMessages((prev) => [...prev, tempMessage]);
 
         const formData = new FormData();
@@ -279,6 +582,7 @@ const MessageContextProvider = ({ children }) => {
             typeParam = "?type=group";
         } else if (selectedUser) {
             url += selectedUser._id;
+            typeParam = "?type=direct";
         }
 
         try {
@@ -289,25 +593,21 @@ const MessageContextProvider = ({ children }) => {
                 }
             });
             const savedMessage = { ...res.data, status: 'sent' };
-            
-            // Reconcile temporary message with server-saved database record
             setMessages((prev) => 
                 prev.map((msg) => msg._id === tempId ? savedMessage : msg)
             );
+            fetchSidebarData();
         } catch (err) {
             console.error("Error sending message:", err);
-            // Mark as failed to render retry indicator
             setMessages((prev) => 
                 prev.map((msg) => msg._id === tempId ? { ...msg, status: 'failed' } : msg)
             );
-            toast.error("Failed to send message. Tap the retry icon next to the message.");
+            toast.error(err.response?.data?.message || "Failed to send message. Tap the retry icon next to the message.");
         }
     };
 
     const EditMessage = async (messageId, newText) => {
         let previousText = "";
-        
-        // Optimistic UI Update
         setMessages((prev) => 
             prev.map((msg) => {
                 if (msg._id === messageId) {
@@ -319,14 +619,13 @@ const MessageContextProvider = ({ children }) => {
         );
 
         try {
-            const token = localStorage.getItem("userToken");
+            const token = localStorage.getItem("userToken") || authUser?.token;
             await axios.put(`${process.env.NEXT_PUBLIC_SOCKET_URL}/api/message/edit/${messageId}`, { text: newText }, {
                 headers: { authorization: `Bearer ${token}` }
             });
         } catch (err) {
             console.error("Error editing message:", err);
-            toast.error("Failed to edit message. Reverting changes.");
-            // Rollback on failure
+            toast.error("Failed to edit message. Reverting.");
             setMessages((prev) => 
                 prev.map((msg) => msg._id === messageId ? { ...msg, text: previousText } : msg)
             );
@@ -335,22 +634,19 @@ const MessageContextProvider = ({ children }) => {
 
     const DeleteMessage = async (messageId) => {
         let deletedMsg = null;
-        
-        // Optimistic UI Update
         setMessages((prev) => {
             deletedMsg = prev.find(m => m._id === messageId);
             return prev.filter((msg) => msg._id !== messageId);
         });
 
         try {
-            const token = localStorage.getItem("userToken");
+            const token = localStorage.getItem("userToken") || authUser?.token;
             await axios.delete(`${process.env.NEXT_PUBLIC_SOCKET_URL}/api/message/delete/${messageId}`, {
                 headers: { authorization: `Bearer ${token}` }
             });
         } catch (err) {
             console.error("Error deleting message:", err);
             toast.error("Failed to delete message. Restoring.");
-            // Rollback (Restore) on failure in original sort order
             if (deletedMsg) {
                 setMessages((prev) => 
                     [...prev, deletedMsg].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
@@ -361,18 +657,13 @@ const MessageContextProvider = ({ children }) => {
 
     const SendReaction = async (messageId, emoji) => {
         let previousReactions = [];
-        
-        // Optimistic UI Update
         setMessages((prev) =>
             prev.map((msg) => {
                 if (msg._id === messageId) {
                     previousReactions = msg.reactions || [];
                     const hasReacted = previousReactions.some(r => r.user?._id === authUser?._id && r.emoji === emoji);
-                    let newReactions;
-                    if (hasReacted) {
-                        newReactions = previousReactions.filter(r => r.user?._id !== authUser?._id);
-                    } else {
-                        newReactions = previousReactions.filter(r => r.user?._id !== authUser?._id);
+                    let newReactions = previousReactions.filter(r => r.user?._id !== authUser?._id);
+                    if (!hasReacted && emoji) {
                         newReactions.push({ user: { _id: authUser._id, username: authUser.username, profilePic: authUser.profilePic }, emoji });
                     }
                     return { ...msg, reactions: newReactions };
@@ -382,13 +673,12 @@ const MessageContextProvider = ({ children }) => {
         );
 
         try {
-            const token = localStorage.getItem("userToken");
+            const token = localStorage.getItem("userToken") || authUser?.token;
             await axios.post(`${process.env.NEXT_PUBLIC_SOCKET_URL}/api/message/react/${messageId}`, { emoji }, {
                 headers: { authorization: `Bearer ${token}` }
             });
         } catch (err) {
             console.error("Error sending reaction:", err);
-            // Rollback on failure
             setMessages((prev) =>
                 prev.map((msg) => msg._id === messageId ? { ...msg, reactions: previousReactions } : msg)
             );
@@ -400,7 +690,7 @@ const MessageContextProvider = ({ children }) => {
             prev.map((msg) => msg._id === failedMessage._id ? { ...msg, status: 'sending' } : msg)
         );
 
-        const token = localStorage.getItem("userToken");
+        const token = localStorage.getItem("userToken") || authUser?.token;
         if (!token) return;
 
         let url = `${process.env.NEXT_PUBLIC_SOCKET_URL}/api/message/send/`;
@@ -414,6 +704,7 @@ const MessageContextProvider = ({ children }) => {
             typeParam = "?type=group";
         } else if (selectedUser) {
             url += selectedUser._id;
+            typeParam = "?type=direct";
         }
 
         try {
@@ -444,19 +735,19 @@ const MessageContextProvider = ({ children }) => {
 
     const TogglePin = async (messageId) => {
         try {
-            const token = localStorage.getItem("userToken");
+            const token = localStorage.getItem("userToken") || authUser?.token;
             await axios.put(`${process.env.NEXT_PUBLIC_SOCKET_URL}/api/message/pin/${messageId}`, {}, {
                 headers: { authorization: `Bearer ${token}` }
             });
             toast.success("Pin toggled");
         } catch (err) {
-            console.error("Pin toggled error:", err);
+            console.error(err);
         }
     };
 
     const ToggleStar = async (messageId) => {
         try {
-            const token = localStorage.getItem("userToken");
+            const token = localStorage.getItem("userToken") || authUser?.token;
             const res = await axios.put(`${process.env.NEXT_PUBLIC_SOCKET_URL}/api/message/star/${messageId}`, {}, {
                 headers: { authorization: `Bearer ${token}` }
             });
@@ -466,15 +757,15 @@ const MessageContextProvider = ({ children }) => {
         }
     };
 
-    // --- 7. Group CRUD & Settings wrapper ---
+    // Create Group Community
     const CreateGroup = async (name, description, isPrivate) => {
         try {
-            const token = localStorage.getItem("userToken");
+            const token = localStorage.getItem("userToken") || authUser?.token;
             const res = await axios.post(`${process.env.NEXT_PUBLIC_SOCKET_URL}/api/group`, { name, description, isPrivate }, {
                 headers: { authorization: `Bearer ${token}` }
             });
             toast.success("Group created successfully");
-            fetchGroups();
+            fetchSidebarData();
             return res.data.group;
         } catch (err) {
             toast.error(err.response?.data?.message || "Failed to create group");
@@ -483,13 +774,12 @@ const MessageContextProvider = ({ children }) => {
 
     const CreateChannel = async (groupId, name, description, type) => {
         try {
-            const token = localStorage.getItem("userToken");
+            const token = localStorage.getItem("userToken") || authUser?.token;
             await axios.post(`${process.env.NEXT_PUBLIC_SOCKET_URL}/api/group/${groupId}/channels`, { name, description, type }, {
                 headers: { authorization: `Bearer ${token}` }
             });
             toast.success("Channel created successfully");
             if (selectedGroup && selectedGroup._id === groupId) {
-                // Refresh group details
                 const res = await axios.get(`${process.env.NEXT_PUBLIC_SOCKET_URL}/api/group/${groupId}`, {
                     headers: { authorization: `Bearer ${token}` }
                 });
@@ -513,10 +803,12 @@ const MessageContextProvider = ({ children }) => {
     return (
         <MessageContext.Provider
             value={{
-                users,
-                isUserLoading,
-                groups,
-                isGroupsLoading,
+                directChats,
+                groupChats,
+                archivedChats,
+                requests,
+                isSidebarLoading,
+                contacts,
                 selectedUser,
                 selectedGroup,
                 selectedChannel,
@@ -525,6 +817,26 @@ const MessageContextProvider = ({ children }) => {
                 setSelectedChannel: (c) => handleSelectChat("channel", c),
                 messages,
                 isMessagesLoading,
+                loadMoreMessages,
+                hasMoreMessages,
+                searchQuery,
+                setSearchQuery,
+                searchSuggestions,
+                isSearching,
+                groupSearchResults,
+                isGroupSearching,
+                handleSearchGroups,
+                handleJoinGroup,
+                handleAddContact,
+                handleInviteUser,
+                handleRespondInvite,
+                handleTogglePin,
+                handleToggleArchive,
+                handleToggleMute,
+                handleToggleFavorite,
+                handleSaveDraft,
+                handleForwardMessage,
+                totalUnread,
                 AddNewMessage,
                 EditMessage,
                 DeleteMessage,
@@ -534,11 +846,13 @@ const MessageContextProvider = ({ children }) => {
                 ToggleStar,
                 CreateGroup,
                 CreateChannel,
-                fetchGroups,
                 typingUsers,
                 setTypingUsers,
                 showRightSidebar,
-                setShowRightSidebar
+                setShowRightSidebar,
+                fetchSidebarData,
+                replyMessage,
+                setReplyMessage
             }}
         >
             {children}

@@ -19,8 +19,20 @@ const {
     leaveGroup,
     createChannel,
     getChannelsByGroup,
-    deleteChannel
+    deleteChannel,
+    searchGroups,
+    inviteUserToGroup,
+    respondToGroupInvite
 } = require("../Controller/groupController");
+
+router.route("/search")
+    .get(verifyToken, searchGroups);
+
+router.route("/invite")
+    .post(verifyToken, inviteUserToGroup);
+
+router.route("/invites/:inviteId/respond")
+    .post(verifyToken, respondToGroupInvite);
 
 /**
  * @openapi

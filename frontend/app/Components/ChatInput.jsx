@@ -1,36 +1,83 @@
 'use client';
 
 import React, { useContext, useState, useEffect, useRef } from 'react';
-import { FaImage, FaPaperclip, FaSmile, FaMicrophone } from "react-icons/fa";
+import { FaImage, FaPaperclip, FaSmile, FaMicrophone, FaReply } from "react-icons/fa";
 import { IoIosSend } from "react-icons/io";
 import { IoMdClose } from "react-icons/io";
 import { MessageContext } from '../Context/MessageContext';
 import { AuthContext } from '../Context/AuthContext';
 
 const ChatInput = () => {
-  const { selectedUser, selectedGroup, selectedChannel, AddNewMessage } = useContext(MessageContext);
+  const { 
+    selectedUser, 
+    selectedGroup, 
+    selectedChannel, 
+    AddNewMessage,
+    directChats,
+    groupChats,
+    handleSaveDraft,
+    replyMessage,
+    setReplyMessage
+  } = useContext(MessageContext);
+  
   const { socket, authUser } = useContext(AuthContext);
 
   const [message, setMessage] = useState('');
   const [attachments, setAttachments] = useState([]);
   const [isTyping, setIsTyping] = useState(false);
+  
   const typingTimeoutRef = useRef(null);
+  const draftSaveTimeoutRef = useRef(null);
 
-  // --- Real-time Typing Handlers ---
+  const targetId = selectedUser?._id || selectedGroup?._id || selectedChannel?._id;
+  const type = selectedUser ? "direct" : selectedGroup ? "group" : "channel";
+
+  // --- 1. Populate drafts on selection change ---
+  useEffect(() => {
+    setMessage('');
+    setReplyMessage(null); // Clear reply when chat changes
+
+    if (!targetId) return;
+
+    if (type === "group") {
+      const activeGrp = groupChats.find(g => g._id === targetId);
+      if (activeGrp?.draft) setMessage(activeGrp.draft);
+    } else {
+      const activeDM = directChats.find(c => c.recipient?._id === targetId || c._id === targetId);
+      if (activeDM?.draft) setMessage(activeDM.draft);
+    }
+  }, [selectedUser, selectedGroup, selectedChannel]);
+
+  // --- 2. Save draft automatically with debounce ---
+  const triggerDraftSave = (text) => {
+    if (!targetId) return;
+
+    if (draftSaveTimeoutRef.current) clearTimeout(draftSaveTimeoutRef.current);
+
+    draftSaveTimeoutRef.current = setTimeout(async () => {
+      let chatId = targetId;
+      if (type === "direct") {
+        const activeDM = directChats.find(c => c.recipient?._id === targetId);
+        if (activeDM) chatId = activeDM._id;
+        else return; // If conversation is not created yet, no draft is saved on server
+      }
+      await handleSaveDraft(chatId, type, text);
+    }, 1000); // 1-second debounce
+  };
+
+  // --- 3. Real-time Typing Handlers ---
   const handleInputChange = (e) => {
-    setMessage(e.target.value);
+    const val = e.target.value;
+    setMessage(val);
+    triggerDraftSave(val);
     
-    if (!socket) return;
-
-    const targetId = selectedUser?._id || selectedGroup?._id || selectedChannel?._id;
-    const type = selectedUser ? "direct" : selectedGroup ? "group" : "channel";
+    if (!socket || !targetId) return;
 
     if (!isTyping) {
       setIsTyping(true);
       socket.emit("typingStart", { targetId, type, senderName: authUser?.username });
     }
 
-    // Debounce stop typing event
     if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
 
     typingTimeoutRef.current = setTimeout(() => {
@@ -41,7 +88,6 @@ const ChatInput = () => {
 
   const handleFileChange = (e) => {
     const files = Array.from(e.target.files);
-    // Enforce 10MB limit
     const validFiles = files.filter(file => {
       if (file.size > 10 * 1024 * 1024) {
         alert(`File ${file.name} exceeds 10MB limit.`);
@@ -60,20 +106,30 @@ const ChatInput = () => {
   const handleSend = async () => {
     if (!message.trim() && attachments.length === 0) return;
 
-    // Emit stop typing immediately
-    if (socket) {
-      const targetId = selectedUser?._id || selectedGroup?._id || selectedChannel?._id;
-      const type = selectedUser ? "direct" : selectedGroup ? "group" : "channel";
+    // Clear typing indicator immediately
+    if (socket && targetId) {
       setIsTyping(false);
       socket.emit("typingStop", { targetId, type });
     }
 
     // Call Context wrapper
-    await AddNewMessage(message, attachments);
+    const replyToId = replyMessage ? replyMessage._id : null;
+    await AddNewMessage(message, attachments, replyToId);
     
+    // Clear draft on server
+    if (targetId) {
+      let chatId = targetId;
+      if (type === "direct") {
+        const activeDM = directChats.find(c => c.recipient?._id === targetId);
+        if (activeDM) chatId = activeDM._id;
+      }
+      handleSaveDraft(chatId, type, "");
+    }
+
     // Clear local inputs
     setMessage('');
     setAttachments([]);
+    setReplyMessage(null);
   };
 
   const handleKeyDown = (e) => {
@@ -85,13 +141,34 @@ const ChatInput = () => {
 
   return (
     <div className="border-t border-border p-4 bg-surface flex flex-col space-y-3 relative transition-all duration-300">
+      
+      {/* Reply Reference Preview Bar */}
+      {replyMessage && (
+        <div className="flex items-center justify-between p-3 bg-primary/5 border border-primary/20 rounded-xl animate-slide-in">
+          <div className="flex items-center gap-2 text-left overflow-hidden">
+            <FaReply className="text-primary text-xs flex-shrink-0" />
+            <div className="flex flex-col overflow-hidden leading-tight">
+              <span className="text-[10px] font-extrabold text-primary uppercase tracking-wider">Replying to @{replyMessage.sender?.username || "Friend"}</span>
+              <p className="text-xs text-text-secondary truncate italic font-medium">{replyMessage.text || "Media attachment"}</p>
+            </div>
+          </div>
+          <button 
+            onClick={() => setReplyMessage(null)}
+            className="p-1 rounded-full text-text-muted hover:text-rose-500 hover:bg-surface-hover transition-all duration-300"
+            title="Cancel Reply"
+          >
+            <IoMdClose size={16} />
+          </button>
+        </div>
+      )}
+
       {/* File Previews Panel */}
       {attachments.length > 0 && (
         <div className="flex flex-wrap gap-3 p-3 bg-bg-primary border border-border rounded-xl max-h-32 overflow-y-auto">
           {attachments.map((file, index) => {
             const isImage = file.type.startsWith("image/");
             return (
-              <div key={index} className="relative flex items-center gap-2.5 p-2 bg-surface rounded-lg border border-border pr-8">
+              <div key={index} className="relative flex items-center gap-2.5 p-2 bg-surface rounded-lg border border-border pr-8 animate-fade-in">
                 {isImage ? (
                   <img 
                     src={URL.createObjectURL(file)} 
@@ -120,7 +197,7 @@ const ChatInput = () => {
       {/* Input controls row */}
       <div className="flex items-center gap-3">
         {/* Attachment buttons */}
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1.5 font-bold">
           <input 
             type="file"
             id="file-attachment"
@@ -154,7 +231,7 @@ const ChatInput = () => {
         </div>
 
         {/* Text Input area */}
-        <div className="flex-1 relative">
+        <div className="flex-1 relative font-bold">
           <input 
             type="text"
             placeholder="Write a message..."

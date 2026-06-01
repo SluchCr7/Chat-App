@@ -30,7 +30,6 @@ const io = new Server(server, {
 });
 
 // --- OPTIONAL REDIS ADAPTER HOOK FOR HORIZONTAL SCALING ---
-// To use, install packages: npm install redis @socket.io/redis-adapter
 if (process.env.REDIS_URL) {
   try {
     const { createClient } = require("redis");
@@ -46,18 +45,17 @@ if (process.env.REDIS_URL) {
       console.error("Socket.IO Redis connection failed:", err);
     });
   } catch (err) {
-    console.warn("Redis packages missing. Horizontal scaling adapter not loaded. Run 'npm install redis @socket.io/redis-adapter' to enable.");
+    console.warn("Redis packages missing. Horizontal scaling adapter not loaded.");
   }
 }
 
-const userSocketMap = {}; // { userId: socketId }
+const userSocketMap = {}; // { userId: socketId } (maintained for backward compatibility)
 
 function getReceiverSocketId(userId) {
   return userSocketMap[userId];
 }
 
 // --- JWT AUTHENTICATION MIDDLEWARE ---
-// Secures the handshake against user spoofing
 io.use((socket, next) => {
   const token = socket.handshake.auth?.token || socket.handshake.query?.token;
   
@@ -84,6 +82,9 @@ io.on("connection", async (socket) => {
 
   console.log(`[Socket] Secure connection established. User: ${userId} | Socket: ${socket.id}`);
   userSocketMap[userId] = socket.id;
+
+  // Join the personal room for multi-tab synchronization
+  socket.join(`user_${userId}`);
 
   try {
     // Update presence in Database
@@ -173,10 +174,8 @@ io.on("connection", async (socket) => {
       const roomId = `${type}_${targetId}`;
       socket.to(roomId).emit("typingStatus", { senderId: userId, senderName, isTyping: true, type, targetId });
     } else {
-      const receiverSocketId = getReceiverSocketId(targetId);
-      if (receiverSocketId) {
-        io.to(receiverSocketId).emit("typingStatus", { senderId: userId, senderName, isTyping: true, type: "direct", targetId: userId });
-      }
+      // Direct message: broadcast to recipient room
+      io.to(`user_${targetId}`).emit("typingStatus", { senderId: userId, senderName, isTyping: true, type: "direct", targetId: userId });
     }
   });
 
@@ -186,10 +185,8 @@ io.on("connection", async (socket) => {
       const roomId = `${type}_${targetId}`;
       socket.to(roomId).emit("typingStatus", { senderId: userId, isTyping: false, type, targetId });
     } else {
-      const receiverSocketId = getReceiverSocketId(targetId);
-      if (receiverSocketId) {
-        io.to(receiverSocketId).emit("typingStatus", { senderId: userId, isTyping: false, type: "direct", targetId: userId });
-      }
+      // Direct message: broadcast to recipient room
+      io.to(`user_${targetId}`).emit("typingStatus", { senderId: userId, isTyping: false, type: "direct", targetId: userId });
     }
   });
 
@@ -213,10 +210,8 @@ io.on("connection", async (socket) => {
   // Mark messages as read/seen
   socket.on("markAsSeen", async ({ messageIds, senderId }) => {
     try {
-      const receiverSocketId = getReceiverSocketId(senderId);
-      if (receiverSocketId) {
-        io.to(receiverSocketId).emit("messagesSeen", { seenBy: userId, messageIds });
-      }
+      // Broadcast to recipient room (sender)
+      io.to(`user_${senderId}`).emit("messagesSeen", { seenBy: userId, messageIds });
     } catch (err) {
       console.error(err);
     }
@@ -225,17 +220,21 @@ io.on("connection", async (socket) => {
   // --- DISCONNECT HANDLING ---
   socket.on("disconnect", async () => {
     console.log(`[Socket] User disconnected: ${userId} | Socket: ${socket.id}`);
-    delete userSocketMap[userId];
-
-    try {
-      // Set to offline in Database
-      await User.findByIdAndUpdate(userId, { isOnline: false, status: "offline" });
+    
+    // Check if the user has any other active tabs/sockets open
+    const activeSockets = await io.in(`user_${userId}`).fetchSockets();
+    
+    if (activeSockets.length === 0) {
+      // Truly offline (all tabs closed)
+      delete userSocketMap[userId];
       
-      // Update online counts
-      io.emit("getOnlineUsers", Object.keys(userSocketMap));
-      io.emit("userStatusUpdate", { userId, status: "offline", isOnline: false });
-    } catch (err) {
-      console.error("Error setting user offline on disconnect:", err);
+      try {
+        await User.findByIdAndUpdate(userId, { isOnline: false, status: "offline" });
+        io.emit("getOnlineUsers", Object.keys(userSocketMap));
+        io.emit("userStatusUpdate", { userId, status: "offline", isOnline: false });
+      } catch (err) {
+        console.error("Error setting user offline on disconnect:", err);
+      }
     }
   });
 });

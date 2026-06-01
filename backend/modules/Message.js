@@ -11,13 +11,20 @@ const messageSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
     },
+    conversation: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Conversation",
+        index: true
+    },
     group: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Group",
+        index: true
     },
     channel: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Channel",
+        index: true
     },
     text: {
         type: String,

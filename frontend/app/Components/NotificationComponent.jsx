@@ -9,12 +9,12 @@ const NotificationComponent = ({ showMenu, setShowMenu , showNotification , setS
   const {selectedUser} = useContext(MessageContext)
     return (
     <div
-      className={`bg-white shadow-lg w-80 rounded-xl absolute top-10 right-4 z-50 transition-opacity duration-300 ${
+      className={`bg-white shadow-lg w-80 rounded-xl absolute top-10 p-4 right-4 z-50 transition-opacity duration-300 ${
         showMenu ? 'opacity-100' : 'opacity-0 pointer-events-none'
       }`}
     >
       <div className='flex flex-col w-full'>
-        <div className="flex items-center justify-between w-full p-4 border-b">
+        <div className="flex items-center justify-between pb-4 w-full border-b">
           <span className='font-semibold text-gray-600 text-sm'>Notifications</span>
           <IoMdClose
             onClick={() => setShowMenu(false)}
@@ -22,7 +22,7 @@ const NotificationComponent = ({ showMenu, setShowMenu , showNotification , setS
           />
         </div>
 
-        <div className='text-sm text-gray-500'>  
+        <div className='text-sm text-gray-50 pt-4'>  
             {
                 notifications.length > 0 ?
                 <div className="flex flex-col">

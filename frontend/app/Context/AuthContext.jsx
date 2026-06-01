@@ -206,6 +206,33 @@ const AuthContextProvider = ({ children }) => {
         }
     };
 
+    const toggleBlockUser = async (userId) => {
+        try {
+            const token = localStorage.getItem("userToken") || authUser?.token;
+            const res = await axios.post(
+                `${process.env.NEXT_PUBLIC_SOCKET_URL}/api/auth/block/${userId}`,
+                {},
+                { headers: { authorization: `Bearer ${token}` } }
+            );
+            
+            let updatedBlockedList = authUser?.blockedUsers || [];
+            if (res.data.blocked) {
+                updatedBlockedList = [...updatedBlockedList, userId];
+                toast.success("User blocked");
+            } else {
+                updatedBlockedList = updatedBlockedList.filter(id => id !== userId);
+                toast.success("User unblocked");
+            }
+            
+            const updatedUser = { ...authUser, blockedUsers: updatedBlockedList };
+            localStorage.setItem("userAuth", JSON.stringify(updatedUser));
+            setAuthUser(updatedUser);
+            return res.data.blocked;
+        } catch (err) {
+            toast.error(err?.response?.data?.message || "Failed to toggle block");
+        }
+    };
+
     useEffect(() => {
         if (authUser) {
             axios.get(`${process.env.NEXT_PUBLIC_SOCKET_URL}/api/auth`).then((res) => {
@@ -251,7 +278,8 @@ const AuthContextProvider = ({ children }) => {
                     allUsers,
                     socket,
                     socketStatus,
-                    updatePresenceStatus
+                    updatePresenceStatus,
+                    toggleBlockUser
                 }}
             >
                 {children}

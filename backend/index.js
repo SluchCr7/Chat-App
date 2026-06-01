@@ -11,7 +11,10 @@ const {app , server} = require('./config/socket.js')
 const {errorhandler} = require('./middelwares/errorHandler.js')
 
 // Connect to DB
-connectDB()
+connectDB().then(() => {
+    const { runMigration } = require("./utils/migration.js");
+    runMigration();
+});
 
 // Middlewares
 app.use(express.urlencoded({ extended: true }));
@@ -54,6 +57,8 @@ app.use('/api/message', require('./Routes/MessageRoute.js'))
 app.use('/api/notify', require('./Routes/NotifyRoute.js'))
 app.use('/api/group', require('./Routes/GroupRoute.js'))
 app.use('/api/admin', require('./Routes/AdminRoute.js'))
+app.use('/api/contacts', require('./Routes/ContactRoute.js'))
+app.use('/api/conversations', require('./Routes/ConversationRoute.js'))
 app.use(errorhandler)
 // Start server
 

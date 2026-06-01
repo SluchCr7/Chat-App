@@ -3,7 +3,10 @@ const { Group, validateGroup } = require("../modules/Group");
 const { Channel, validateChannel } = require("../modules/Channel");
 const { Message } = require("../modules/Message");
 const { User } = require("../modules/User");
+const { GroupMember } = require("../modules/GroupMember");
+const { GroupInvite } = require("../modules/GroupInvite");
 const crypto = require("crypto");
+const { io } = require("../config/socket");
 
 // Create a Group and a default #general channel
 const createGroup = asyncHandler(async (req, res) => {
@@ -25,6 +28,14 @@ const createGroup = asyncHandler(async (req, res) => {
     });
 
     await newGroup.save();
+
+    // Create GroupMember record for the owner
+    const newGM = new GroupMember({
+        group: newGroup._id,
+        user: req.user._id,
+        role: "owner"
+    });
+    await newGM.save();
 
     // Create default public channel
     const defaultChannel = new Channel({
@@ -94,7 +105,6 @@ const joinGroupByInvite = asyncHandler(async (req, res) => {
     if (isMember) return res.status(400).json({ message: "You are already a member of this group" });
 
     if (group.isPrivate) {
-        // Add to join requests
         if (group.joinRequests.includes(req.user._id)) {
             return res.status(400).json({ message: "Join request already pending" });
         }
@@ -105,6 +115,14 @@ const joinGroupByInvite = asyncHandler(async (req, res) => {
 
     group.members.push({ user: req.user._id, role: "member" });
     await group.save();
+
+    // Create GroupMember record
+    const newGM = new GroupMember({
+        group: group._id,
+        user: req.user._id,
+        role: "member"
+    });
+    await newGM.save();
 
     res.status(200).json({ status: "joined", group });
 });
@@ -125,6 +143,25 @@ const handleJoinRequest = asyncHandler(async (req, res) => {
     if (action === "approve") {
         group.members.push({ user: userId, role: "member" });
         await group.save();
+
+        const newGM = new GroupMember({
+            group: group._id,
+            user: userId,
+            role: "member"
+        });
+        await newGM.save();
+
+        io.to(`user_${userId}`).emit("group:joined", {
+            _id: group._id,
+            type: "group",
+            name: group.name,
+            avatar: group.avatar,
+            description: group.description,
+            membersCount: group.members.length,
+            lastActivity: group.lastActivity,
+            unreadCount: 0
+        });
+
         res.status(200).json({ message: "Request approved. User added to group." });
     } else {
         await group.save();
@@ -134,7 +171,7 @@ const handleJoinRequest = asyncHandler(async (req, res) => {
 
 // Change role / promote / demote (Owner or Admin only)
 const changeMemberRole = asyncHandler(async (req, res) => {
-    const { targetUserId, newRole } = req.body; // "admin", "moderator", "member"
+    const { targetUserId, newRole } = req.body;
     const group = await Group.findById(req.params.id);
     if (!group) return res.status(404).json({ message: "Group not found" });
 
@@ -152,6 +189,9 @@ const changeMemberRole = asyncHandler(async (req, res) => {
 
     targetMember.role = newRole;
     await group.save();
+
+    // Sync GroupMember
+    await GroupMember.findOneAndUpdate({ group: group._id, user: targetUserId }, { role: newRole });
 
     res.status(200).json({ message: "Member role updated successfully", group });
 });
@@ -175,6 +215,9 @@ const kickMember = asyncHandler(async (req, res) => {
     group.members = group.members.filter(m => m.user.toString() !== targetUserId);
     await group.save();
 
+    // Delete GroupMember
+    await GroupMember.deleteOne({ group: group._id, user: targetUserId });
+
     res.status(200).json({ message: "Member kicked successfully", group });
 });
 
@@ -193,10 +236,12 @@ const leaveGroup = asyncHandler(async (req, res) => {
     group.members = group.members.filter(m => m.user.toString() !== req.user._id.toString());
     await group.save();
 
+    await GroupMember.deleteOne({ group: group._id, user: req.user._id });
+
     res.status(200).json({ message: "You have left the group" });
 });
 
-// Create a Channel (Group member with Owner/Admin/Moderator role)
+// Create a Channel
 const createChannel = asyncHandler(async (req, res) => {
     const { error } = validateChannel(req.body);
     if (error) return res.status(400).json({ message: error.details[0].message });
@@ -233,7 +278,7 @@ const getChannelsByGroup = asyncHandler(async (req, res) => {
     res.status(200).json(channels);
 });
 
-// Delete channel (Owner or Admin only)
+// Delete channel
 const deleteChannel = asyncHandler(async (req, res) => {
     const channel = await Channel.findById(req.params.channelId);
     if (!channel) return res.status(404).json({ message: "Channel not found" });
@@ -254,6 +299,123 @@ const deleteChannel = asyncHandler(async (req, res) => {
     res.status(200).json({ message: "Channel deleted successfully" });
 });
 
+// Global Group Search
+const searchGroups = asyncHandler(async (req, res) => {
+    const { q } = req.query;
+    const loggedUserId = req.user._id;
+
+    if (!q || q.trim() === "") {
+        return res.status(200).json([]);
+    }
+
+    const queryStr = q.trim();
+
+    const matchingGroups = await Group.find({
+        name: { $regex: queryStr, $options: "i" }
+    })
+    .populate("creator", "username profileName")
+    .select("name description avatar creator members isPrivate lastActivity");
+
+    const result = matchingGroups.map(grp => {
+        const isJoined = grp.members.some(m => m.user.toString() === loggedUserId.toString());
+        return {
+            _id: grp._id,
+            name: grp.name,
+            description: grp.description,
+            avatar: grp.avatar,
+            creator: grp.creator,
+            membersCount: grp.members.length,
+            isPrivate: grp.isPrivate,
+            isJoined
+        };
+    });
+
+    res.status(200).json(result);
+});
+
+// Invite a user to join a group
+const inviteUserToGroup = asyncHandler(async (req, res) => {
+    const { groupId, inviteeId } = req.body;
+    const inviterId = req.user._id;
+
+    const group = await Group.findById(groupId);
+    if (!group) return res.status(404).json({ message: "Group not found" });
+
+    const isMember = group.members.some(m => m.user.toString() === inviterId.toString());
+    if (!isMember) return res.status(403).json({ message: "You must be a member of the group to invite others" });
+
+    const isAlreadyMember = group.members.some(m => m.user.toString() === inviteeId.toString());
+    if (isAlreadyMember) return res.status(400).json({ message: "User is already a member of this group" });
+
+    const existing = await GroupInvite.findOne({ group: groupId, invitee: inviteeId, status: "pending" });
+    if (existing) return res.status(400).json({ message: "User is already invited to this group" });
+
+    const newInvite = new GroupInvite({
+        group: groupId,
+        inviter: inviterId,
+        invitee: inviteeId
+    });
+    await newInvite.save();
+
+    // Emit real-time notification
+    io.to(`user_${inviteeId}`).emit("group:invite_received", {
+        _id: newInvite._id,
+        group: { _id: group._id, name: group.name, avatar: group.avatar, description: group.description },
+        inviter: { username: req.user.username, profileName: req.user.profileName, profilePic: req.user.profilePic }
+    });
+
+    res.status(201).json({ message: "Invitation sent successfully", invite: newInvite });
+});
+
+// Respond to group invitation
+const respondToGroupInvite = asyncHandler(async (req, res) => {
+    const { action } = req.body; // "accept" or "reject"
+    const { inviteId } = req.params;
+    const loggedUserId = req.user._id;
+
+    const invite = await GroupInvite.findById(inviteId);
+    if (!invite) return res.status(404).json({ message: "Invitation not found" });
+
+    if (invite.invitee.toString() !== loggedUserId.toString()) {
+        return res.status(403).json({ message: "Unauthorized response" });
+    }
+
+    invite.status = action === "accept" ? "accepted" : "rejected";
+    await invite.save();
+
+    if (action === "accept") {
+        const group = await Group.findById(invite.group);
+        if (!group) return res.status(404).json({ message: "Group not found" });
+
+        const isMember = group.members.some(m => m.user.toString() === loggedUserId.toString());
+        if (!isMember) {
+            group.members.push({ user: loggedUserId, role: "member" });
+            await group.save();
+
+            const newGM = new GroupMember({
+                group: group._id,
+                user: loggedUserId,
+                role: "member"
+            });
+            await newGM.save();
+
+            // Emit joined update to sync sidebar
+            io.to(`user_${loggedUserId}`).emit("group:joined", {
+                _id: group._id,
+                type: "group",
+                name: group.name,
+                avatar: group.avatar,
+                description: group.description,
+                membersCount: group.members.length,
+                lastActivity: group.lastActivity,
+                unreadCount: 0
+            });
+        }
+    }
+
+    res.status(200).json({ message: `Invitation ${action}ed successfully` });
+});
+
 module.exports = {
     createGroup,
     getGroups,
@@ -266,5 +428,8 @@ module.exports = {
     leaveGroup,
     createChannel,
     getChannelsByGroup,
-    deleteChannel
+    deleteChannel,
+    searchGroups,
+    inviteUserToGroup,
+    respondToGroupInvite
 };

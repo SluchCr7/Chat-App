@@ -58,6 +58,41 @@ const groupSchema = new mongoose.Schema({
     isPrivate: {
         type: Boolean,
         default: false
+    },
+    pinnedBy: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User"
+    }],
+    archivedBy: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User"
+    }],
+    mutedBy: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User"
+    }],
+    favoriteBy: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User"
+    }],
+    drafts: [{
+        user: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User"
+        },
+        text: {
+            type: String,
+            default: ""
+        },
+        updatedAt: {
+            type: Date,
+            default: Date.now
+        }
+    }],
+    lastActivity: {
+        type: Date,
+        default: Date.now,
+        index: true
     }
 }, {
     timestamps: true

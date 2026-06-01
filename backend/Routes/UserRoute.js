@@ -8,9 +8,15 @@
  */
 const express = require("express");
 const route = express.Router();
-const {login, logout, signup, getAllUsers , getUserById , updateUser , uploadPhoto } = require("../Controller/UserController.js");
+const {login, logout, signup, getAllUsers , getUserById , updateUser , uploadPhoto, toggleBlockUser, reportItem } = require("../Controller/UserController.js");
 const {verifyToken, verifyUser} = require("../middelwares/verifyToken.js");
 const photoUpload = require("../middelwares/uploadPhoto.js");
+
+route.route("/block/:userId")
+    .post(verifyToken, toggleBlockUser);
+
+route.route("/report")
+    .post(verifyToken, reportItem);
 
 /**
  * @openapi

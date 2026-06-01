@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useContext, useEffect, useRef } from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 import { MessageContext } from '../Context/MessageContext';
 import { AuthContext } from '../Context/AuthContext';
 import ChatInput from './ChatInput';
@@ -17,20 +17,51 @@ const ChatContainer = () => {
     selectedUser, 
     selectedGroup, 
     selectedChannel,
-    typingUsers 
+    typingUsers,
+    loadMoreMessages,
+    hasMoreMessages
   } = useContext(MessageContext);
   
   const { authUser } = useContext(AuthContext);
   const MessageEndRef = useRef(null);
+  const ScrollContainerRef = useRef(null);
+
+  const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
+  const [previousScrollHeight, setPreviousScrollHeight] = useState(0);
 
   // --- Scroll to Bottom ---
   useEffect(() => {
-    if (MessageEndRef.current) {
+    if (shouldAutoScroll && MessageEndRef.current) {
       MessageEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    } else if (ScrollContainerRef.current && previousScrollHeight > 0) {
+      // Adjust scroll position after loading previous page of messages to prevent jumping
+      const currentScrollHeight = ScrollContainerRef.current.scrollHeight;
+      ScrollContainerRef.current.scrollTop = currentScrollHeight - previousScrollHeight;
+      setPreviousScrollHeight(0);
     }
-  }, [messages, typingUsers]);
+  }, [messages, typingUsers, shouldAutoScroll]);
 
-  if (isMessagesLoading) return <MessageSkeleton />;
+  // Reset scroll state on chat target change
+  useEffect(() => {
+    setShouldAutoScroll(true);
+    setPreviousScrollHeight(0);
+  }, [selectedUser, selectedGroup, selectedChannel]);
+
+  const handleScroll = (e) => {
+    const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
+    
+    // Check if user is scrolled near bottom to enable auto-scroll
+    const isAtBottom = scrollHeight - scrollTop - clientHeight < 150;
+    setShouldAutoScroll(isAtBottom);
+
+    // Detect top of container scroll for infinite scroll
+    if (scrollTop === 0 && hasMoreMessages && !isMessagesLoading) {
+      setPreviousScrollHeight(scrollHeight);
+      loadMoreMessages();
+    }
+  };
+
+  if (isMessagesLoading && messages.length === 0) return <MessageSkeleton />;
 
   // --- Grouping Messages by Day ---
   const groupMessagesByDate = (messages) => {
@@ -74,7 +105,17 @@ const ChatContainer = () => {
       <Chatheader />
 
       {/* Messages Scroll Area */}
-      <div className="flex-1 w-full overflow-y-auto p-5 space-y-6 scrollbar-thin bg-bg-primary/50">
+      <div 
+        ref={ScrollContainerRef}
+        onScroll={handleScroll}
+        className="flex-1 w-full overflow-y-auto p-5 space-y-6 scrollbar-thin bg-bg-primary/50"
+      >
+        {isMessagesLoading && (
+          <div className="flex justify-center py-2">
+            <span className="loading loading-spinner loading-sm text-primary"></span>
+          </div>
+        )}
+
         {sortedDates.length > 0 ? (
           sortedDates.map((dateKey) => (
             <div key={dateKey} className="space-y-4">

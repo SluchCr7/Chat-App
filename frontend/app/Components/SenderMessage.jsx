@@ -2,14 +2,26 @@
 
 import React, { useContext, useState } from 'react';
 import Image from 'next/image';
-import { FaEdit, FaTrashAlt, FaStar, FaThumbtack, FaRegSmile, FaCheck, FaCheckDouble, FaFileDownload } from "react-icons/fa";
+import { 
+    FaEdit, FaTrashAlt, FaStar, FaThumbtack, FaRegSmile, FaCheck, 
+    FaCheckDouble, FaFileDownload, FaShare, FaTimes, FaReply 
+} from "react-icons/fa";
 import { MessageContext } from '../Context/MessageContext';
 
 const SenderMessage = ({ message, user }) => {
-  const { EditMessage, DeleteMessage, SendReaction, TogglePin, ToggleStar, RetryMessage } = useContext(MessageContext);
+  const { 
+      EditMessage, DeleteMessage, SendReaction, TogglePin, 
+      ToggleStar, RetryMessage, contacts, groupChats, handleForwardMessage,
+      setReplyMessage
+  } = useContext(MessageContext);
+
   const [showReactions, setShowReactions] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editVal, setEditVal] = useState(message.text);
+
+  // Forwarding State
+  const [showForwardModal, setShowForwardModal] = useState(false);
+  const [selectedTargets, setSelectedTargets] = useState([]); // Array of { id, type }
 
   const handleEditSubmit = async (e) => {
     e.preventDefault();
@@ -23,12 +35,30 @@ const SenderMessage = ({ message, user }) => {
     setShowReactions(false);
   };
 
+  const toggleTargetSelection = (id, type) => {
+    setSelectedTargets(prev => {
+        const exists = prev.some(t => t.id === id);
+        if (exists) {
+            return prev.filter(t => t.id !== id);
+        } else {
+            return [...prev, { id, type }];
+        }
+    });
+  };
+
+  const handleSendForward = async () => {
+    if (selectedTargets.length === 0) return;
+    await handleForwardMessage(message._id, selectedTargets);
+    setSelectedTargets([]);
+    setShowForwardModal(false);
+  };
+
   const isStarred = message.starredBy?.length > 0;
 
   return (
     <div className="flex justify-end mb-6 relative group transition-all duration-300">
       {/* Options Hover Overlay */}
-      <div className="absolute top-1/2 -translate-y-1/2 left-4 hidden group-hover:flex items-center gap-1 bg-surface border border-border p-1.5 rounded-xl shadow-lg z-10 transition-all duration-300">
+      <div className="absolute top-1/2 -translate-y-1/2 left-4 hidden group-hover:flex items-center gap-1 bg-surface border border-border p-1.5 rounded-xl shadow-lg z-10 transition-all duration-300 animate-fade-in">
         <button 
           onClick={() => setShowReactions(!showReactions)}
           className="p-2 text-xs text-text-secondary hover:text-primary hover:bg-surface-hover rounded-lg transition"
@@ -56,6 +86,20 @@ const SenderMessage = ({ message, user }) => {
           title="Edit"
         >
           <FaEdit />
+        </button>
+        <button 
+          onClick={() => setReplyMessage(message)}
+          className="p-2 text-xs text-text-secondary hover:text-primary hover:bg-surface-hover rounded-lg transition"
+          title="Reply"
+        >
+          <FaReply />
+        </button>
+        <button 
+          onClick={() => setShowForwardModal(true)}
+          className="p-2 text-xs text-text-secondary hover:text-primary hover:bg-surface-hover rounded-lg transition"
+          title="Forward Message"
+        >
+          <FaShare />
         </button>
         <button 
           onClick={() => DeleteMessage(message._id)}
@@ -231,6 +275,95 @@ const SenderMessage = ({ message, user }) => {
           />
         </div>
       </div>
+
+      {/* Forward Dialog Modal */}
+      {showForwardModal && (
+        <div className="menu_bg z-50">
+          <div className="bg-black border border-border p-6 rounded-[24px] w-full max-w-sm shadow-2xl relative animate-slide-in flex flex-col max-h-[70vh]">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm font-bold text-text-primary flex items-center gap-2">
+                <FaShare className="text-primary" /> Forward Message
+              </h3>
+              <button 
+                onClick={() => { setShowForwardModal(false); setSelectedTargets([]); }}
+                className="text-text-muted hover:text-text-primary transition"
+              >
+                <FaTimes />
+              </button>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto space-y-3 pr-1 scrollbar-thin">
+              {/* Direct Contacts List */}
+              <div>
+                <span className="text-[9px] uppercase font-extrabold text-text-muted tracking-widest block mb-2 px-1">Contacts</span>
+                {contacts.length > 0 ? (
+                  contacts.map(c => {
+                    const isSelected = selectedTargets.some(t => t.id === c._id);
+                    return (
+                      <button 
+                        key={c._id}
+                        onClick={() => toggleTargetSelection(c._id, "direct")}
+                        className={`w-full p-2.5 rounded-xl border flex items-center justify-between mb-1.5 text-left transition duration-200 ${
+                            isSelected 
+                            ? "bg-primary/10 border-primary/20" 
+                            : "border-border bg-surface/30 hover:bg-surface-hover"
+                        }`}
+                      >
+                        <div className="flex items-center gap-2.5 overflow-hidden">
+                          <Image src={c.profilePic?.url || "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png"} width={28} height={28} alt="avatar" className="rounded-full object-cover" />
+                          <span className="text-xs font-semibold text-text-primary truncate">{c.username}</span>
+                        </div>
+                        <input type="checkbox" checked={isSelected} readOnly className="checkbox checkbox-xs checkbox-primary border-border bg-bg-primary" />
+                      </button>
+                    );
+                  })
+                ) : (
+                  <p className="text-[10px] text-text-muted px-1 font-medium">No contacts available.</p>
+                )}
+              </div>
+
+              {/* Group Communities List */}
+              <div className="mt-4">
+                <span className="text-[9px] uppercase font-extrabold text-text-muted tracking-widest block mb-2 px-1">Communities</span>
+                {groupChats.length > 0 ? (
+                  groupChats.map(g => {
+                    const isSelected = selectedTargets.some(t => t.id === g._id);
+                    return (
+                      <button 
+                        key={g._id}
+                        onClick={() => toggleTargetSelection(g._id, "group")}
+                        className={`w-full p-2.5 rounded-xl border flex items-center justify-between mb-1.5 text-left transition duration-200 ${
+                            isSelected 
+                            ? "bg-primary/10 border-primary/20" 
+                            : "border-border bg-surface/30 hover:bg-surface-hover"
+                        }`}
+                      >
+                        <div className="flex items-center gap-2.5 overflow-hidden">
+                          <Image src={g.avatar?.url || "https://cdn.pixabay.com/photo/2016/11/14/17/39/group-1824145_1280.png"} width={28} height={28} alt="avatar" className="rounded-full object-cover" />
+                          <span className="text-xs font-semibold text-text-primary truncate">{g.name}</span>
+                        </div>
+                        <input type="checkbox" checked={isSelected} readOnly className="checkbox checkbox-xs checkbox-primary border-border bg-bg-primary" />
+                      </button>
+                    );
+                  })
+                ) : (
+                  <p className="text-[10px] text-text-muted px-1 font-medium">No communities joined.</p>
+                )}
+              </div>
+            </div>
+
+            <div className="pt-4 border-t border-border mt-3">
+              <button 
+                onClick={handleSendForward}
+                disabled={selectedTargets.length === 0}
+                className="w-full py-2.5 text-xs font-extrabold text-text-inverse bg-primary hover:bg-primary-hover rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition duration-300"
+              >
+                Forward Message ({selectedTargets.length})
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

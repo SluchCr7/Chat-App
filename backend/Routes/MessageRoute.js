@@ -15,11 +15,15 @@ const {
     addReaction,
     togglePinMessage,
     toggleStarMessage,
-    getStarredMessages
+    getStarredMessages,
+    forwardMessage
 } = require("../Controller/messageController");
 const { verifyToken } = require("../middelwares/verifyToken.js");
 const photoUpload = require("../middelwares/uploadPhoto.js");
 const route = require("express").Router();
+
+route.route("/forward")
+    .post(verifyToken, forwardMessage);
 
 /**
  * @openapi

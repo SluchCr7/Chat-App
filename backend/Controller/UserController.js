@@ -184,5 +184,55 @@ const uploadPhoto = asynchandler(async (req, res) => {
     fs.unlinkSync(imagePath)
 })
 
+const toggleBlockUser = asynchandler(async (req, res) => {
+    const loggedUserId = req.user._id;
+    const { userId } = req.params;
 
-module.exports = {signup, login , logout , getAllUsers , getUserById , updateUser , uploadPhoto};
+    if (loggedUserId.toString() === userId.toString()) {
+        return res.status(400).json({ message: "You cannot block yourself" });
+    }
+
+    const me = await User.findById(loggedUserId);
+    const target = await User.findById(userId);
+    if (!target) return res.status(404).json({ message: "User not found" });
+
+    const isBlocked = me.blockedUsers.includes(userId);
+    if (isBlocked) {
+        me.blockedUsers = me.blockedUsers.filter(uid => uid.toString() !== userId.toString());
+    } else {
+        me.blockedUsers.push(userId);
+    }
+    await me.save();
+    
+    const { Contact } = require("../modules/Contact");
+    await Contact.deleteMany({
+        $or: [
+            { user: loggedUserId, contact: userId },
+            { user: userId, contact: loggedUserId }
+        ]
+    });
+
+    res.status(200).json({ blocked: !isBlocked, message: isBlocked ? "User unblocked successfully" : "User blocked successfully" });
+});
+
+const reportItem = asynchandler(async (req, res) => {
+    const loggedUserId = req.user._id;
+    const { reportedUserId, messageId, reason } = req.body;
+
+    if (!reportedUserId || !reason) {
+        return res.status(400).json({ message: "reportedUserId and reason are required" });
+    }
+
+    const { Report } = require("../modules/Report");
+    const newReport = new Report({
+        reporter: loggedUserId,
+        reportedUser: reportedUserId,
+        message: messageId || undefined,
+        reason
+    });
+
+    await newReport.save();
+    res.status(201).json({ message: "Report submitted successfully", report: newReport });
+});
+
+module.exports = {signup, login , logout , getAllUsers , getUserById , updateUser , uploadPhoto, toggleBlockUser, reportItem};

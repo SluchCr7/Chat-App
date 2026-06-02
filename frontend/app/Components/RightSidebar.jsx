@@ -78,9 +78,12 @@ const RightSidebar = () => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 md:static md:w-[24%] md:h-[90vh] h-full bg-bg-sidebar/95 md:bg-bg-sidebar border-l border-border md:border-l border-border flex flex-col overflow-hidden transition-all duration-300 animate-slide-in">
-      <div className="absolute inset-0 bg-black/40 md:hidden" onClick={() => setShowRightSidebar(false)} />
-      <div className="relative z-10 flex flex-col h-full">
+    <div className="fixed inset-0 z-50 md:static md:h-full md:w-[300px] lg:w-[340px] md:flex-shrink-0 flex justify-end transition-all duration-300 animate-slide-in">
+      {/* Backdrop overlay on mobile */}
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm md:hidden" onClick={() => setShowRightSidebar(false)} />
+      
+      {/* Sidebar Content Panel */}
+      <div className="relative z-10 flex flex-col h-full w-full max-w-[320px] md:max-w-none bg-bg-sidebar border-l border-border shadow-2xl md:shadow-none overflow-hidden">
         {/* Title Header */}
         <div className="p-4 border-b border-border bg-bg-sidebar flex items-center justify-between">
           <div>
@@ -193,7 +196,7 @@ const RightSidebar = () => {
         </div>
 
         {/* Lists contents */}
-        <div className="flex-1 overflow-y-auto p-4 scrollbar-thin">
+        <div className="flex-1 overflow-y-auto p-4 wa-scroll">
         
         {/* Group members list */}
         {isGroup && activeSubTab === 'members' && group && (

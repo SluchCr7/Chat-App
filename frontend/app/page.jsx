@@ -92,7 +92,7 @@ export default function Home() {
   const currentStep = steps[stepIndex];
 
   return (
-    <div className="bg-bg-primary text-text-primary min-h-screen relative overflow-hidden">
+    <div className="bg-bg-primary text-text-primary h-full w-full relative overflow-hidden flex flex-col">
       {/* Premium Loader Overlay with seamless exit animation */}
       <AnimatePresence mode="wait">
         {loading && (
@@ -105,15 +105,27 @@ export default function Home() {
       </AnimatePresence>
 
       {/* Main Chat Interface */}
-      <div className="bg-bg-primary text-text-primary min-h-screen">
+      <div className="flex-1 w-full h-full overflow-hidden">
         {authUser ? (
-          <div className="flex flex-col lg:flex-row items-stretch  w-full max-w-[1600px] mx-auto">
-            <SideBar />
-            {(selectedUser || selectedGroup || selectedChannel) ? <ChatContainer /> : <NoChatSelected />}
+          <div className="flex flex-row items-stretch w-full h-full overflow-hidden bg-bg-primary relative">
+            <div className={`w-full md:w-[320px] lg:w-[360px] h-full flex-shrink-0 border-r border-border flex-col ${
+              (selectedUser || selectedGroup || selectedChannel) ? 'hidden md:flex' : 'flex'
+            }`}>
+              <SideBar />
+            </div>
+            
+            <div className={`flex-1 h-full min-w-0 flex-col ${
+              (selectedUser || selectedGroup || selectedChannel) ? 'flex' : 'hidden md:flex'
+            }`}>
+              {(selectedUser || selectedGroup || selectedChannel) ? <ChatContainer /> : <NoChatSelected />}
+            </div>
+
             {(selectedUser || selectedGroup || selectedChannel) && showRightSidebar && <RightSidebar />}
           </div>
         ) : (
-          <HomePage />
+          <div className="min-h-screen overflow-y-auto">
+            <HomePage />
+          </div>
         )}
       </div>
     </div>

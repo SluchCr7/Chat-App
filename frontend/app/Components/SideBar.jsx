@@ -7,6 +7,7 @@ import Image from 'next/image';
 import { MessageContext } from '../Context/MessageContext';
 import { AuthContext } from '../Context/AuthContext';
 import Logo from './Logo';
+import Link from 'next/link';
 
 const SideBar = () => {
     const { 
@@ -157,12 +158,28 @@ const SideBar = () => {
     };
 
     return (
-        <aside className="w-full fixed md:w-[28%] min-h-[75vh] md:min-h-[90vh] bg-bg-sidebar border-r border-border flex flex-col overflow-hidden transition-all duration-300 md:sticky md:top-0 md:self-start">
+        <aside className="w-full h-full bg-bg-sidebar flex flex-col overflow-hidden transition-all duration-300">
             {/* Sidebar header */}
             <div className="p-5 border-b border-border space-y-4">
                 <div className="flex items-center justify-between gap-3">
                     <div className="flex items-center gap-2">
-                        <Logo compact />
+                        {authUser ? (
+                            <Link href="/Pages/Profile" className="relative group transition-all duration-300 flex items-center" title="View Profile">
+                                <div className="relative">
+                                    <Image 
+                                        src={authUser.profilePic?.url || "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png"}
+                                        width={36}
+                                        height={36}
+                                        alt="My Profile"
+                                        className="rounded-full object-cover border border-border hover:ring-2 hover:ring-primary/50 transition duration-300 w-9 h-9"
+                                        unoptimized
+                                    />
+                                    <div className="w-2.5 h-2.5 rounded-full absolute bottom-0 right-0 border border-bg-sidebar bg-success status-glow-online"></div>
+                                </div>
+                            </Link>
+                        ) : (
+                            <Logo compact />
+                        )}
                         {totalUnread > 0 && (
                             <span className="bg-primary/20 border border-primary/30 text-primary-light text-[10px] font-extrabold px-2.5 py-0.5 rounded-full shadow-[0_0_10px_rgba(56,189,248,0.25)] animate-pulse tracking-wide">
                                 ({totalUnread})

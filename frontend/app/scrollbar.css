@@ -1,0 +1,56 @@
+/* ============================================================
+   GLOBAL: Hide ALL scrollbars across the entire app
+   (keeps scroll functionality, removes visual track)
+   ============================================================ */
+
+* {
+  scrollbar-width: none;         /* Firefox */
+  -ms-overflow-style: none;      /* IE / Edge legacy */
+}
+
+*::-webkit-scrollbar {
+  display: none;                 /* Chrome / Safari / WebKit */
+}
+
+/* ============================================================
+   .wa-scroll — WhatsApp-style premium scrollbar
+   Ultra-thin (3px), appears only on hover/scroll, fades out
+   Apply ONLY to: sidebar chats list, chat messages area
+   ============================================================ */
+
+.wa-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+  transition: scrollbar-color 0.3s ease;
+}
+
+/* Show on hover or while actively scrolling */
+.wa-scroll:hover,
+.wa-scroll:focus-within {
+  scrollbar-color: rgba(99, 179, 237, 0.35) transparent;
+}
+
+/* WebKit */
+.wa-scroll::-webkit-scrollbar {
+  display: block;                /* override the global hide */
+  width: 3px;
+}
+
+.wa-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.wa-scroll::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 999px;
+  transition: background 0.3s ease;
+}
+
+.wa-scroll:hover::-webkit-scrollbar-thumb,
+.wa-scroll:focus-within::-webkit-scrollbar-thumb {
+  background: rgba(99, 179, 237, 0.35);  /* subtle cyan tint — matches your primary */
+}
+
+.wa-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(99, 179, 237, 0.6);
+}

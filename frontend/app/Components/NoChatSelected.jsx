@@ -5,7 +5,7 @@ import { LuMessageSquare } from "react-icons/lu";
 
 const NoChatSelected = () => {
   return (
-    <div className="relative flex min-h-[90vh] w-full items-center justify-center overflow-hidden bg-bg px-6">
+    <div className="relative flex h-full w-full items-center justify-center overflow-hidden bg-bg px-6">
 
       {/* Background Blur Effects */}
       <div className="absolute inset-0 overflow-hidden">

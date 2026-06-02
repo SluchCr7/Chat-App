@@ -306,7 +306,7 @@ const SenderMessage = ({ message, user }) => {
               </button>
             </div>
             
-            <div className="flex-1 overflow-y-auto space-y-3 pr-1 scrollbar-thin">
+            <div className="flex-1 overflow-y-auto space-y-3 pr-1 wa-scroll">
               {/* Direct Contacts List */}
               <div>
                 <span className="text-[9px] uppercase font-extrabold text-text-muted tracking-widest block mb-2 px-1">Contacts</span>
@@ -382,4 +382,4 @@ const SenderMessage = ({ message, user }) => {
   );
 };
 
-export default SenderMessage;
+export default React.memo(SenderMessage);

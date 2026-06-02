@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useContext, useEffect, useRef, useState } from 'react';
+import React, { useContext, useEffect, useRef, useState, useCallback } from 'react';
 import { MessageContext } from '../Context/MessageContext';
 import { AuthContext } from '../Context/AuthContext';
 import ChatInput from './ChatInput';
@@ -9,7 +9,7 @@ import MessageSkeleton from '../Skeletons/MessageSkeleton';
 import SenderMessage from './SenderMessage';
 import ReceiverMessage from './ReceiverMessage';
 import { format, isToday, isYesterday } from 'date-fns';
-import { FaThumbtack } from "react-icons/fa";
+import { FaThumbtack, FaArrowDown } from "react-icons/fa";
 import { IoMdClose } from "react-icons/io";
 
 const ChatContainer = () => {
@@ -47,22 +47,51 @@ const ChatContainer = () => {
     }
   };
 
+  const [firstUnreadMessageId, setFirstUnreadMessageId] = useState(null);
   const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
   const [previousScrollHeight, setPreviousScrollHeight] = useState(0);
 
-  // --- Scroll to Bottom ---
+  // --- Scroll to Bottom Programmatically ---
+  const scrollToBottom = useCallback((behavior = 'smooth') => {
+    if (ScrollContainerRef.current) {
+      const { scrollHeight, clientHeight } = ScrollContainerRef.current;
+      ScrollContainerRef.current.scrollTo({
+        top: scrollHeight - clientHeight,
+        behavior
+      });
+    }
+  }, []);
+
+  // Set the first unread message ID when switching chat contexts
   useEffect(() => {
-    if (shouldAutoScroll && MessageEndRef.current) {
-      MessageEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    if (messages && messages.length > 0 && authUser) {
+      const firstUnread = messages.find(m => {
+        const senderId = m.sender?._id || m.sender;
+        return senderId !== authUser._id && !m.isRead;
+      });
+      if (firstUnread) {
+        setFirstUnreadMessageId(firstUnread._id);
+      } else {
+        setFirstUnreadMessageId(null);
+      }
+    } else {
+      setFirstUnreadMessageId(null);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedUser, selectedGroup, selectedChannel]);
+
+  // Adjust scroll after content updates or pagination
+  useEffect(() => {
+    if (shouldAutoScroll) {
+      scrollToBottom('smooth');
     } else if (ScrollContainerRef.current && previousScrollHeight > 0) {
-      // Adjust scroll position after loading previous page of messages to prevent jumping
       const currentScrollHeight = ScrollContainerRef.current.scrollHeight;
       ScrollContainerRef.current.scrollTop = currentScrollHeight - previousScrollHeight;
       setPreviousScrollHeight(0);
     }
-  }, [messages, typingUsers, shouldAutoScroll, previousScrollHeight]);
+  }, [messages, typingUsers, shouldAutoScroll, previousScrollHeight, scrollToBottom]);
 
-  // Reset scroll state on chat target change
+  // Reset scroll states on target swap
   useEffect(() => {
     setShouldAutoScroll(true);
     setPreviousScrollHeight(0);
@@ -71,11 +100,11 @@ const ChatContainer = () => {
   const handleScroll = (e) => {
     const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
     
-    // Check if user is scrolled near bottom to enable auto-scroll
+    // Check if user is near bottom
     const isAtBottom = scrollHeight - scrollTop - clientHeight < 150;
     setShouldAutoScroll(isAtBottom);
 
-    // Detect top of container scroll for infinite scroll
+    // Infinite scroll trigger
     if (scrollTop === 0 && hasMoreMessages && !isMessagesLoading) {
       setPreviousScrollHeight(scrollHeight);
       loadMoreMessages();
@@ -110,7 +139,7 @@ const ChatContainer = () => {
     (a, b) => new Date(a).getTime() - new Date(b).getTime()
   );
 
-  // Determine typing users in the active context
+  // Determine typing users in active context
   const activeTyping = Object.entries(typingUsers)
     .filter(([userId, data]) => {
       if (!data.isTyping) return false;
@@ -122,16 +151,16 @@ const ChatContainer = () => {
     .map(([_, data]) => data.senderName);
 
   return (
-    <div className="flex-1 min-h-[70vh] md:min-h-[90vh] bg-bg-primary border border-border overflow-hidden shadow-xl flex flex-col transition-all duration-300">
+    <div className="flex-1 h-full bg-bg-primary flex flex-col overflow-hidden relative transition-all duration-300">
       <Chatheader />
 
-      {/* Sleek WhatsApp-style Pinned Message Bar docked under header */}
+      {/* WhatsApp-style Pinned Message Bar docked under header */}
       {activePinnedMessage && (
         <div 
           onClick={() => jumpToMessage(activePinnedMessage._id)}
           className="bg-surface/85 backdrop-blur-md border-b border-border px-5 py-2.5 flex items-center justify-between cursor-pointer hover:bg-surface-hover/50 transition-all duration-300 z-20 group/pin relative shadow-sm"
         >
-          {/* Accent indicator line on left */}
+          {/* Accent indicator line */}
           <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-cyan-400 group-hover/pin:bg-cyan-300 transition duration-300" />
           
           <div className="flex items-center gap-3 overflow-hidden select-none">
@@ -155,7 +184,7 @@ const ChatContainer = () => {
           <div className="flex items-center gap-2">
             <button 
               onClick={(e) => {
-                e.stopPropagation(); // Prevent jumping to message
+                e.stopPropagation();
                 TogglePin(activePinnedMessage._id);
               }}
               className="p-2 rounded-lg text-text-muted hover:text-rose-400 hover:bg-rose-500/10 transition-all duration-300"
@@ -171,7 +200,7 @@ const ChatContainer = () => {
       <div 
         ref={ScrollContainerRef}
         onScroll={handleScroll}
-        className="flex-1 w-full overflow-y-auto p-5 space-y-6 scrollbar-thin bg-bg-primary/50"
+        className="flex-1 w-full overflow-y-auto p-5 space-y-6 wa-scroll bg-bg-primary/50"
       >
         {isMessagesLoading && (
           <div className="flex justify-center py-2">
@@ -183,8 +212,11 @@ const ChatContainer = () => {
           sortedDates.map((dateKey) => (
             <div key={dateKey} className="space-y-4">
               {/* Date Separator */}
-              <div className="flex justify-center my-6">
-                <span className="bg-surface text-text-primary border border-border px-4 py-1.5 rounded-full text-xs font-semibold shadow-sm tracking-wide">
+              <div className="relative flex items-center justify-center my-6">
+                <div className="absolute inset-0 flex items-center" aria-hidden="true">
+                  <div className="w-full border-t border-border"></div>
+                </div>
+                <span className="relative z-10 bg-bg-primary/95 backdrop-blur-sm px-4 py-1.5 text-xs font-bold text-text-secondary border border-border rounded-full shadow-sm tracking-wide">
                   {getDisplayDate(dateKey)}
                 </span>
               </div>
@@ -193,47 +225,73 @@ const ChatContainer = () => {
               {groupedMessages[dateKey].map((msg, index) => {
                 const isSender = (msg.sender?._id || msg.sender) === authUser?._id;
                 const msgId = msg._id || `temp-${index}`;
+                const showUnreadSeparator = msgId === firstUnreadMessageId;
+                
                 return (
-                  <div 
-                    key={msgId} 
-                    id={`msg-${msgId}`} 
-                    className="transition-all duration-500 rounded-2xl"
-                  >
-                    {isSender ? (
-                      <SenderMessage message={msg} user={authUser} />
-                    ) : (
-                      <ReceiverMessage 
-                        message={msg} 
-                        user={msg.sender || selectedUser} 
-                      />
+                  <React.Fragment key={msgId}>
+                    {showUnreadSeparator && (
+                      <div className="flex items-center my-6">
+                        <div className="flex-grow border-t border-rose-500/30"></div>
+                        <span className="bg-rose-500/10 text-rose-500 border border-rose-500/20 px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider mx-4 shadow-[0_0_10px_rgba(239,68,68,0.1)]">
+                          New Messages
+                        </span>
+                        <div className="flex-grow border-t border-rose-500/30"></div>
+                      </div>
                     )}
-                  </div>
+                    <div 
+                      id={`msg-${msgId}`} 
+                      className="transition-all duration-500 rounded-2xl"
+                    >
+                      {isSender ? (
+                        <SenderMessage message={msg} user={authUser} />
+                      ) : (
+                        <ReceiverMessage 
+                          message={msg} 
+                          user={msg.sender || selectedUser} 
+                        />
+                      )}
+                    </div>
+                  </React.Fragment>
                 );
               })}
             </div>
           ))
         ) : (
-          <div className="h-full flex items-center justify-center flex-col text-center text-text-muted">
-            <p className="text-sm font-semibold tracking-wide">No messages yet. Send a message to start the conversation.</p>
-          </div>
-        )}
-
-        {/* Real-time typing indicators container */}
-        {activeTyping.length > 0 && (
-          <div className="flex items-center gap-2 px-4 py-2.5 bg-surface/50 border border-border rounded-xl max-w-xs animate-pulse">
-            <div className="flex gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-primary animate-bounce delay-75"></span>
-              <span className="w-1.5 h-1.5 rounded-full bg-primary animate-bounce delay-150"></span>
-              <span className="w-1.5 h-1.5 rounded-full bg-primary animate-bounce delay-225"></span>
-            </div>
-            <span className="text-xs text-text-secondary font-semibold">
-              {activeTyping.join(", ")} {activeTyping.length === 1 ? "is" : "are"} typing...
-            </span>
+          <div className="h-full flex items-center justify-center flex-col text-center text-text-muted select-none">
+            <p className="text-sm font-semibold tracking-wide bg-surface/40 px-6 py-3 border border-border rounded-full backdrop-blur-sm">No messages yet. Send a message to start the conversation.</p>
           </div>
         )}
 
         <div ref={MessageEndRef} />
       </div>
+
+      {/* Real-time typing indicators docked container */}
+      {activeTyping.length > 0 && (
+        <div className="px-5 py-2.5 border-t border-border bg-bg-primary/95 flex items-center gap-2.5 text-xs text-text-secondary select-none animate-fade-in z-20 flex-shrink-0">
+          <div className="flex gap-1">
+            <span className="w-1.5 h-1.5 rounded-full bg-primary animate-bounce" style={{ animationDelay: '0ms' }}></span>
+            <span className="w-1.5 h-1.5 rounded-full bg-primary animate-bounce" style={{ animationDelay: '150ms' }}></span>
+            <span className="w-1.5 h-1.5 rounded-full bg-primary animate-bounce" style={{ animationDelay: '300ms' }}></span>
+          </div>
+          <span className="font-semibold text-[11px]">
+            {activeTyping.join(", ")} {activeTyping.length === 1 ? "is" : "are"} typing...
+          </span>
+        </div>
+      )}
+
+      {/* Floating Scroll-to-Bottom Button */}
+      {!shouldAutoScroll && (
+        <button
+          onClick={() => {
+            setShouldAutoScroll(true);
+            scrollToBottom('smooth');
+          }}
+          className="absolute bottom-20 right-6 z-40 p-3 rounded-full bg-primary hover:bg-primary-hover text-text-inverse shadow-xl border border-primary/20 hover:scale-110 active:scale-95 transition-all duration-300 flex items-center justify-center"
+          title="Scroll to bottom"
+        >
+          <FaArrowDown className="text-xs text-white" />
+        </button>
+      )}
 
       <ChatInput />
     </div>

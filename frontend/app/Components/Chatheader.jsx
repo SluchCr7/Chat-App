@@ -4,7 +4,7 @@ import React, { useContext, useState } from 'react';
 import { MessageContext } from '../Context/MessageContext';
 import { AuthContext } from '../Context/AuthContext';
 import Image from 'next/image';
-import { FaPhone, FaVideo, FaInfoCircle, FaLink, FaPlus } from "react-icons/fa";
+import { FaPhone, FaVideo, FaInfoCircle, FaLink, FaPlus, FaArrowLeft } from "react-icons/fa";
 import { toast } from 'react-toastify';
 
 const Chatheader = () => {
@@ -12,6 +12,8 @@ const Chatheader = () => {
     selectedUser, 
     selectedGroup, 
     selectedChannel,
+    setSelectedUser,
+    setSelectedGroup,
     setSelectedChannel,
     CreateChannel,
     showRightSidebar,
@@ -64,11 +66,25 @@ const Chatheader = () => {
     setShowChannelModal(false);
   };
 
+  const handleBack = () => {
+    setSelectedUser(null);
+    setSelectedGroup(null);
+    setSelectedChannel(null);
+  };
+
   return (
-    <header className="w-full p-4 border-b border-border bg-surface flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between shadow-sm transition-all duration-300">
+    <header className="w-full h-16 min-h-[64px] flex-shrink-0 px-4 border-b border-border bg-surface flex items-center justify-between shadow-sm transition-all duration-300 z-30">
       {/* Target details */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
-        <div className="relative flex items-center">
+      <div className="flex items-center gap-2 sm:gap-4 overflow-hidden flex-1 mr-3">
+        <button
+          onClick={handleBack}
+          className="md:hidden p-2 rounded-xl bg-bg-primary hover:bg-surface border border-border text-text-secondary hover:text-text-primary transition-all duration-300 mr-1 flex items-center justify-center flex-shrink-0"
+          title="Back to Chats"
+        >
+          <FaArrowLeft className="text-xs" />
+        </button>
+
+        <div className="relative flex items-center flex-shrink-0">
           <Image
             src={
               isDirect 
@@ -76,12 +92,13 @@ const Chatheader = () => {
                 : activeTarget?.avatar?.url || "https://cdn.pixabay.com/photo/2016/11/14/17/39/group-1824145_1280.png"
             }
             alt="chat_avatar"
-            width={42}
-            height={42}
-            className="rounded-full object-cover border border-border"
+            width={40}
+            height={40}
+            className="rounded-full object-cover border border-border w-10 h-10"
+            unoptimized
           />
           {isDirect && (
-            <div className={`w-3.5 h-3.5 rounded-full absolute bottom-0 right-0 border-2 border-surface ${
+            <div className={`w-3 h-3 rounded-full absolute bottom-0 right-0 border-2 border-surface ${
               isOnline 
                 ? userStatus === "away" ? "bg-warning" : userStatus === "busy" ? "bg-error" : "bg-success status-glow-online"
                 : "bg-text-disabled"
@@ -89,12 +106,12 @@ const Chatheader = () => {
           )}
         </div>
 
-        <div className="flex flex-col items-start">
-          <h2 className="font-bold text-sm text-text-primary flex items-center gap-1.5 leading-tight">
-            {isDirect ? selectedUser.username : activeTarget.name}
-            {isChannel && <span className="text-[10px] px-2 py-0.5 font-bold rounded-full bg-primary/10 text-primary border border-primary/20"># {selectedChannel.name}</span>}
+        <div className="flex flex-col items-start min-w-0 text-left">
+          <h2 className="font-bold text-sm text-text-primary flex items-center gap-1.5 leading-tight w-full truncate">
+            <span className="truncate">{isDirect ? selectedUser.username : activeTarget.name}</span>
+            {isChannel && <span className="text-[10px] px-2 py-0.5 font-bold rounded-full bg-primary/10 text-primary border border-primary/20 flex-shrink-0"># {selectedChannel.name}</span>}
           </h2>
-          <span className="text-[11px] text-text-muted font-bold mt-0.5">
+          <span className="text-[11px] text-text-muted font-bold mt-0.5 truncate w-full">
             {isDirect 
               ? (isOnline ? `Online (${userStatus})` : "Offline") 
               : isChannel 
@@ -107,7 +124,7 @@ const Chatheader = () => {
       </div>
 
       {/* Action triggers */}
-      <div className="flex flex-wrap items-center gap-3.5 justify-end">
+      <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
         {/* Channel dropdown button */}
         {isGroup && canCreateChannel && (
           <button 

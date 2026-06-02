@@ -107,7 +107,7 @@ export default function Home() {
       {/* Main Chat Interface */}
       <div className="bg-bg-primary text-text-primary min-h-screen">
         {authUser ? (
-          <div className="flex flex-col lg:flex-row items-stretch pt-3 px-4 pb-6 w-full max-w-[1600px] mx-auto">
+          <div className="flex flex-col lg:flex-row items-stretch  w-full max-w-[1600px] mx-auto">
             <SideBar />
             {(selectedUser || selectedGroup || selectedChannel) ? <ChatContainer /> : <NoChatSelected />}
             {(selectedUser || selectedGroup || selectedChannel) && showRightSidebar && <RightSidebar />}

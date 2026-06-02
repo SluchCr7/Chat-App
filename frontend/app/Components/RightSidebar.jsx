@@ -129,7 +129,7 @@ const RightSidebar = () => {
             </p>
           </div>
 
-          <div className="grid grid-cols-2 gap-2 w-full sm:grid-cols-3">
+          <div className="grid grid-cols-2 gap-2 w-full">
             <div className="rounded-3xl bg-surface/90 border border-border p-3 text-center">
               <p className="text-[10px] uppercase tracking-[0.24em] text-text-muted">Channels</p>
               <p className="text-sm font-bold text-text-primary mt-1">{groupChannels.length || 0}</p>

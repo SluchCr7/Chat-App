@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useContext, useState, useEffect, useRef } from 'react';
+import React, { useContext, useState, useEffect, useRef , useCallback } from 'react';
 import { 
   FaImage, FaPaperclip, FaSmile, FaMicrophone, FaReply, 
   FaTrashAlt, FaStop, FaPlay, FaPause 
@@ -69,6 +69,38 @@ const ChatInput = () => {
   const animationFrameRef = useRef(null);
   const canvasRef = useRef(null);
   const previewAudioRef = useRef(null);
+
+  // Voice recording helpers (declared early to prevent temporal dead zone reference errors in useEffect)
+  const cleanupRecordingResources = useCallback((stopTracks = true) => {
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current);
+      animationFrameRef.current = null;
+    }
+    if (audioContextRef.current) {
+      if (audioContextRef.current.state !== 'closed') {
+        audioContextRef.current.close();
+      }
+      audioContextRef.current = null;
+    }
+    if (stopTracks && streamRef.current) {
+      streamRef.current.getTracks().forEach((track) => track.stop());
+      streamRef.current = null;
+    }
+  }, []);
+
+  const cancelRecording = useCallback(() => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      mediaRecorderRef.current.stop();
+    }
+    cleanupRecordingResources(true);
+    setAudioBlob(null);
+    setAudioUrl('');
+    setRecordingState('idle');
+  }, [cleanupRecordingResources]);
 
   // --- 1. Populate drafts on selection change ---
   useEffect(() => {
@@ -302,27 +334,6 @@ const ChatInput = () => {
     }
   };
 
-  const cleanupRecordingResources = useCallback((stopTracks = true) => {
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-      timerRef.current = null;
-    }
-    if (animationFrameRef.current) {
-      cancelAnimationFrame(animationFrameRef.current);
-      animationFrameRef.current = null;
-    }
-    if (audioContextRef.current) {
-      if (audioContextRef.current.state !== 'closed') {
-        audioContextRef.current.close();
-      }
-      audioContextRef.current = null;
-    }
-    if (stopTracks && streamRef.current) {
-      streamRef.current.getTracks().forEach((track) => track.stop());
-      streamRef.current = null;
-    }
-  }, []);
-
   const stopRecording = () => {
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
       mediaRecorderRef.current.stop();
@@ -330,16 +341,6 @@ const ChatInput = () => {
     cleanupRecordingResources(false);
     setRecordingState('preview');
   };
-
-  const cancelRecording = useCallback(() => {
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
-      mediaRecorderRef.current.stop();
-    }
-    cleanupRecordingResources(true);
-    setAudioBlob(null);
-    setAudioUrl('');
-    setRecordingState('idle');
-  }, [cleanupRecordingResources]);
 
   const sendVoiceMessage = async () => {
     if (!audioBlob || isUploading) return;

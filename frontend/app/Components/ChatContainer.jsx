@@ -9,6 +9,8 @@ import MessageSkeleton from '../Skeletons/MessageSkeleton';
 import SenderMessage from './SenderMessage';
 import ReceiverMessage from './ReceiverMessage';
 import { format, isToday, isYesterday } from 'date-fns';
+import { FaThumbtack } from "react-icons/fa";
+import { IoMdClose } from "react-icons/io";
 
 const ChatContainer = () => {
   const { 
@@ -19,12 +21,31 @@ const ChatContainer = () => {
     selectedChannel,
     typingUsers,
     loadMoreMessages,
-    hasMoreMessages
+    hasMoreMessages,
+    TogglePin
   } = useContext(MessageContext);
   
   const { authUser } = useContext(AuthContext);
   const MessageEndRef = useRef(null);
   const ScrollContainerRef = useRef(null);
+
+  // Find the active pinned message (most recently updated one)
+  const activePinnedMessage = (messages || [])
+    .filter(m => m.isPinned)
+    .sort((a, b) => new Date(a.updatedAt).getTime() - new Date(b.updatedAt).getTime())
+    .pop();
+
+  const jumpToMessage = (msgId) => {
+    const element = document.getElementById(`msg-${msgId}`);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      // Apply a premium highlight pulse effect
+      element.classList.add('bg-primary/10', 'ring-1', 'ring-primary/20', 'scale-[1.01]', 'shadow-md');
+      setTimeout(() => {
+        element.classList.remove('bg-primary/10', 'ring-1', 'ring-primary/20', 'scale-[1.01]', 'shadow-md');
+      }, 1500);
+    }
+  };
 
   const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
   const [previousScrollHeight, setPreviousScrollHeight] = useState(0);
@@ -104,6 +125,48 @@ const ChatContainer = () => {
     <div className="flex-1 min-h-[70vh] md:min-h-[90vh] bg-bg-primary border border-border rounded-2xl overflow-hidden shadow-xl flex flex-col transition-all duration-300">
       <Chatheader />
 
+      {/* Sleek WhatsApp-style Pinned Message Bar docked under header */}
+      {activePinnedMessage && (
+        <div 
+          onClick={() => jumpToMessage(activePinnedMessage._id)}
+          className="bg-surface/85 backdrop-blur-md border-b border-border px-5 py-2.5 flex items-center justify-between cursor-pointer hover:bg-surface-hover/50 transition-all duration-300 z-20 group/pin relative shadow-sm"
+        >
+          {/* Accent indicator line on left */}
+          <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-cyan-400 group-hover/pin:bg-cyan-300 transition duration-300" />
+          
+          <div className="flex items-center gap-3 overflow-hidden select-none">
+            <div className="w-8 h-8 rounded-lg bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400 group-hover/pin:scale-105 transition duration-300">
+              <FaThumbtack className="text-xs" />
+            </div>
+            
+            <div className="flex flex-col text-left overflow-hidden leading-tight">
+              <span className="text-[10px] font-extrabold uppercase tracking-wider text-cyan-400 flex items-center gap-1.5">
+                Pinned Message
+                <span className="text-[9px] text-text-muted font-bold lowercase">
+                  by @{activePinnedMessage.sender?.username || "user"}
+                </span>
+              </span>
+              <p className="text-xs text-text-secondary truncate font-semibold mt-0.5 max-w-[280px] sm:max-w-[450px] md:max-w-[600px] lg:max-w-[750px]">
+                {activePinnedMessage.text || (activePinnedMessage.Photos?.length > 0 ? "📷 Photo attachment" : "🎤 Voice note")}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button 
+              onClick={(e) => {
+                e.stopPropagation(); // Prevent jumping to message
+                TogglePin(activePinnedMessage._id);
+              }}
+              className="p-2 rounded-lg text-text-muted hover:text-rose-400 hover:bg-rose-500/10 transition-all duration-300"
+              title="Unpin Message"
+            >
+              <IoMdClose size={16} />
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Messages Scroll Area */}
       <div 
         ref={ScrollContainerRef}
@@ -129,14 +192,22 @@ const ChatContainer = () => {
               {/* Messages Mapping */}
               {groupedMessages[dateKey].map((msg, index) => {
                 const isSender = (msg.sender?._id || msg.sender) === authUser?._id;
-                return isSender ? (
-                  <SenderMessage key={msg._id || index} message={msg} user={authUser} />
-                ) : (
-                  <ReceiverMessage 
-                    key={msg._id || index} 
-                    message={msg} 
-                    user={msg.sender || selectedUser} 
-                  />
+                const msgId = msg._id || `temp-${index}`;
+                return (
+                  <div 
+                    key={msgId} 
+                    id={`msg-${msgId}`} 
+                    className="transition-all duration-500 rounded-2xl"
+                  >
+                    {isSender ? (
+                      <SenderMessage message={msg} user={authUser} />
+                    ) : (
+                      <ReceiverMessage 
+                        message={msg} 
+                        user={msg.sender || selectedUser} 
+                      />
+                    )}
+                  </div>
                 );
               })}
             </div>

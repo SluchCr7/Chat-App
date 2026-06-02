@@ -119,7 +119,11 @@ const sendMessage = asyncHandler(async (req, res) => {
     const files = req.files?.image || [];
 
     for (const file of files) {
-        const result = await cloudUpload(file.path);
+        const uploadOptions = {};
+        if (file.mimetype.startsWith("audio") || file.mimetype.startsWith("video")) {
+            uploadOptions.resource_type = "video";
+        }
+        const result = await cloudUpload(file.path, uploadOptions);
         
         let fileType = "document";
         if (file.mimetype.startsWith("image")) {
@@ -559,7 +563,7 @@ const uploadAudio = asyncHandler(async (req, res) => {
     }
 
     try {
-        const result = await cloudUpload(req.file.path);
+        const result = await cloudUpload(req.file.path, { resource_type: "video" });
         
         // Remove file from local OS tmp directory
         if (fs.existsSync(req.file.path)) {

@@ -303,94 +303,100 @@ const SideBar = () => {
                     </div>
                 )}
 
-                {/* DMs Section */}
-                {(activeTab === 'all' || activeTab === 'direct') && (
-                    <div className="mb-6">
-                        <div className="px-2 mb-2 flex items-center justify-between">
-                            <span className="text-[10px] uppercase font-bold tracking-widest text-text-muted">Direct Messages</span>
-                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-surface border border-border text-text-secondary font-bold">{filteredUsers.length}</span>
-                        </div>
-                        {filteredUsers.length > 0 ? (
-                            filteredUsers.map(renderUserItem)
-                        ) : (
-                            <p className="text-xs text-text-muted px-2 py-2 font-medium">No contacts found in your list. Use the search field above to find users by profile name.</p>
+                {isSidebarLoading ? (
+                    <SideBarSkeleton activeTab={activeTab} />
+                ) : (
+                    <>
+                        {/* DMs Section */}
+                        {(activeTab === 'all' || activeTab === 'direct') && (
+                            <div className="mb-6">
+                                <div className="px-2 mb-2 flex items-center justify-between">
+                                    <span className="text-[10px] uppercase font-bold tracking-widest text-text-muted">Direct Messages</span>
+                                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-surface border border-border text-text-secondary font-bold">{filteredUsers.length}</span>
+                                </div>
+                                {filteredUsers.length > 0 ? (
+                                    filteredUsers.map(renderUserItem)
+                                ) : (
+                                    <p className="text-xs text-text-muted px-2 py-2 font-medium">No contacts found in your list. Use the search field above to find users by profile name.</p>
+                                )}
+                            </div>
                         )}
-                    </div>
-                )}
 
-                {/* Groups Section */}
-                {(activeTab === 'all' || activeTab === 'groups') && (
-                    <div>
-                        <div className="px-2 mb-2 flex items-center justify-between">
-                            <span className="text-[10px] uppercase font-bold tracking-widest text-text-muted">Groups & Communities</span>
-                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-surface border border-border text-text-secondary font-bold">{filteredGroups.length}</span>
-                        </div>
-                        {filteredGroups.length > 0 ? (
-                            filteredGroups.map(renderGroupItem)
-                        ) : (
-                            <p className="text-xs text-text-muted px-2 py-2 font-medium">No groups joined yet — try discovering a new community above.</p>
+                        {/* Groups Section */}
+                        {(activeTab === 'all' || activeTab === 'groups') && (
+                            <div>
+                                <div className="px-2 mb-2 flex items-center justify-between">
+                                    <span className="text-[10px] uppercase font-bold tracking-widest text-text-muted">Groups & Communities</span>
+                                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-surface border border-border text-text-secondary font-bold">{filteredGroups.length}</span>
+                                </div>
+                                {filteredGroups.length > 0 ? (
+                                    filteredGroups.map(renderGroupItem)
+                                ) : (
+                                    <p className="text-xs text-text-muted px-2 py-2 font-medium">No groups joined yet — try discovering a new community above.</p>
+                                )}
+                            </div>
                         )}
-                    </div>
-                )}
 
-                {(activeTab === 'all' || activeTab === 'direct') && activeGroupRequests.length > 0 && (
-                    <div className="mb-6">
-                        <div className="px-2 mb-2 flex items-center justify-between">
-                            <span className="text-[10px] uppercase font-bold tracking-widest text-text-muted">Pending Group Requests</span>
-                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-surface border border-border text-text-secondary font-bold">{activeGroupRequests.length}</span>
-                        </div>
-                        {activeGroupRequests.map((req) => (
-                            <div key={req._id} className="mb-2 p-3 rounded-xl border border-border bg-surface flex flex-col gap-3">
-                                <div className="flex items-center justify-between gap-3">
-                                    <div>
-                                        <p className="text-sm font-semibold text-text-primary">{req.group.name}</p>
-                                        <p className="text-[11px] text-text-muted">Request from {req.user.username} (@{(req.user.profileName || '').replace(/^@/, '')})</p>
+                        {(activeTab === 'all' || activeTab === 'direct') && activeGroupRequests.length > 0 && (
+                            <div className="mb-6">
+                                <div className="px-2 mb-2 flex items-center justify-between">
+                                    <span className="text-[10px] uppercase font-bold tracking-widest text-text-muted">Pending Group Requests</span>
+                                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-surface border border-border text-text-secondary font-bold">{activeGroupRequests.length}</span>
+                                </div>
+                                {activeGroupRequests.map((req) => (
+                                    <div key={req._id} className="mb-2 p-3 rounded-xl border border-border bg-surface flex flex-col gap-3">
+                                        <div className="flex items-center justify-between gap-3">
+                                            <div>
+                                                <p className="text-sm font-semibold text-text-primary">{req.group.name}</p>
+                                                <p className="text-[11px] text-text-muted">Request from {req.user.username} (@{(req.user.profileName || '').replace(/^@/, '')})</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex gap-2">
+                                            <button
+                                                type="button"
+                                                onClick={() => handleGroupRequestResponse(req.group._id, req.user._id, 'approve')}
+                                                className="flex-1 px-3 py-2 rounded-xl bg-success text-white text-xs font-semibold"
+                                            >Approve</button>
+                                            <button
+                                                type="button"
+                                                onClick={() => handleGroupRequestResponse(req.group._id, req.user._id, 'reject')}
+                                                className="flex-1 px-3 py-2 rounded-xl bg-error text-white text-xs font-semibold"
+                                            >Reject</button>
+                                        </div>
                                     </div>
-                                </div>
-                                <div className="flex gap-2">
-                                    <button
-                                        type="button"
-                                        onClick={() => handleGroupRequestResponse(req.group._id, req.user._id, 'approve')}
-                                        className="flex-1 px-3 py-2 rounded-xl bg-success text-white text-xs font-semibold"
-                                    >Approve</button>
-                                    <button
-                                        type="button"
-                                        onClick={() => handleGroupRequestResponse(req.group._id, req.user._id, 'reject')}
-                                        className="flex-1 px-3 py-2 rounded-xl bg-error text-white text-xs font-semibold"
-                                    >Reject</button>
-                                </div>
+                                ))}
                             </div>
-                        ))}
-                    </div>
-                )}
+                        )}
 
-                {(activeTab === 'all' || activeTab === 'direct') && incomingGroupInvites.length > 0 && (
-                    <div className="mb-6">
-                        <div className="px-2 mb-2 flex items-center justify-between">
-                            <span className="text-[10px] uppercase font-bold tracking-widest text-text-muted">Incoming Group Invites</span>
-                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-surface border border-border text-text-secondary font-bold">{incomingGroupInvites.length}</span>
-                        </div>
-                        {incomingGroupInvites.map((invite) => (
-                            <div key={invite._id} className="mb-2 p-3 rounded-xl border border-border bg-surface flex flex-col gap-3">
-                                <div>
-                                    <p className="text-sm font-semibold text-text-primary">{invite.group.name}</p>
-                                    <p className="text-[11px] text-text-muted">Invited by {invite.inviter.username} (@{(invite.inviter.profileName || '').replace(/^@/, '')})</p>
+                        {(activeTab === 'all' || activeTab === 'direct') && incomingGroupInvites.length > 0 && (
+                            <div className="mb-6">
+                                <div className="px-2 mb-2 flex items-center justify-between">
+                                    <span className="text-[10px] uppercase font-bold tracking-widest text-text-muted">Incoming Group Invites</span>
+                                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-surface border border-border text-text-secondary font-bold">{incomingGroupInvites.length}</span>
                                 </div>
-                                <div className="flex gap-2">
-                                    <button
-                                        type="button"
-                                        onClick={() => handleRespondInvite(invite._id, 'accept')}
-                                        className="flex-1 px-3 py-2 rounded-xl bg-primary text-white text-xs font-semibold"
-                                    >Accept</button>
-                                    <button
-                                        type="button"
-                                        onClick={() => handleRespondInvite(invite._id, 'reject')}
-                                        className="flex-1 px-3 py-2 rounded-xl bg-surface border border-border text-text-primary text-xs font-semibold"
-                                    >Decline</button>
-                                </div>
+                                {incomingGroupInvites.map((invite) => (
+                                    <div key={invite._id} className="mb-2 p-3 rounded-xl border border-border bg-surface flex flex-col gap-3">
+                                        <div>
+                                            <p className="text-sm font-semibold text-text-primary">{invite.group.name}</p>
+                                            <p className="text-[11px] text-text-muted">Invited by {invite.inviter.username} (@{(invite.inviter.profileName || '').replace(/^@/, '')})</p>
+                                        </div>
+                                        <div className="flex gap-2">
+                                            <button
+                                                type="button"
+                                                onClick={() => handleRespondInvite(invite._id, 'accept')}
+                                                className="flex-1 px-3 py-2 rounded-xl bg-primary text-white text-xs font-semibold"
+                                            >Accept</button>
+                                            <button
+                                                type="button"
+                                                onClick={() => handleRespondInvite(invite._id, 'reject')}
+                                                className="flex-1 px-3 py-2 rounded-xl bg-surface border border-border text-text-primary text-xs font-semibold"
+                                            >Decline</button>
+                                        </div>
+                                    </div>
+                                ))}
                             </div>
-                        ))}
-                    </div>
+                        )}
+                    </>
                 )}
             </div>
 

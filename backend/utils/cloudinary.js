@@ -7,14 +7,15 @@ cloudinary.config({
 })
 // Cloudinary upload image
 
-const cloudUpload = async (fileToUpload) =>{
+const cloudUpload = async (fileToUpload, options = {}) =>{
     try {
         const data = await cloudinary.uploader.upload(fileToUpload, {
             resource_type: "auto",
+            ...options
         });
         return data
     } catch (error) {
-        throw new Error("Something went wrong")
+        throw new Error(error.message || "Something went wrong")
     }
 }
 

@@ -94,7 +94,7 @@ const getMessages = asyncHandler(async (req, res) => {
 
 // Send a new message (text, photos, multiple file attachments, replies)
 const sendMessage = asyncHandler(async (req, res) => {
-    const { text, replyTo, scheduledAt } = req.body;
+    const { text, replyTo, scheduledAt, messageType, audio } = req.body;
     const targetId = req.params.id; // could be recipientId, groupId, or channelId
     const sender = req.user._id;
     const { type } = req.query; // "group", "channel" or direct
@@ -102,6 +102,15 @@ const sendMessage = asyncHandler(async (req, res) => {
     const { error } = validateMessage({ text, replyTo, scheduledAt });
     if (error) {
         return res.status(400).json({ message: error.details[0].message });
+    }
+
+    let parsedAudio = null;
+    if (audio) {
+        try {
+            parsedAudio = typeof audio === 'string' ? JSON.parse(audio) : audio;
+        } catch (e) {
+            console.error("Failed to parse audio data", e);
+        }
     }
 
     // Retrieve files from multer fields
@@ -138,7 +147,7 @@ const sendMessage = asyncHandler(async (req, res) => {
         }
     }
 
-    if (!text && uploadedPhotos.length === 0 && uploadedAttachments.length === 0) {
+    if (!text && uploadedPhotos.length === 0 && uploadedAttachments.length === 0 && !parsedAudio) {
         return res.status(400).json({ message: "Message cannot be empty." });
     }
 
@@ -148,7 +157,9 @@ const sendMessage = asyncHandler(async (req, res) => {
         replyTo: replyTo || undefined,
         scheduledAt: scheduledAt || undefined,
         Photos: uploadedPhotos,
-        attachments: uploadedAttachments
+        attachments: uploadedAttachments,
+        messageType: messageType || "text",
+        audio: parsedAudio || undefined
     };
 
     let conv = null;
@@ -541,6 +552,34 @@ const forwardMessage = asyncHandler(async (req, res) => {
     res.status(201).json(forwardedMessages);
 });
 
+// Upload audio file to Cloudinary and return details
+const uploadAudio = asyncHandler(async (req, res) => {
+    if (!req.file) {
+        return res.status(400).json({ message: "No audio file uploaded." });
+    }
+
+    try {
+        const result = await cloudUpload(req.file.path);
+        
+        // Remove file from local OS tmp directory
+        if (fs.existsSync(req.file.path)) {
+            fs.unlinkSync(req.file.path);
+        }
+
+        res.status(200).json({
+            url: result.secure_url,
+            publicId: result.public_id,
+            fileSize: req.file.size
+        });
+    } catch (error) {
+        // Cleanup local file on failure
+        if (req.file && fs.existsSync(req.file.path)) {
+            fs.unlinkSync(req.file.path);
+        }
+        res.status(500).json({ message: "Failed to upload audio to Cloudinary: " + error.message });
+    }
+});
+
 module.exports = {
     getUsersInSideBar,
     getMessages,
@@ -551,5 +590,6 @@ module.exports = {
     togglePinMessage,
     toggleStarMessage,
     getStarredMessages,
-    forwardMessage
+    forwardMessage,
+    uploadAudio
 };

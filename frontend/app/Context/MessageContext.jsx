@@ -577,7 +577,7 @@ const MessageContextProvider = ({ children }) => {
     }, [selectedUser, selectedGroup, selectedChannel, socket, authUser, directChats]);
 
     // --- 11. Core messaging APIs (Optimistic updates & Rollbacks) ---
-    const AddNewMessage = async (messageText, images, replyToId = null) => {
+    const AddNewMessage = async (messageText, images, replyToId = null, audio = null) => {
         const token = localStorage.getItem("userToken") || authUser?.token;
         if (!token) return;
 
@@ -593,6 +593,8 @@ const MessageContextProvider = ({ children }) => {
             text: messageText || '',
             Photos: images && images.length > 0 ? images.map(img => ({ url: URL.createObjectURL(img) })) : [],
             attachments: [],
+            messageType: audio ? 'audio' : (images && images.length > 0 ? 'image' : 'text'),
+            audio: audio || undefined,
             isRead: false,
             status: 'sending',
             createdAt: new Date().toISOString(),
@@ -612,6 +614,15 @@ const MessageContextProvider = ({ children }) => {
         }
         formData.append('text', messageText || '');
         if (replyToId) formData.append('replyTo', replyToId);
+        
+        if (audio) {
+            formData.append('messageType', 'audio');
+            formData.append('audio', JSON.stringify(audio));
+        } else if (images && images.length > 0) {
+            formData.append('messageType', 'image');
+        } else {
+            formData.append('messageType', 'text');
+        }
 
         let url = `${process.env.NEXT_PUBLIC_SOCKET_URL}/api/message/send/`;
         let typeParam = "";
@@ -754,6 +765,14 @@ const MessageContextProvider = ({ children }) => {
             formData.append('text', failedMessage.text || '');
             if (failedMessage.replyTo) {
                 formData.append('replyTo', failedMessage.replyTo._id);
+            }
+            if (failedMessage.audio) {
+                formData.append('messageType', 'audio');
+                formData.append('audio', JSON.stringify(failedMessage.audio));
+            } else if (failedMessage.Photos && failedMessage.Photos.length > 0) {
+                formData.append('messageType', 'image');
+            } else {
+                formData.append('messageType', 'text');
             }
             
             const res = await axios.post(url + typeParam, formData, {

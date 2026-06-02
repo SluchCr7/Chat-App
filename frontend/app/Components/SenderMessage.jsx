@@ -7,6 +7,7 @@ import {
     FaCheckDouble, FaFileDownload, FaShare, FaTimes, FaReply 
 } from "react-icons/fa";
 import { MessageContext } from '../Context/MessageContext';
+import VoiceMessage from './VoiceMessage';
 
 const SenderMessage = ({ message, user }) => {
   const { 
@@ -169,6 +170,17 @@ const SenderMessage = ({ message, user }) => {
               </div>
             )}
 
+            {/* If contains Audio message schema */}
+            {message.audio && message.audio.url && (
+              <div className="mb-2 w-full text-left">
+                <VoiceMessage 
+                  audioUrl={message.audio.url} 
+                  duration={message.audio.duration}
+                  isSender={true}
+                />
+              </div>
+            )}
+
             {/* Rich generic attachments */}
             {Array.isArray(message.attachments) && message.attachments.length > 0 && (
               <div className="space-y-3 mb-2 w-full text-left">
@@ -185,11 +197,11 @@ const SenderMessage = ({ message, user }) => {
                   }
                   if (file.fileType === "audio" || file.fileType === "voice") {
                     return (
-                      <audio 
+                      <VoiceMessage 
                         key={idx} 
-                        src={file.url} 
-                        controls 
-                        className="w-64 max-w-full bg-black/5 rounded-lg"
+                        audioUrl={file.url} 
+                        duration={file.duration}
+                        isSender={true}
                       />
                     );
                   }
@@ -216,19 +228,21 @@ const SenderMessage = ({ message, user }) => {
             )}
 
             {/* Editable or Standard message body text */}
-            {isEditing ? (
-              <form onSubmit={handleEditSubmit} className="flex gap-2 items-center">
-                <input 
-                  type="text" 
-                  value={editVal}
-                  onChange={(e) => setEditVal(e.target.value)}
-                  className="bg-black/20 border border-white/20 rounded-lg p-1.5 text-xs text-white outline-none focus:ring-1 focus:ring-white/40"
-                />
-                <button type="submit" className="text-[10px] bg-white text-black font-extrabold px-2 py-1 rounded-lg">Save</button>
-              </form>
-            ) : (
-              <p className="text-sm font-semibold whitespace-pre-wrap leading-relaxed">{message.text}</p>
-            )}
+            {message.text ? (
+              isEditing ? (
+                <form onSubmit={handleEditSubmit} className="flex gap-2 items-center">
+                  <input 
+                    type="text" 
+                    value={editVal}
+                    onChange={(e) => setEditVal(e.target.value)}
+                    className="bg-black/20 border border-white/20 rounded-lg p-1.5 text-xs text-white outline-none focus:ring-1 focus:ring-white/40"
+                  />
+                  <button type="submit" className="text-[10px] bg-white text-black font-extrabold px-2 py-1 rounded-lg">Save</button>
+                </form>
+              ) : (
+                <p className="text-sm font-semibold whitespace-pre-wrap leading-relaxed">{message.text}</p>
+              )
+            ) : null}
           </div>
 
           {/* Reactions Row */}

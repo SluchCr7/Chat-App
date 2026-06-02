@@ -4,6 +4,7 @@ import React, { useContext, useState } from 'react';
 import Image from 'next/image';
 import { FaStar, FaThumbtack, FaRegSmile, FaFileDownload, FaShare, FaTimes, FaReply } from "react-icons/fa";
 import { MessageContext } from '../Context/MessageContext';
+import VoiceMessage from './VoiceMessage';
 
 const ReceiverMessage = ({ message, user }) => {
   const { SendReaction, TogglePin, ToggleStar, contacts, groupChats, handleForwardMessage, setReplyMessage } = useContext(MessageContext);
@@ -104,6 +105,17 @@ const ReceiverMessage = ({ message, user }) => {
               </div>
             )}
 
+            {/* If contains Audio message schema */}
+            {message.audio && message.audio.url && (
+              <div className="mb-2 w-full text-left">
+                <VoiceMessage 
+                  audioUrl={message.audio.url} 
+                  duration={message.audio.duration}
+                  isSender={false}
+                />
+              </div>
+            )}
+
             {/* Rich generic attachments */}
             {Array.isArray(message.attachments) && message.attachments.length > 0 && (
               <div className="space-y-3 mb-2 w-full text-left">
@@ -120,11 +132,11 @@ const ReceiverMessage = ({ message, user }) => {
                   }
                   if (file.fileType === "audio" || file.fileType === "voice") {
                     return (
-                      <audio 
+                      <VoiceMessage 
                         key={idx} 
-                        src={file.url} 
-                        controls 
-                        className="w-64 max-w-full bg-bg-primary rounded-lg"
+                        audioUrl={file.url} 
+                        duration={file.duration}
+                        isSender={false}
                       />
                     );
                   }
@@ -150,7 +162,9 @@ const ReceiverMessage = ({ message, user }) => {
               </div>
             )}
 
-            <p className="text-sm font-semibold whitespace-pre-wrap leading-relaxed">{message.text}</p>
+            {message.text ? (
+              <p className="text-sm font-semibold whitespace-pre-wrap leading-relaxed">{message.text}</p>
+            ) : null}
           </div>
 
           {/* Reactions Row */}

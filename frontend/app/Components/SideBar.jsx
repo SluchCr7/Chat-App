@@ -165,7 +165,7 @@ const SideBar = () => {
                         <Logo compact />
                         {totalUnread > 0 && (
                             <span className="bg-primary/20 border border-primary/30 text-primary-light text-[10px] font-extrabold px-2.5 py-0.5 rounded-full shadow-[0_0_10px_rgba(56,189,248,0.25)] animate-pulse tracking-wide">
-                                Messages ({totalUnread})
+                                ({totalUnread})
                             </span>
                         )}
                     </div>

@@ -54,6 +54,7 @@ app.get('/', (req, res) => {
 
 app.use('/api/auth', require('./Routes/UserRoute.js'))
 app.use('/api/message', require('./Routes/MessageRoute.js'))
+app.use('/api/messages', require('./Routes/MessagesRoute.js'))
 app.use('/api/notify', require('./Routes/NotifyRoute.js'))
 app.use('/api/group', require('./Routes/GroupRoute.js'))
 app.use('/api/admin', require('./Routes/AdminRoute.js'))

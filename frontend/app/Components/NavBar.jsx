@@ -1,9 +1,8 @@
 'use client'
 import React, { useContext } from 'react'
 import Link from 'next/link'
-import { CiSettings, CiLogout, CiUser } from "react-icons/io5"; // تم استبدالها بـ io5 لشكل أكثر اتساقاً ونعومة
+import { IoSettingsOutline, IoLogOutOutline, IoPersonOutline, IoNotificationsOutline } from "react-icons/io5";
 import { FaUserShield } from "react-icons/fa6";
-import { IoNotificationsOutline } from "react-icons/io5";
 import { AuthContext } from '../Context/AuthContext';
 import NotificationComponent from './NotificationComponent';
 import Logo from './Logo'
@@ -57,7 +56,7 @@ const NavBar = ({ showMenu, setShowMenu, showNotification, setShowNotification }
           title="App Settings"
           className="p-2.5 rounded-xl text-text-secondary hover:text-text-primary hover:bg-surface-hover transition-all duration-200 flex items-center justify-center"
         >
-          <CiSettings className="text-[22px]" />
+          <IoSettingsOutline className="text-[22px]" />
         </Link>
 
         {authUser && (
@@ -69,7 +68,7 @@ const NavBar = ({ showMenu, setShowMenu, showNotification, setShowNotification }
               title="Your Profile"
               className="p-2.5 rounded-xl text-text-secondary hover:text-text-primary hover:bg-surface-hover transition-all duration-200 flex items-center justify-center"
             >
-              <CiUser className="text-[22px]" />
+              <IoPersonOutline className="text-[22px]" />
             </Link>
 
             {/* زر الإشعارات */}
@@ -96,7 +95,7 @@ const NavBar = ({ showMenu, setShowMenu, showNotification, setShowNotification }
               title="Logout"
               className="p-2.5 rounded-xl text-rose-500 hover:text-rose-600 hover:bg-rose-500/5 transition-all duration-200 flex items-center justify-center"
             >
-              <CiLogout className="text-[22px]" />
+              <IoLogOutOutline className="text-[22px]" />
             </button>
 
             {/* مكون الإشعارات المنسدل */}

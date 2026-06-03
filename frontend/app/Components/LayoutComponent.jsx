@@ -29,7 +29,7 @@ const LayoutWrapper = ({ children, showNotification, setShowNotification, showMe
                     showNotification={showNotification} 
                     setShowNotification={setShowNotification} 
                 />
-                <main className="flex-1 flex flex-col overflow-hidden bg-bg-primary">{children}</main>
+                <main className={`flex-1 flex flex-col bg-bg-primary ${pathname === "/" ? "overflow-hidden" : "overflow-y-auto"}`}>{children}</main>
             </div>
         );
     }

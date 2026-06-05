@@ -78,7 +78,7 @@ const Chatheader = () => {
       <div className="flex items-center gap-2 sm:gap-4 overflow-hidden flex-1 mr-3">
         <button
           onClick={handleBack}
-          className="md:hidden p-2 rounded-xl bg-bg-primary hover:bg-surface border border-border text-text-secondary hover:text-text-primary transition-all duration-300 mr-1 flex items-center justify-center flex-shrink-0"
+          className="p-2 rounded-xl bg-bg-primary hover:bg-surface border border-border text-text-secondary hover:text-text-primary transition-all duration-300 mr-1 flex items-center justify-center flex-shrink-0"
           title="Back to Chats"
         >
           <FaArrowLeft className="text-xs" />
@@ -177,8 +177,8 @@ const Chatheader = () => {
       {/* Channel Creation Modal */}
       {showChannelModal && (
         <div className="menu_bg">
-          <div className="bg-modal-bg border border-border p-7 rounded-[24px] w-full max-w-md shadow-2xl relative animate-slide-in">
-            <h3 className="text-lg font-bold text-text-primary mb-4 flex items-center gap-2">
+          <div className="bg-black border border-border p-7 rounded-[24px] w-full max-w-md shadow-2xl relative animate-slide-in">
+            <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
               <FaPlus className="text-primary" /> Create New Channel
             </h3>
             <form onSubmit={handleCreateChannelSubmit} className="space-y-4">

@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useContext, useState } from 'react';
+import React, { useContext, useState, useEffect } from 'react';
 import { MessageContext } from '../Context/MessageContext';
 import { AuthContext } from '../Context/AuthContext';
 import Image from 'next/image';
-import { FaTimes, FaFileAlt, FaImages, FaUsers, FaUserShield } from "react-icons/fa";
+import { FaTimes, FaFileAlt, FaImages, FaUsers, FaUserShield, FaStar } from "react-icons/fa";
 import { toast } from 'react-toastify';
 import axios from 'axios';
 
@@ -20,11 +20,33 @@ const RightSidebar = () => {
     fetchGroupDetails,
     handleGroupRequestResponse,
     groupChannels,
-    isGroupDetailsLoading
+    isGroupDetailsLoading,
+    fetchStarredMessages,
+    ToggleStar
   } = useContext(MessageContext);
 
   const { authUser } = useContext(AuthContext);
   const [activeSubTab, setActiveSubTab] = useState(selectedGroup || selectedChannel ? 'members' : 'media');
+  const [starredMessages, setStarredMessages] = useState([]);
+  const [isStarredLoading, setIsStarredLoading] = useState(false);
+
+  const loadStarredMessages = async () => {
+    setIsStarredLoading(true);
+    const msgs = await fetchStarredMessages();
+    setStarredMessages(msgs);
+    setIsStarredLoading(false);
+  };
+
+  const handleUnstar = async (msgId) => {
+    await ToggleStar(msgId);
+    setStarredMessages(prev => prev.filter(m => m._id !== msgId));
+  };
+
+  useEffect(() => {
+    if (activeSubTab === 'starred') {
+      loadStarredMessages();
+    }
+  }, [activeSubTab, selectedUser, selectedGroup, selectedChannel]);
 
   if (!selectedUser && !selectedGroup && !selectedChannel) return null;
 
@@ -192,6 +214,14 @@ const RightSidebar = () => {
             }`}
           >
             <span className="flex items-center justify-center gap-2"><FaFileAlt className="text-[11px]" /> Files</span>
+          </button>
+          <button 
+            onClick={() => setActiveSubTab('starred')}
+            className={`py-2 text-xs font-semibold rounded-2xl transition-all duration-300 ${
+              activeSubTab === 'starred' ? "bg-surface text-text-primary shadow-sm" : "text-text-muted hover:text-text-secondary bg-bg-sidebar"
+            }`}
+          >
+            <span className="flex items-center justify-center gap-2"><FaStar className="text-[11px]" /> Starred</span>
           </button>
         </div>
 
@@ -373,6 +403,81 @@ const RightSidebar = () => {
           ) : (
             <p className="text-xs text-text-muted text-center py-6 font-medium">No shared files found</p>
           )
+        )}
+
+        {/* Starred Messages list */}
+        {activeSubTab === 'starred' && (
+          <div className="space-y-3">
+            {isStarredLoading ? (
+              <p className="text-xs text-text-muted text-center py-6">Loading starred messages…</p>
+            ) : starredMessages.length > 0 ? (
+              starredMessages.map((msg) => {
+                const isSentByMe = msg.sender?._id === authUser._id || msg.sender === authUser._id;
+                const senderName = isSentByMe ? "You" : (msg.sender?.username || "Someone");
+                
+                return (
+                  <div key={msg._id} className="p-3.5 rounded-2xl bg-surface border border-border flex flex-col gap-2 relative group hover:border-primary/30 transition-all duration-300">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        <Image
+                          src={msg.sender?.profilePic?.url || "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png"}
+                          alt="avatar"
+                          width={24}
+                          height={24}
+                          unoptimized
+                          className="w-6 h-6 rounded-full object-cover border border-border"
+                        />
+                        <div className="flex flex-col text-left">
+                          <span className="text-xs font-semibold text-text-primary leading-tight">{senderName}</span>
+                          <span className="text-[9px] text-text-muted mt-0.5">{new Date(msg.createdAt).toLocaleString()}</span>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => handleUnstar(msg._id)}
+                        className="p-1 rounded-full text-warning hover:text-text-muted hover:bg-surface-hover transition-all duration-300"
+                        title="Unstar message"
+                      >
+                        <FaStar className="text-xs" />
+                      </button>
+                    </div>
+
+                    {/* Message Body */}
+                    <div className="text-xs text-text-secondary leading-relaxed text-left pl-8 pr-2 break-words">
+                      {msg.text && <p>{msg.text}</p>}
+                      
+                      {msg.Photos && msg.Photos.length > 0 && (
+                        <div className="mt-2 grid grid-cols-2 gap-1.5">
+                          {msg.Photos.map((photo, index) => (
+                            <a href={photo.url} target="_blank" rel="noreferrer" key={index} className="aspect-video rounded-lg overflow-hidden border border-border">
+                              <Image src={photo.url} alt="photo" width={100} height={100} unoptimized className="object-cover w-full h-full" />
+                            </a>
+                          ))}
+                        </div>
+                      )}
+                      
+                      {msg.audio && (
+                        <div className="mt-2 p-2 rounded-xl bg-bg-primary/50 border border-border flex items-center gap-2 max-w-xs">
+                          <span className="text-xs">🎤 Voice Note ({msg.audio.duration}s)</span>
+                        </div>
+                      )}
+
+                      {msg.attachments && msg.attachments.length > 0 && (
+                        <div className="mt-2 space-y-1">
+                          {msg.attachments.map((file, index) => (
+                            <a href={file.url} target="_blank" rel="noreferrer" key={index} className="flex items-center gap-1.5 p-1.5 rounded-lg bg-bg-primary/50 border border-border hover:bg-surface transition-colors truncate">
+                              <span className="text-[10px] truncate">{file.name}</span>
+                            </a>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })
+            ) : (
+              <p className="text-xs text-text-muted text-center py-6 font-medium">No starred messages in this chat yet.</p>
+            )}
+          </div>
         )}
 
       </div>

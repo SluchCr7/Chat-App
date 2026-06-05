@@ -3,6 +3,7 @@
 import React, { useContext, useEffect, useRef, useState, useCallback } from 'react';
 import { MessageContext } from '../Context/MessageContext';
 import { AuthContext } from '../Context/AuthContext';
+import { ThemeContext } from '../Context/ThemeContext';
 import ChatInput from './ChatInput';
 import Chatheader from './Chatheader';
 import MessageSkeleton from '../Skeletons/MessageSkeleton';
@@ -26,6 +27,7 @@ const ChatContainer = () => {
   } = useContext(MessageContext);
   
   const { authUser } = useContext(AuthContext);
+  const { wallpaper } = useContext(ThemeContext);
   const MessageEndRef = useRef(null);
   const ScrollContainerRef = useRef(null);
 
@@ -109,6 +111,20 @@ const ChatContainer = () => {
       setPreviousScrollHeight(scrollHeight);
       loadMoreMessages();
     }
+  };
+
+  const getWallpaperStyle = () => {
+    if (!wallpaper || wallpaper.type === 'none') return {};
+    if (wallpaper.type === 'color') return { backgroundColor: wallpaper.value };
+    if (wallpaper.type === 'pattern' || wallpaper.type === 'image') {
+      return {
+        backgroundImage: `url(${wallpaper.value})`,
+        backgroundSize: wallpaper.type === 'pattern' ? 'auto' : 'cover',
+        backgroundRepeat: wallpaper.type === 'pattern' ? 'repeat' : 'no-repeat',
+        backgroundPosition: 'center',
+      };
+    }
+    return {};
   };
 
   if (isMessagesLoading && messages.length === 0) return <MessageSkeleton />;
@@ -196,12 +212,19 @@ const ChatContainer = () => {
         </div>
       )}
 
-      {/* Messages Scroll Area */}
-      <div 
-        ref={ScrollContainerRef}
-        onScroll={handleScroll}
-        className="flex-1 w-full overflow-y-auto p-5 space-y-6 wa-scroll bg-bg-primary/50"
-      >
+      {/* Messages Scroll Area Container */}
+      <div className="flex-1 w-full relative overflow-hidden flex flex-col">
+        {wallpaper && wallpaper.type !== 'none' && (
+          <div 
+            className="absolute inset-0 pointer-events-none transition-all duration-300"
+            style={{ ...getWallpaperStyle(), opacity: wallpaper.opacity, zIndex: 0 }}
+          />
+        )}
+        <div 
+          ref={ScrollContainerRef}
+          onScroll={handleScroll}
+          className="flex-1 w-full overflow-y-auto p-5 space-y-6 wa-scroll bg-transparent z-10 relative"
+        >
         {isMessagesLoading && (
           <div className="flex justify-center py-2">
             <span className="loading loading-spinner loading-sm text-primary"></span>
@@ -263,6 +286,7 @@ const ChatContainer = () => {
         )}
 
         <div ref={MessageEndRef} />
+      </div>
       </div>
 
       {/* Real-time typing indicators docked container */}

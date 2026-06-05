@@ -465,11 +465,27 @@ const toggleStarMessage = asyncHandler(async (req, res) => {
     res.status(200).json({ starred: !isStarred, message });
 });
 
-// Get all starred messages for user
+// Get all starred messages for user (with optional conversation/group/channel filtering)
 const getStarredMessages = asyncHandler(async (req, res) => {
-    const starred = await Message.find({ starredBy: req.user._id })
+    const query = { starredBy: req.user._id };
+    const { type, id } = req.query;
+
+    if (id) {
+        if (type === "group") {
+            query.group = id;
+        } else if (type === "channel") {
+            query.channel = id;
+        } else if (type === "direct") {
+            query.conversation = id;
+        }
+    }
+
+    const starred = await Message.find(query)
         .populate('sender', 'username profilePic profileName status')
-        .populate('receiver', 'username profilePic profileName status');
+        .populate('receiver', 'username profilePic profileName status')
+        .populate('replyTo')
+        .sort({ createdAt: -1 });
+
     res.status(200).json(starred);
 });
 

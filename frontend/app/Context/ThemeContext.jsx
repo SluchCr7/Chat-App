@@ -5,13 +5,26 @@ export const ThemeContext = createContext()
 
 const ThemeContextProvider = ({ children }) => {
   const [theme, setTheme] = useState('white');
+  const [wallpaper, setWallpaper] = useState({
+    type: 'none',
+    value: '',
+    opacity: 0.15
+  });
 
-  // Load theme from localStorage on first render
+  // Load theme and wallpaper from localStorage on first render
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const savedTheme = localStorage.getItem('theme');
       if (savedTheme) {
         setTheme(savedTheme);
+      }
+      const savedWallpaper = localStorage.getItem('chat-wallpaper');
+      if (savedWallpaper) {
+        try {
+          setWallpaper(JSON.parse(savedWallpaper));
+        } catch (e) {
+          console.error("Error parsing chat-wallpaper from localStorage:", e);
+        }
       }
     }
   }, []);
@@ -25,8 +38,16 @@ const ThemeContextProvider = ({ children }) => {
       localStorage.setItem('theme', theme); // Save the current theme
     }
   }, [theme]);
+
+  // Save wallpaper to localStorage when wallpaper state changes
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('chat-wallpaper', JSON.stringify(wallpaper));
+    }
+  }, [wallpaper]);
+
   return (
-    <ThemeContext.Provider value={{ theme, setTheme }}>
+    <ThemeContext.Provider value={{ theme, setTheme, wallpaper, setWallpaper }}>
       {children}
     </ThemeContext.Provider>
   )

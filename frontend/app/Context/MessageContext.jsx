@@ -497,34 +497,30 @@ const MessageContextProvider = ({ children }) => {
                 if (selectedUser && msg.sender?._id === selectedUser._id) {
                     socket.emit("markAsSeen", { messageIds: [msg._id], senderId: selectedUser._id });
                 }
-            } else {
-                // Background alert & sidebar count increments
-                fetchSidebarData();
             }
+            
+            // Background alert & sidebar count increments / updates
+            fetchSidebarData();
         };
 
         const handleMessageUpdated = (updatedMsg) => {
             setMessages((prev) => 
                 prev.map((msg) => msg._id === updatedMsg._id ? updatedMsg : msg)
             );
+            fetchSidebarData();
         };
 
         const handleMessageDeleted = ({ messageId }) => {
             setMessages((prev) => prev.filter((msg) => msg._id !== messageId));
+            fetchSidebarData();
         };
 
         const handleTypingStatus = ({ senderId, senderName, isTyping, type, targetId }) => {
-            const isActiveContext = 
-                (type === "direct" && selectedUser && selectedUser._id === senderId) ||
-                (type === "group" && selectedGroup && selectedGroup._id === targetId) ||
-                (type === "channel" && selectedChannel && selectedChannel._id === targetId);
-
-            if (isActiveContext) {
-                setTypingUsers((prev) => ({
-                    ...prev,
-                    [senderId]: { senderName, isTyping }
-                }));
-            }
+            const trackingKey = type === "direct" ? senderId : targetId;
+            setTypingUsers((prev) => ({
+                ...prev,
+                [trackingKey]: { senderName, isTyping, type }
+            }));
         };
 
         const handleMessagesSeen = ({ seenBy, messageIds }) => {
@@ -812,11 +808,66 @@ const MessageContextProvider = ({ children }) => {
             const res = await axios.put(`${process.env.NEXT_PUBLIC_SOCKET_URL}/api/message/star/${messageId}`, {}, {
                 headers: { authorization: `Bearer ${token}` }
             });
+
+            // Update messages locally
+            setMessages((prev) => 
+                prev.map((msg) => {
+                    if (msg._id === messageId) {
+                        const isStarredNow = res.data.starred;
+                        let starredBy = msg.starredBy || [];
+                        if (isStarredNow) {
+                            if (!starredBy.includes(authUser._id)) {
+                                starredBy = [...starredBy, authUser._id];
+                            }
+                        } else {
+                            starredBy = starredBy.filter(id => id.toString() !== authUser._id.toString());
+                        }
+                        return { ...msg, starredBy };
+                    }
+                    return msg;
+                })
+            );
+
             toast.success(res.data.starred ? "Starred message" : "Unstarred message");
         } catch (err) {
             console.error(err);
         }
     };
+
+    const fetchStarredMessages = useCallback(async () => {
+        try {
+            const token = localStorage.getItem("userToken") || authUser?.token;
+            if (!token) return [];
+
+            let type = "";
+            let id = "";
+
+            if (selectedChannel) {
+                type = "channel";
+                id = selectedChannel._id;
+            } else if (selectedGroup) {
+                type = "group";
+                id = selectedGroup._id;
+            } else if (selectedUser) {
+                type = "direct";
+                const activeDM = directChatsRef.current.find(c => c.recipient?._id === selectedUser._id);
+                if (activeDM) id = activeDM._id;
+                else return [];
+            } else {
+                return [];
+            }
+
+            const res = await axios.get(`${process.env.NEXT_PUBLIC_SOCKET_URL}/api/message/starred`, {
+                headers: { authorization: `Bearer ${token}` },
+                params: { type, id }
+            });
+
+            return res.data || [];
+        } catch (err) {
+            console.error("Error fetching starred messages:", err);
+            return [];
+        }
+    }, [authUser, selectedUser, selectedGroup, selectedChannel]);
 
     // Create Group Community
     const CreateGroup = async (name, description, isPrivate) => {
@@ -943,6 +994,7 @@ const MessageContextProvider = ({ children }) => {
                 RetryMessage,
                 TogglePin,
                 ToggleStar,
+                fetchStarredMessages,
                 CreateGroup,
                 CreateChannel,
                 groupChannels,

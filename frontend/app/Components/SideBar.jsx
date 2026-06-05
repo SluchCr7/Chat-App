@@ -2,16 +2,45 @@
 
 import React, { useContext, useEffect, useState } from 'react';
 import SideBarSkeleton from '../Skeletons/SideBarSkeleton';
-import { FaUser, FaUsers, FaPlus, FaSearch, FaChevronRight } from "react-icons/fa";
+import { FaUser, FaUsers, FaPlus, FaSearch, FaChevronRight, FaVolumeMute, FaThumbtack } from "react-icons/fa";
 import Image from 'next/image';
 import { MessageContext } from '../Context/MessageContext';
 import { AuthContext } from '../Context/AuthContext';
 import Logo from './Logo';
 import Link from 'next/link';
 
+const formatLastActivityTime = (timestamp) => {
+    if (!timestamp) return "";
+    const date = new Date(timestamp);
+    const now = new Date();
+    
+    // Check if it is today
+    if (date.toDateString() === now.toDateString()) {
+        return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+    
+    // Check if it is yesterday
+    const yesterday = new Date(now);
+    yesterday.setDate(now.getDate() - 1);
+    if (date.toDateString() === yesterday.toDateString()) {
+        return "Yesterday";
+    }
+    
+    // Check if it is within 7 days
+    const diffTime = Math.abs(now - date);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    if (diffDays < 7) {
+        return date.toLocaleDateString([], { weekday: 'short' });
+    }
+    
+    // Older dates
+    return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+};
+
 const SideBar = () => {
     const { 
         isSidebarLoading,
+        directChats,
         contacts, 
         groupChats, 
         selectedUser, 
@@ -33,7 +62,8 @@ const SideBar = () => {
         handleJoinGroup,
         handleRespondInvite,
         handleGroupRequestResponse,
-        CreateGroup
+        CreateGroup,
+        typingUsers
     } = useContext(MessageContext);
 
     const { authUser, onlineUsers } = useContext(AuthContext);
@@ -45,6 +75,14 @@ const SideBar = () => {
     const [newGroupName, setNewGroupName] = useState('');
     const [newGroupDesc, setNewGroupDesc] = useState('');
     const [newGroupPrivate, setNewGroupPrivate] = useState(false);
+    const [showContacts, setShowContacts] = useState(false);
+
+    // Expand contacts list automatically if directChats is empty
+    useEffect(() => {
+        if (!isSidebarLoading && directChats?.length === 0) {
+            setShowContacts(true);
+        }
+    }, [isSidebarLoading, directChats?.length]);
 
     useEffect(() => {
         const timer = setTimeout(() => {
@@ -55,6 +93,7 @@ const SideBar = () => {
 
         return () => clearTimeout(timer);
     }, [groupSearchQuery, handleSearchGroups]);
+
     const handleCreateGroupSubmit = async (e) => {
         e.preventDefault();
         if (!newGroupName.trim()) return;
@@ -65,14 +104,40 @@ const SideBar = () => {
         setShowGroupModal(false);
     };
 
-    // Filter Logic
-    const filteredUsers = contacts.filter(user => 
-        (user.username && user.username.toLowerCase().includes(searchQuery.toLowerCase())) ||
-        (user.profileName && user.profileName.toLowerCase().includes(searchQuery.toLowerCase()))
+    // Filter & Sort Logic for Direct Chats (Conversations)
+    const filteredDirectChats = (directChats || []).filter(chat => {
+        const user = chat.recipient;
+        if (!user) return false;
+        return (user.username && user.username.toLowerCase().includes(searchQuery.toLowerCase())) ||
+               (user.profileName && user.profileName.toLowerCase().includes(searchQuery.toLowerCase())) ||
+               (chat.lastMessage?.text && chat.lastMessage.text.toLowerCase().includes(searchQuery.toLowerCase()));
+    });
+
+    const sortedDirectChats = [...filteredDirectChats].sort((a, b) => {
+        if (a.isPinned && !b.isPinned) return -1;
+        if (!a.isPinned && b.isPinned) return 1;
+        return new Date(b.lastActivity || 0) - new Date(a.lastActivity || 0);
+    });
+
+    // Filter & Sort Logic for Groups
+    const filteredGroups = (groupChats || []).filter(g => 
+        g.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (g.lastMessage?.text && g.lastMessage.text.toLowerCase().includes(searchQuery.toLowerCase()))
     );
 
-    const filteredGroups = groupChats.filter(g => 
-        g.name.toLowerCase().includes(searchQuery.toLowerCase())
+    const sortedGroups = [...filteredGroups].sort((a, b) => {
+        if (a.isPinned && !b.isPinned) return -1;
+        if (!a.isPinned && b.isPinned) return 1;
+        return new Date(b.lastActivity || 0) - new Date(a.lastActivity || 0);
+    });
+
+    // Filter contacts who do not have an active chat conversation yet
+    const directChatUserIds = (directChats || []).map(c => c.recipient?._id);
+    const contactsWithoutChats = (contacts || []).filter(c => !directChatUserIds.includes(c._id));
+
+    const filteredContactsWithoutChats = contactsWithoutChats.filter(user => 
+        (user.username && user.username.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (user.profileName && user.profileName.toLowerCase().includes(searchQuery.toLowerCase()))
     );
 
     const suggestionContacts = searchSuggestions;
@@ -80,8 +145,113 @@ const SideBar = () => {
     const activeGroupRequests = requests?.joinRequests || [];
     const incomingGroupInvites = requests?.invites || [];
 
-    const renderUserItem = (user) => {
-        const isSelected = selectedUser && selectedUser._id === user._id;
+    const renderDirectChatItem = (chat) => {
+        const user = chat.recipient;
+        if (!user) return null;
+        
+        const isSelected = selectedUser && selectedUser._id === user._id && !selectedGroup && !selectedChannel;
+        const isOnline = onlineUsers.includes(user._id) || user.isOnline;
+        
+        let statusColor = "bg-text-disabled";
+        if (isOnline) {
+            if (user.status === "away") statusColor = "bg-warning";
+            else if (user.status === "busy") statusColor = "bg-error";
+            else statusColor = "bg-success status-glow-online";
+        }
+
+        const isTyping = typingUsers[user._id]?.isTyping;
+
+        const renderLastMessageContent = () => {
+            if (isTyping) {
+                return <span className="text-success font-semibold animate-pulse">typing...</span>;
+            }
+            
+            if (chat.draft) {
+                return (
+                    <span className="text-rose-400 font-semibold truncate block">
+                        <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-rose-500/10 mr-1">Draft</span>
+                        <span className="text-text-secondary font-medium">{chat.draft}</span>
+                    </span>
+                );
+            }
+            
+            if (!chat.lastMessage) {
+                return <span className="text-text-muted truncate italic">No messages yet</span>;
+            }
+            
+            const isSentByMe = chat.lastMessage.sender === authUser?._id || chat.lastMessage.sender?._id === authUser?._id;
+            const senderPrefix = isSentByMe ? "You: " : "";
+            
+            let messageContent = chat.lastMessage.text || "";
+            if (chat.lastMessage.messageType === "image" || (chat.lastMessage.Photos && chat.lastMessage.Photos.length > 0)) {
+                messageContent = "📷 Photo";
+            } else if (chat.lastMessage.messageType === "audio" || chat.lastMessage.audio) {
+                messageContent = "🎤 Voice note";
+            } else if (chat.lastMessage.attachments && chat.lastMessage.attachments.length > 0) {
+                messageContent = "📁 File";
+            }
+            
+            return (
+                <span className={`truncate block max-w-full ${chat.unreadCount > 0 ? "text-text-primary font-semibold" : "text-text-muted"}`}>
+                    {senderPrefix}{messageContent}
+                </span>
+            );
+        };
+
+        return (
+            <button
+                key={`chat-${chat._id}`}
+                onClick={() => setSelectedUser(user)}
+                className={`w-full p-3 mb-1.5 flex items-center justify-between rounded-xl border transition-all duration-300 ${
+                    isSelected 
+                    ? "bg-primary/10 border-primary/20 text-primary-light font-semibold shadow-sm" 
+                    : "border-transparent text-text-secondary hover:text-text-primary hover:bg-surface-hover"
+                }`}
+            >
+                <div className="flex items-center gap-3 overflow-hidden flex-1">
+                    <div className="relative flex-shrink-0 flex items-center">
+                        <Image 
+                            src={user?.profilePic?.url || "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png"}
+                            width={40}
+                            height={40}
+                            alt="avatar"
+                            className="rounded-full object-cover border border-border w-10 h-10"
+                        />
+                        <div className={`w-3.5 h-3.5 rounded-full absolute bottom-0 right-0 border-2 border-bg-sidebar ${statusColor}`}></div>
+                    </div>
+                    <div className="flex flex-col items-start text-left overflow-hidden flex-1 leading-tight">
+                        <div className="flex items-center justify-between w-full">
+                            <span className={`text-sm font-semibold truncate ${isSelected ? "text-primary-light" : "text-text-primary"}`}>
+                                {user.username}
+                            </span>
+                            {chat.lastActivity && (
+                                <span className="text-[10px] text-text-muted flex-shrink-0 ml-1">
+                                    {formatLastActivityTime(chat.lastActivity)}
+                                </span>
+                            )}
+                        </div>
+                        <div className="flex items-center justify-between w-full mt-0.5 text-xs text-text-secondary overflow-hidden">
+                            <div className="overflow-hidden flex-1 pr-2">
+                                {renderLastMessageContent()}
+                            </div>
+                            <div className="flex items-center gap-1.5 flex-shrink-0">
+                                {chat.isMuted && <FaVolumeMute className="text-[10px] text-text-muted" />}
+                                {chat.isPinned && <FaThumbtack className="text-[10px] text-primary" />}
+                                {chat.unreadCount > 0 && (
+                                    <span className="bg-primary text-text-inverse text-[10px] font-extrabold px-1.5 py-0.5 rounded-full min-w-5 h-5 flex items-center justify-center shadow-[0_0_10px_rgba(56,189,248,0.25)] animate-pulse">
+                                        {chat.unreadCount}
+                                    </span>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </button>
+        );
+    };
+
+    const renderContactItem = (user) => {
+        const isSelected = selectedUser && selectedUser._id === user._id && !selectedGroup && !selectedChannel;
         const isOnline = onlineUsers.includes(user._id) || user.isOnline;
         
         let statusColor = "bg-text-disabled";
@@ -93,28 +263,28 @@ const SideBar = () => {
 
         return (
             <button
-                key={`user-${user._id}`}
+                key={`contact-${user._id}`}
                 onClick={() => setSelectedUser(user)}
-                className={`w-full p-3 mb-1.5 flex items-center justify-between rounded-xl border transition-all duration-300 ${
+                className={`w-full p-3 mb-1 flex items-center justify-between rounded-xl border transition-all duration-300 ${
                     isSelected 
                     ? "bg-primary/10 border-primary/20 text-primary-light font-semibold shadow-sm" 
                     : "border-transparent text-text-secondary hover:text-text-primary hover:bg-surface-hover"
                 }`}
             >
-                <div className="flex items-center gap-3">
-                    <div className="relative flex items-center">
+                <div className="flex items-center gap-3 overflow-hidden flex-1">
+                    <div className="relative flex-shrink-0 flex items-center">
                         <Image 
                             src={user?.profilePic?.url || "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png"}
-                            width={40}
-                            height={40}
+                            width={36}
+                            height={36}
                             alt="avatar"
-                            className="rounded-full object-cover border border-border"
+                            className="rounded-full object-cover border border-border w-9 h-9"
                         />
-                        <div className={`w-3.5 h-3.5 rounded-full absolute bottom-0 right-0 border-2 border-bg-sidebar ${statusColor}`}></div>
+                        <div className={`w-3 h-3 rounded-full absolute bottom-0 right-0 border-2 border-bg-sidebar ${statusColor}`}></div>
                     </div>
-                    <div className="flex flex-col items-start text-left">
-                        <span className={`text-sm leading-tight ${isSelected ? "text-primary-light" : "text-text-primary"}`}>{user.username}</span>
-                        <span className="text-[11px] text-text-muted font-medium">@{(user.profileName || '').replace('@', '')}</span>
+                    <div className="flex flex-col items-start text-left overflow-hidden flex-1">
+                        <span className={`text-sm font-semibold truncate ${isSelected ? "text-primary-light" : "text-text-primary"}`}>{user.username}</span>
+                        <span className="text-[11px] text-text-muted font-medium truncate">@{(user.profileName || '').replace('@', '')}</span>
                     </div>
                 </div>
                 {isSelected && <FaChevronRight className="text-[10px] text-primary animate-pulse" />}
@@ -124,6 +294,47 @@ const SideBar = () => {
 
     const renderGroupItem = (group) => {
         const isSelected = selectedGroup && selectedGroup._id === group._id;
+        const typingInfo = typingUsers[group._id];
+        const isTyping = typingInfo?.isTyping;
+
+        const renderGroupLastMessageContent = () => {
+            if (isTyping) {
+                return <span className="text-success font-semibold animate-pulse">{typingInfo.senderName} is typing...</span>;
+            }
+            
+            if (group.draft) {
+                return (
+                    <span className="text-rose-400 font-semibold truncate block">
+                        <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-rose-500/10 mr-1">Draft</span>
+                        <span className="text-text-secondary font-medium">{group.draft}</span>
+                    </span>
+                );
+            }
+            
+            if (!group.lastMessage) {
+                return <span className="text-text-muted truncate italic">No messages yet</span>;
+            }
+            
+            const isSentByMe = group.lastMessage.sender === authUser?._id || group.lastMessage.sender?._id === authUser?._id;
+            const senderName = isSentByMe ? "You" : (group.lastMessage.sender?.username || "Someone");
+            const senderPrefix = `${senderName}: `;
+            
+            let messageContent = group.lastMessage.text || "";
+            if (group.lastMessage.messageType === "image" || (group.lastMessage.Photos && group.lastMessage.Photos.length > 0)) {
+                messageContent = "📷 Photo";
+            } else if (group.lastMessage.messageType === "audio" || group.lastMessage.audio) {
+                messageContent = "🎤 Voice note";
+            } else if (group.lastMessage.attachments && group.lastMessage.attachments.length > 0) {
+                messageContent = "📁 File";
+            }
+            
+            return (
+                <span className={`truncate block max-w-full ${group.unreadCount > 0 ? "text-text-primary font-semibold" : "text-text-muted"}`}>
+                    {senderPrefix}{messageContent}
+                </span>
+            );
+        };
+
         return (
             <button
                 key={`group-${group._id}`}
@@ -134,25 +345,46 @@ const SideBar = () => {
                     : "border-transparent text-text-secondary hover:text-text-primary hover:bg-surface-hover"
                 }`}
             >
-                <div className="flex items-center gap-3">
-                    <div className="relative">
+                <div className="flex items-center gap-3 overflow-hidden flex-1">
+                    <div className="relative flex-shrink-0">
                         <Image 
                             src={group?.avatar?.url || "https://cdn.pixabay.com/photo/2016/11/14/17/39/group-1824145_1280.png"}
                             width={40}
                             height={40}
                             alt="avatar"
-                            className="rounded-full object-cover border border-border"
+                            className="rounded-full object-cover border border-border w-10 h-10"
                         />
                         <div className="w-3.5 h-3.5 rounded-full absolute bottom-0 right-0 border-2 border-bg-sidebar bg-accent flex items-center justify-center">
                             <FaUsers className="text-[8px] text-text-inverse" />
                         </div>
                     </div>
-                    <div className="flex flex-col items-start text-left">
-                        <span className={`text-sm leading-tight ${isSelected ? "text-primary-light" : "text-text-primary"}`}>{group.name}</span>
-                        <span className="text-[11px] text-text-muted font-medium">{group?.membersCount || group?.members?.length || 0} members</span>
+                    <div className="flex flex-col items-start text-left overflow-hidden flex-1 leading-tight">
+                        <div className="flex items-center justify-between w-full">
+                            <span className={`text-sm font-semibold truncate ${isSelected ? "text-primary-light" : "text-text-primary"}`}>
+                                {group.name}
+                            </span>
+                            {group.lastActivity && (
+                                <span className="text-[10px] text-text-muted flex-shrink-0 ml-1">
+                                    {formatLastActivityTime(group.lastActivity)}
+                                </span>
+                            )}
+                        </div>
+                        <div className="flex items-center justify-between w-full mt-0.5 text-xs text-text-secondary overflow-hidden">
+                            <div className="overflow-hidden flex-1 pr-2">
+                                {renderGroupLastMessageContent()}
+                            </div>
+                            <div className="flex items-center gap-1.5 flex-shrink-0">
+                                {group.isMuted && <FaVolumeMute className="text-[10px] text-text-muted" />}
+                                {group.isPinned && <FaThumbtack className="text-[10px] text-primary" />}
+                                {group.unreadCount > 0 && (
+                                    <span className="bg-primary text-text-inverse text-[10px] font-extrabold px-1.5 py-0.5 rounded-full min-w-5 h-5 flex items-center justify-center shadow-[0_0_10px_rgba(56,189,248,0.25)] animate-pulse">
+                                        {group.unreadCount}
+                                    </span>
+                                )}
+                            </div>
+                        </div>
                     </div>
                 </div>
-                {isSelected && <FaChevronRight className="text-[10px] text-primary animate-pulse" />}
             </button>
         );
     };
@@ -329,12 +561,40 @@ const SideBar = () => {
                             <div className="mb-6">
                                 <div className="px-2 mb-2 flex items-center justify-between">
                                     <span className="text-[10px] uppercase font-bold tracking-widest text-text-muted">Direct Messages</span>
-                                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-surface border border-border text-text-secondary font-bold">{filteredUsers.length}</span>
+                                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-surface border border-border text-text-secondary font-bold">{sortedDirectChats.length}</span>
                                 </div>
-                                {filteredUsers.length > 0 ? (
-                                    filteredUsers.map(renderUserItem)
+                                {sortedDirectChats.length > 0 ? (
+                                    sortedDirectChats.map(renderDirectChatItem)
                                 ) : (
-                                    <p className="text-xs text-text-muted px-2 py-2 font-medium">No contacts found in your list. Use the search field above to find users by profile name.</p>
+                                    <p className="text-xs text-text-muted px-2 py-2 font-medium">No active chats. Choose a contact below or search above to start messaging!</p>
+                                )}
+                            </div>
+                        )}
+
+                        {/* Collapsible Contacts Section */}
+                        {(activeTab === 'all' || activeTab === 'direct') && (
+                            <div className="mb-6">
+                                <button
+                                    type="button"
+                                    onClick={() => setShowContacts(prev => !prev)}
+                                    className="w-full px-2 mb-2 flex items-center justify-between text-left hover:text-text-primary transition-colors duration-200"
+                                >
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-[10px] uppercase font-bold tracking-widest text-text-muted">My Contacts</span>
+                                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-surface border border-border text-text-secondary font-bold">
+                                            {filteredContactsWithoutChats.length}
+                                        </span>
+                                    </div>
+                                    <FaChevronRight className={`text-[10px] text-text-muted transition-transform duration-300 ${showContacts ? "rotate-90" : ""}`} />
+                                </button>
+                                {showContacts && (
+                                    <div className="space-y-1 max-h-60 overflow-y-auto pr-1">
+                                        {filteredContactsWithoutChats.length > 0 ? (
+                                            filteredContactsWithoutChats.map(renderContactItem)
+                                        ) : (
+                                            <p className="text-xs text-text-muted px-2 py-2 font-medium">No other contacts found. Use the search field above to find users by profile name.</p>
+                                        )}
+                                    </div>
                                 )}
                             </div>
                         )}
@@ -344,10 +604,10 @@ const SideBar = () => {
                             <div>
                                 <div className="px-2 mb-2 flex items-center justify-between">
                                     <span className="text-[10px] uppercase font-bold tracking-widest text-text-muted">Groups & Communities</span>
-                                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-surface border border-border text-text-secondary font-bold">{filteredGroups.length}</span>
+                                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-surface border border-border text-text-secondary font-bold">{sortedGroups.length}</span>
                                 </div>
-                                {filteredGroups.length > 0 ? (
-                                    filteredGroups.map(renderGroupItem)
+                                {sortedGroups.length > 0 ? (
+                                    sortedGroups.map(renderGroupItem)
                                 ) : (
                                     <p className="text-xs text-text-muted px-2 py-2 font-medium">No groups joined yet — try discovering a new community above.</p>
                                 )}

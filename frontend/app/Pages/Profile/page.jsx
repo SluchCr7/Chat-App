@@ -6,8 +6,7 @@ import { motion } from 'framer-motion';
 import { 
   IoIosCamera, 
   IoMdKey, 
-  IoMdInformationCircle, 
-  IoMdShield 
+  IoMdInformationCircle
 } from 'react-icons/io';
 import { FaCalendarAlt, FaToggleOn, FaShieldAlt } from 'react-icons/fa';
 import { AuthContext } from '@/app/Context/AuthContext';
@@ -167,7 +166,7 @@ const Profile = () => {
                 {/* Account verification row */}
                 <div className="flex items-center justify-between">
                   <span className="flex items-center gap-2">
-                    <IoMdShield className="text-text-muted" size={14} />
+                    <FaShieldAlt className="text-text-muted" size={14} />
                     <span>Identity Status</span>
                   </span>
                   <span className="bg-primary/10 border border-primary/20 px-2 py-0.5 rounded-md font-extrabold text-[10px] text-primary uppercase tracking-wide">

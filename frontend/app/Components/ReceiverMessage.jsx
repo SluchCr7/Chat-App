@@ -87,7 +87,7 @@ const ReceiverMessage = ({ message, user }) => {
           )}
 
           {/* Main message bubble content */}
-          <div className="bg-surface border border-border text-text-primary px-4 py-3 rounded-2xl rounded-bl-none shadow-md">
+          <div className="msg-bubble-received px-4 py-3 shadow-md">
             {/* If contains Photo attachments */}
             {Array.isArray(message.Photos) && message.Photos.length > 0 && (
               <div className="flex flex-wrap gap-2 mb-2 justify-start">

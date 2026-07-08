@@ -5,6 +5,7 @@ const { Message } = require("../modules/Message");
 const { User } = require("../modules/User");
 const { GroupMember } = require("../modules/GroupMember");
 const { GroupInvite } = require("../modules/GroupInvite");
+const { Notification } = require("../modules/notification");
 const crypto = require("crypto");
 const { io } = require("../config/socket");
 
@@ -110,6 +111,27 @@ const joinGroupByInvite = asyncHandler(async (req, res) => {
         }
         group.joinRequests.push(req.user._id);
         await group.save();
+
+        try {
+            const newNotify = new Notification({
+                content: `${req.user.username} requested to join the group "${group.name}"`,
+                sender: req.user._id,
+                receiver: group.creator,
+                type: 'group_join_request',
+                referenceId: group._id,
+                metadata: {
+                    groupId: group._id,
+                    groupName: group.name,
+                    groupAvatar: group.avatar?.url
+                }
+            });
+            await newNotify.save();
+            const populatedNotify = await Notification.findById(newNotify._id).populate('sender', 'username profilePic profileName status');
+            io.to(`user_${group.creator}`).emit("notification:new", populatedNotify);
+        } catch (err) {
+            console.error("Failed to save group join request notification to database:", err);
+        }
+
         return res.status(200).json({ status: "pending", message: "Join request submitted successfully" });
     }
 
@@ -161,6 +183,26 @@ const handleJoinRequest = asyncHandler(async (req, res) => {
             lastActivity: group.lastActivity,
             unreadCount: 0
         });
+
+        try {
+            const newNotify = new Notification({
+                content: `Your request to join the group "${group.name}" has been approved!`,
+                sender: req.user._id,
+                receiver: userId,
+                type: 'system',
+                referenceId: group._id,
+                metadata: {
+                    groupId: group._id,
+                    groupName: group.name,
+                    groupAvatar: group.avatar?.url
+                }
+            });
+            await newNotify.save();
+            const populatedNotify = await Notification.findById(newNotify._id).populate('sender', 'username profilePic profileName status');
+            io.to(`user_${userId}`).emit("notification:new", populatedNotify);
+        } catch (err) {
+            console.error("Failed to save join request approval notification:", err);
+        }
 
         res.status(200).json({ message: "Request approved. User added to group." });
     } else {
@@ -373,6 +415,26 @@ const inviteUserToGroup = asyncHandler(async (req, res) => {
         group: { _id: group._id, name: group.name, avatar: group.avatar, description: group.description },
         inviter: { username: req.user.username, profileName: req.user.profileName, profilePic: req.user.profilePic }
     });
+
+    try {
+        const newNotify = new Notification({
+            content: `${req.user.username} invited you to join the group "${group.name}"`,
+            sender: inviterId,
+            receiver: inviteeId,
+            type: 'group_invite',
+            referenceId: newInvite._id,
+            metadata: {
+                groupId: group._id,
+                groupName: group.name,
+                groupAvatar: group.avatar?.url
+            }
+        });
+        await newNotify.save();
+        const populatedNotify = await Notification.findById(newNotify._id).populate('sender', 'username profilePic profileName status');
+        io.to(`user_${inviteeId}`).emit("notification:new", populatedNotify);
+    } catch (err) {
+        console.error("Failed to save group invite notification to database:", err);
+    }
 
     res.status(201).json({ message: "Invitation sent successfully", invite: newInvite });
 });

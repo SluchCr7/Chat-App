@@ -77,6 +77,55 @@ const NotifyContextProvider = ({ children }) => {
         }
     };
 
+    // Mark a notification as read
+    const markAsRead = async (id) => {
+        try {
+            const token = localStorage.getItem("userToken") || authUser?.token;
+            if (!token) return;
+            const res = await axios.put(
+                `${process.env.NEXT_PUBLIC_SOCKET_URL}/api/notify/${id}/read`,
+                {},
+                { headers: { authorization: `Bearer ${token}` } }
+            );
+            setNotifications(prev => prev.map(n => n._id === id ? res.data : n));
+        } catch (err) {
+            console.error("Error marking notification as read:", err);
+        }
+    };
+
+    // Mark all notifications as read
+    const markAllAsRead = async () => {
+        try {
+            const token = localStorage.getItem("userToken") || authUser?.token;
+            if (!token) return;
+            await axios.put(
+                `${process.env.NEXT_PUBLIC_SOCKET_URL}/api/notify/read-all`,
+                {},
+                { headers: { authorization: `Bearer ${token}` } }
+            );
+            setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+            toast.success("All notifications marked as read");
+        } catch (err) {
+            console.error("Error marking all notifications as read:", err);
+        }
+    };
+
+    // Clear all notifications
+    const clearAll = async () => {
+        try {
+            const token = localStorage.getItem("userToken") || authUser?.token;
+            if (!token) return;
+            await axios.delete(
+                `${process.env.NEXT_PUBLIC_SOCKET_URL}/api/notify/clear-all`,
+                { headers: { authorization: `Bearer ${token}` } }
+            );
+            setNotifications([]);
+            toast.success("All notifications cleared");
+        } catch (err) {
+            console.error("Error clearing notifications:", err);
+        }
+    };
+
     // --- Sockets Integration for In-App & Audio Notifications ---
     useEffect(() => {
         if (!socket) return;
@@ -127,12 +176,46 @@ const NotifyContextProvider = ({ children }) => {
             fetchNotifications();
         };
 
+        const handleNewNotification = (notification) => {
+            // Prepend new notification to the active list
+            setNotifications(prev => {
+                if (prev.some(n => n._id === notification._id)) return prev;
+                return [notification, ...prev];
+            });
+
+            // Alerts for other types of notifications (messages are handled by handleNewMessageNotification above)
+            if (notification.type === 'group_invite') {
+                try {
+                    const audio = new Audio(mentionSoundUrl);
+                    audio.volume = 0.4;
+                    audio.play();
+                } catch (e) {}
+                toast.info(`Group Invite: ${notification.content}`);
+            } else if (notification.type === 'group_join_request') {
+                try {
+                    const audio = new Audio(mentionSoundUrl);
+                    audio.volume = 0.4;
+                    audio.play();
+                } catch (e) {}
+                toast.info(`Group Join Request: ${notification.content}`);
+            } else if (notification.type === 'system') {
+                try {
+                    const audio = new Audio(messageSoundUrl);
+                    audio.volume = 0.4;
+                    audio.play();
+                } catch (e) {}
+                toast.success(notification.content);
+            }
+        };
+
         socket.on("newMessage", handleNewMessageNotification);
+        socket.on("notification:new", handleNewNotification);
 
         return () => {
             socket.off("newMessage", handleNewMessageNotification);
+            socket.off("notification:new", handleNewNotification);
         };
-    }, [socket, authUser, selectedUser, selectedGroup, selectedChannel]);
+    }, [socket, authUser, selectedUser, selectedGroup, selectedChannel, fetchNotifications]);
 
     return (
         <NotifyContext.Provider value={{
@@ -140,7 +223,10 @@ const NotifyContextProvider = ({ children }) => {
             setNotifications,
             AddNotify,
             deleteNotify,
-            fetchNotifications
+            fetchNotifications,
+            markAsRead,
+            markAllAsRead,
+            clearAll
         }}>
             {children}
         </NotifyContext.Provider>

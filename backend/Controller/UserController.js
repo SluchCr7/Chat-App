@@ -6,7 +6,8 @@ const asynchandler = require('express-async-handler')
 const jwt = require("jsonwebtoken");
 const { cloudUpload, cloudRemove } = require("../utils/cloudinary.js");
 const fs = require('fs')
-const path = require('path')
+const path = require('path');
+const { generateAccessToken } = require("../middelwares/TokenGenerator.js");
 
 const signup = asynchandler(async (req, res) => {
     const { error } = validateUser(req.body);
@@ -30,7 +31,7 @@ const signup = asynchandler(async (req, res) => {
       email : req.body.email,
       password: hashedPassword,
     });
-    const token = jwt.sign({ _id: newUser._id, isAdmin: newUser.isAdmin }, process.env.TOKEN_SECRET);
+    const token = generateAccessToken(newUser);
     const { password, ...others } = newUser._doc
     res.cookie('token', token, {
         httpOnly: true,
@@ -57,7 +58,7 @@ const login = asynchandler(async (req, res) => {
 
   if (!isPasswordCorrect) return res.status(400).json({ message: "Invalid credentials" });
 
-  const token = jwt.sign({ _id: user._id, isAdmin: user.isAdmin }, process.env.TOKEN_SECRET);
+  const token = generateAccessToken(user);
 
   const { password, ...others } = user._doc;
 

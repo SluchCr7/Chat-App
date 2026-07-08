@@ -14,6 +14,21 @@ const notificationSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
         required: true,
+    },
+    isRead: {
+        type: Boolean,
+        default: false
+    },
+    type: {
+        type: String,
+        enum: ['message', 'mention', 'group_invite', 'group_join_request', 'system'],
+        default: 'message'
+    },
+    referenceId: {
+        type: mongoose.Schema.Types.ObjectId
+    },
+    metadata: {
+        type: mongoose.Schema.Types.Mixed
     }
 }, {
     timestamps: true,

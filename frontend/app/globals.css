@@ -19,6 +19,7 @@
 
   /* Default Premium Dark (Black) Theme Settings */
   --primary: #0ea5e9;
+  --primary-rgb: 14, 165, 233;
   --primary-hover: #0284c7;
   --primary-light: #38bdf8;
   --primary-dark: #0369a1;
@@ -65,6 +66,7 @@
 /* 1. Cyber Dark Theme (Defaults) */
 .theme-black {
   --primary: #0ea5e9;
+  --primary-rgb: 14, 165, 233;
   --primary-hover: #0284c7;
   --primary-light: #38bdf8;
   --primary-dark: #0369a1;
@@ -88,6 +90,7 @@
 /* 2. Premium Accessible Light Theme (White) */
 .theme-white {
   --primary: #4f46e5;
+  --primary-rgb: 79, 70, 229;
   --primary-hover: #4338ca;
   --primary-light: #818cf8;
   --primary-dark: #3730a3;
@@ -125,6 +128,7 @@
 /* 3. Deep Coral Rose Theme (Red) */
 .theme-red {
   --primary: #f43f5e;
+  --primary-rgb: 244, 63, 94;
   --primary-hover: #e11d48;
   --primary-light: #fb7185;
   --primary-dark: #be123c;
@@ -145,6 +149,7 @@
 /* 4. Emerald Forest Theme (Green) */
 .theme-green {
   --primary: #10b981;
+  --primary-rgb: 16, 185, 129;
   --primary-hover: #059669;
   --primary-light: #34d399;
   --primary-dark: #047857;
@@ -165,6 +170,7 @@
 /* 5. Deep Ocean Sapphire Theme (Blue) */
 .theme-blue {
   --primary: #3b82f6;
+  --primary-rgb: 59, 130, 246;
   --primary-hover: #2563eb;
   --primary-light: #60a5fa;
   --primary-dark: #1d4ed8;
@@ -185,6 +191,7 @@
 /* 6. Honey Amber Gold Theme (Yellow) */
 .theme-yellow {
   --primary: #f59e0b;
+  --primary-rgb: 245, 158, 11;
   --primary-hover: #d97706;
   --primary-light: #fbbf24;
   --primary-dark: #b45309;
@@ -506,5 +513,117 @@
     rgba(0, 0, 0, 0.07) 60%,
     rgba(0, 0, 0, 0) 100%
   );
+}
+
+/* ==========================================================================
+   Premium Obsidian Glassmorphism Overrides & Neon Glow System
+   ========================================================================== */
+
+.premium-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.premium-card:hover {
+  background: var(--surface-hover);
+  border-color: var(--border-hover);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
+  transform: translateY(-2px);
+}
+
+/* Selected active items border and shadow glow */
+.premium-active-glow {
+  background: linear-gradient(135deg, rgba(var(--primary-rgb), 0.12) 0%, rgba(var(--primary-rgb), 0.03) 100%) !important;
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 15px rgba(var(--primary-rgb), 0.15) !important;
+}
+
+/* Beautiful custom tab buttons */
+.custom-tab-btn {
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.custom-tab-btn::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 0;
+  height: 2px;
+  background: var(--primary);
+  transition: all 0.3s ease;
+  transform: translateX(-50%);
+}
+
+.custom-tab-btn.active::after {
+  width: 60%;
+}
+
+/* Premium chat input control deck */
+.premium-input-deck {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-lg);
+  border-radius: var(--radius-lg);
+}
+
+/* Message bubbles styling updates (Unique card designs) */
+.msg-bubble-sent {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%) !important;
+  color: var(--text-inverse) !important;
+  border-radius: 20px 20px 4px 20px !important;
+  box-shadow: 0 4px 15px rgba(var(--primary-rgb), 0.2) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+.msg-bubble-received {
+  background: var(--surface) !important;
+  color: var(--text-primary) !important;
+  border-radius: 20px 20px 20px 4px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25) !important;
+  border: 1px solid var(--border) !important;
+}
+
+/* Glowing text effects */
+.text-glow {
+  text-shadow: 0 0 10px rgba(var(--primary-rgb), 0.5);
+}
+
+/* Smooth lists slide-in */
+@keyframes slideUpIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-up-in {
+  animation: slideUpIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Neon glow indicators */
+.active-dot-neon {
+  box-shadow: 0 0 10px var(--online), 0 0 2px var(--online);
+}
+
+/* Glass dropdown override */
+.glass-dropdown-card {
+  background: rgba(15, 19, 26, 0.75) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+.theme-white .glass-dropdown-card {
+  background: rgba(255, 255, 255, 0.8) !important;
+  border: 1px solid rgba(15, 23, 42, 0.08) !important;
 }
 

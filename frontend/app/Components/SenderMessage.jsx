@@ -152,7 +152,7 @@ const SenderMessage = ({ message, user }) => {
           )}
 
           {/* Main message bubble content */}
-          <div className={`bg-primary text-text-inverse px-4 py-3 rounded-2xl rounded-br-none shadow-md text-left transition-all duration-300 ${message.status === 'sending' ? 'opacity-75 animate-pulse' : message.status === 'failed' ? 'border border-rose-500 bg-rose-500/10 text-rose-200' : ''}`}>
+          <div className={`msg-bubble-sent px-4 py-3 text-left transition-all duration-300 ${message.status === 'sending' ? 'opacity-75 animate-pulse' : message.status === 'failed' ? 'border border-rose-500 bg-rose-500/10 text-rose-200' : ''}`}>
             {/* If contains Photo attachments */}
             {Array.isArray(message.Photos) && message.Photos.length > 0 && (
               <div className="flex flex-wrap gap-2 mb-2 justify-end">

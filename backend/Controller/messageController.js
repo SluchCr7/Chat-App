@@ -4,6 +4,7 @@ const { Group } = require('../modules/Group');
 const { Channel } = require('../modules/Channel');
 const { Conversation } = require('../modules/Conversation');
 const { UnreadCounter } = require('../modules/UnreadCounter');
+const { Notification } = require('../modules/notification');
 const { cloudUpload } = require('../utils/cloudinary');
 const fs = require('fs');
 const { io } = require('../config/socket');
@@ -280,6 +281,83 @@ const sendMessage = asyncHandler(async (req, res) => {
         .populate('sender', 'username profilePic profileName status')
         .populate('receiver', 'username profilePic profileName status')
         .populate('replyTo');
+
+    // Create database notification (Direct message or mentions in Group/Channel)
+    try {
+        if (type === "group" || type === "channel") {
+            const mentionRegex = /@(\w+)/g;
+            let match;
+            const mentionedUsernames = [];
+            if (text) {
+                while ((match = mentionRegex.exec(text)) !== null) {
+                    mentionedUsernames.push(match[1]);
+                }
+            }
+            if (mentionedUsernames.length > 0) {
+                const users = await User.find({
+                    $or: [
+                        { username: { $in: mentionedUsernames } },
+                        { profileName: { $in: mentionedUsernames } }
+                    ]
+                });
+                
+                const channelObj = type === "channel" ? await Channel.findById(targetId) : null;
+                const groupObj = type === "group" 
+                    ? await Group.findById(targetId)
+                    : (channelObj ? await Group.findById(channelObj.group) : null);
+
+                if (groupObj) {
+                    const memberIds = groupObj.members.map(m => m.user.toString());
+                    const groupName = groupObj.name;
+                    const contextName = type === "group" ? groupName : `#${channelObj ? channelObj.name : 'channel'} (${groupName})`;
+
+                    for (const u of users) {
+                        if (u._id.toString() !== sender.toString() && memberIds.includes(u._id.toString())) {
+                            const newNotify = new Notification({
+                                content: `${req.user.username} mentioned you in ${contextName}`,
+                                sender: sender,
+                                receiver: u._id,
+                                type: 'mention',
+                                referenceId: type === "group" ? targetId : targetId,
+                                metadata: {
+                                    messageId: message._id,
+                                    roomType: type,
+                                    text: text ? text.substring(0, 60) : ""
+                                }
+                            });
+                            await newNotify.save();
+                            const populatedNotify = await Notification.findById(newNotify._id).populate('sender', 'username profilePic profileName status');
+                            io.to(`user_${u._id}`).emit("notification:new", populatedNotify);
+                        }
+                    }
+                }
+            }
+        } else {
+            // Direct message: Create message notification if recipient exists
+            const recipientUser = await User.findById(targetId);
+            if (recipientUser) {
+                const hasMention = text && text.includes(`@${recipientUser.profileName}`);
+                const newNotify = new Notification({
+                    content: hasMention 
+                        ? `${req.user.username} mentioned you in a message` 
+                        : `${req.user.username} sent you a message`,
+                    sender: sender,
+                    receiver: targetId,
+                    type: hasMention ? 'mention' : 'message',
+                    referenceId: conv ? conv._id : targetId, // Use conversation ID if available
+                    metadata: {
+                        messageId: message._id,
+                        text: text ? text.substring(0, 60) : (message.Photos?.length > 0 ? "📷 Photo" : "📁 Attachment")
+                    }
+                });
+                await newNotify.save();
+                const populatedNotify = await Notification.findById(newNotify._id).populate('sender', 'username profilePic profileName status');
+                io.to(`user_${targetId}`).emit("notification:new", populatedNotify);
+            }
+        }
+    } catch (notifyErr) {
+        console.error("Failed to create database notification:", notifyErr);
+    }
 
     // --- Real-time Socket Broadcasts ---
     if (type === "group" || type === "channel") {

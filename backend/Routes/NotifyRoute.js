@@ -4,7 +4,7 @@
  *   - name: Notifications
  *     description: Notification management and delivery
  */
-const { addNewNotify, getAllNotify, deleteNotify , getAllNotificationsByUser } = require("../Controller/notificationController")
+const { addNewNotify, getAllNotify, deleteNotify, getAllNotificationsByUser, markAsRead, markAllAsRead, clearAll } = require("../Controller/notificationController")
 const { verifyToken } = require("../middelwares/verifyToken.js");
 const route = require("express").Router();
 
@@ -122,5 +122,14 @@ route.route("/send/:id")
  */
 route.route("/user")
     .get(verifyToken, getAllNotificationsByUser)
+
+route.route("/read-all")
+    .put(verifyToken, markAllAsRead);
+
+route.route("/clear-all")
+    .delete(verifyToken, clearAll);
+
+route.route("/:id/read")
+    .put(verifyToken, markAsRead);
 
 module.exports = route

@@ -1,14 +1,16 @@
-'use client'
 import React, { useContext } from 'react'
 import Link from 'next/link'
 import { IoSettingsOutline, IoLogOutOutline, IoPersonOutline, IoNotificationsOutline } from "react-icons/io5";
 import { FaUserShield } from "react-icons/fa6";
 import { AuthContext } from '../Context/AuthContext';
+import { NotifyContext } from '../Context/NotifyContext';
 import NotificationComponent from './NotificationComponent';
 import Logo from './Logo'
-
+import Image from 'next/image';
 const NavBar = ({ showMenu, setShowMenu, showNotification, setShowNotification }) => {
   const { authUser, logout, socketStatus } = useContext(AuthContext)
+  const { notifications } = useContext(NotifyContext) || { notifications: [] }
+  const unreadNotificationsCount = notifications.filter(n => !n.isRead).length;
 
   // تحديد ألوان حالة الاتصال بشكل منظم ونظيف
   const statusConfig = {
@@ -20,12 +22,17 @@ const NavBar = ({ showMenu, setShowMenu, showNotification, setShowNotification }
   const currentStatus = statusConfig[socketStatus] || statusConfig.disconnected;
 
   return (
-    <nav className="flex items-center justify-between w-full py-3.5 px-6 border-b border-border bg-bg-navbar/80 backdrop-blur-md sticky top-0 z-50 transition-all duration-300">
+    <nav className="flex items-center justify-between w-full py-1 px-6 border-b border-border bg-bg-navbar/80 backdrop-blur-md sticky top-0 z-50 transition-all duration-300">
       
       {/* الجزء الأيسر: الشعار وحالة الاتصال */}
       <div className="flex items-center gap-4">
-        <Logo compact />
-        
+        <Image
+          src="/logo.png" 
+          alt="Logo" 
+          width={32} 
+          height={32} 
+          className="rounded-full"
+        />
         {authUser && (
           <div className="flex items-center gap-2 px-2.5 py-1 rounded-full border border-border bg-surface/40 backdrop-blur-sm text-[11px] font-medium transition-all duration-300">
             <span className={`w-2 h-2 rounded-full ring-4 ${currentStatus.dot}`} />
@@ -46,7 +53,7 @@ const NavBar = ({ showMenu, setShowMenu, showNotification, setShowNotification }
             title="Admin Dashboard"
             className="p-2.5 rounded-xl text-text-secondary hover:text-primary hover:bg-primary/5 transition-all duration-200 flex items-center justify-center"
           >
-            <FaUserShield className="text-[20px]" />
+            <FaUserShield className="text-[15px]" />
           </Link>
         )}
 
@@ -56,7 +63,7 @@ const NavBar = ({ showMenu, setShowMenu, showNotification, setShowNotification }
           title="App Settings"
           className="p-2.5 rounded-xl text-text-secondary hover:text-text-primary hover:bg-surface-hover transition-all duration-200 flex items-center justify-center"
         >
-          <IoSettingsOutline className="text-[22px]" />
+          <IoSettingsOutline className="text-[17px]" />
         </Link>
 
         {authUser && (
@@ -68,22 +75,26 @@ const NavBar = ({ showMenu, setShowMenu, showNotification, setShowNotification }
               title="Your Profile"
               className="p-2.5 rounded-xl text-text-secondary hover:text-text-primary hover:bg-surface-hover transition-all duration-200 flex items-center justify-center"
             >
-              <IoPersonOutline className="text-[22px]" />
+              <IoPersonOutline className="text-[17px]" />
             </Link>
 
             {/* زر الإشعارات */}
             <button 
               onClick={() => setShowMenu(!showMenu)} 
               title="Notifications"
-              className={`p-2.5 rounded-xl transition-all duration-200 flex items-center justify-center relative ${
+              className={`p-2.5 rounded-xl transition-all duration-200 flex items-center justify-center relative hover:scale-105 active:scale-95 ${
                 showMenu 
                   ? "bg-primary/10 text-primary" 
                   : "text-text-secondary hover:text-text-primary hover:bg-surface-hover"
               }`}
             >
-              <IoNotificationsOutline className="text-[22px]" />
-              {/* نقطة إشعار صغيرة اختيارية إذا كان هناك إشعارات غير مقروءة */}
-              <span className="absolute top-2 right-2 w-2 h-2 bg-primary rounded-full hidden" />
+              <IoNotificationsOutline className="text-[17px]" />
+              {/* نقطة إشعار صغيرة إذا كان هناك إشعارات غير مقروءة */}
+              {unreadNotificationsCount > 0 && (
+                <span className="absolute top-1.5 right-1.5 w-4 h-4 bg-primary text-text-inverse text-[9px] font-extrabold rounded-full flex items-center justify-center border border-bg-navbar active-dot-neon animate-pulse">
+                  {unreadNotificationsCount}
+                </span>
+              )}
             </button>
 
             {/* خط فاصل بسيط يعطي لمسة جمالية وفصل لزر تسجيل الخروج */}
@@ -95,7 +106,7 @@ const NavBar = ({ showMenu, setShowMenu, showNotification, setShowNotification }
               title="Logout"
               className="p-2.5 rounded-xl text-rose-500 hover:text-rose-600 hover:bg-rose-500/5 transition-all duration-200 flex items-center justify-center"
             >
-              <IoLogOutOutline className="text-[22px]" />
+              <IoLogOutOutline className="text-[17px]" />
             </button>
 
             {/* مكون الإشعارات المنسدل */}

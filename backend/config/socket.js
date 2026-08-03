@@ -2,6 +2,7 @@ const { Server } = require("socket.io");
 const http = require("http");
 const express = require("express");
 const jwt = require("jsonwebtoken");
+const { getJwtSecret } = require("./jwtSecret.js");
 const app = express();
 const server = http.createServer(app);
 
@@ -65,7 +66,7 @@ io.use((socket, next) => {
   }
   
   try {
-    const decoded = jwt.verify(token, process.env.TOKEN_SECRET);
+    const decoded = jwt.verify(token, getJwtSecret());
     socket.user = decoded; // Contains _id, isAdmin, etc.
     next();
   } catch (err) {

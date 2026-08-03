@@ -1,4 +1,5 @@
 const jwt = require("jsonwebtoken");
+const { getJwtSecret, getRefreshTokenSecret } = require("../config/jwtSecret.js");
 
 const generateAccessToken = (user) => {
   return jwt.sign(
@@ -6,7 +7,7 @@ const generateAccessToken = (user) => {
       _id: user._id,
       isAdmin: user.isAdmin,
     },
-    process.env.ACCESS_TOKEN_SECRET
+    getJwtSecret()
     // {
     //   expiresIn: "15m",
     // }
@@ -18,7 +19,7 @@ const generateRefreshToken = (user) => {
     {
       _id: user._id,
     },
-    process.env.REFRESH_TOKEN_SECRET,
+    getRefreshTokenSecret(),
     {
       expiresIn: "30d",
     }

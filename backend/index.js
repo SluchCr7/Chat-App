@@ -1,8 +1,8 @@
+require('dotenv').config();
 const express = require('express');
 const path = require('path');
 // const app = express()
 const connectDB = require('./config/db.js')
-require('dotenv').config()
 const cors = require('cors')
 const cookieParser = require('cookie-parser');
 const swaggerUi = require('swagger-ui-express');

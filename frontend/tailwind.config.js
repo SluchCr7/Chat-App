@@ -56,14 +56,20 @@ module.exports = {
         },
       },
       borderRadius: {
+        'xs': 'var(--radius-xs)',
+        'sm': 'var(--radius-sm)',
+        'md': 'var(--radius-md)',
+        'lg': 'var(--radius-lg)',
+        'xl': 'var(--radius-xl)',
         '2xl': 'var(--radius-lg)',
         '3xl': 'var(--radius-xl)',
       },
       boxShadow: {
-        sm: 'var(--shadow-sm)',
+        sm: 'var(--shadow-subtle)',
         md: 'var(--shadow-md)',
         lg: 'var(--shadow-lg)',
         xl: 'var(--shadow-xl)',
+        glow: 'var(--shadow-glow)',
       }
     },
   },

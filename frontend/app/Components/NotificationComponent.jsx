@@ -1,4 +1,5 @@
-'use client'
+'use client';
+
 import React, { useContext, useState } from 'react';
 import { IoMdClose } from "react-icons/io";
 import { IoNotificationsOutline, IoMailOutline, IoAtOutline, IoPersonAddOutline, IoShieldCheckmarkOutline, IoCheckmarkDoneOutline, IoTrashOutline } from "react-icons/io5";
@@ -9,7 +10,7 @@ import { MessageContext } from '../Context/MessageContext';
 const NotificationComponent = ({ showMenu, setShowMenu, showNotification, setShowNotification }) => {
   const { notifications, markAsRead, markAllAsRead, clearAll } = useContext(NotifyContext) || { notifications: [] };
   const { setSelectedUser, setSelectedGroup, setSelectedChannel, groupChats } = useContext(MessageContext);
-  const [activeFilter, setActiveFilter] = useState('all'); // 'all', 'unread'
+  const [activeFilter, setActiveFilter] = useState('all');
 
   const handleNotificationClick = async (notif) => {
     if (!notif.isRead) {
@@ -18,7 +19,6 @@ const NotificationComponent = ({ showMenu, setShowMenu, showNotification, setSho
     
     setShowMenu(false);
 
-    // Auto-navigate to appropriate chat window
     if (notif.type === 'message' || notif.type === 'mention') {
       const roomType = notif.metadata?.roomType;
       const refId = notif.referenceId;
@@ -36,7 +36,6 @@ const NotificationComponent = ({ showMenu, setShowMenu, showNotification, setSho
           }
         }
       } else {
-        // Direct Message: Select the sender user
         if (notif.sender) {
           setSelectedUser(notif.sender);
           setSelectedGroup(null);
@@ -64,28 +63,28 @@ const NotificationComponent = ({ showMenu, setShowMenu, showNotification, setSho
 
   return (
     <div
-      className={`glass-dropdown-card shadow-2xl w-80 sm:w-96 rounded-2xl absolute top-12 p-4 right-0 z-50 border border-border/80 transition-all duration-300 ${
-        showMenu ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 -translate-y-4 scale-95 pointer-events-none'
+      className={`glass-dropdown-card shadow-2xl w-80 sm:w-96 rounded-2xl absolute top-12 p-4 right-0 z-50 border border-border transition-all duration-300 ${
+        showMenu ? 'opacity-100 translate-y-0 scale-100 pointer-events-auto' : 'opacity-0 -translate-y-4 scale-95 pointer-events-none'
       }`}
     >
-      <div className="flex flex-col w-full">
+      <div className="flex flex-col w-full text-left">
         {/* Header Block */}
         <div className="flex items-center justify-between pb-3 w-full border-b border-border">
-          <span className="font-extrabold text-text-primary text-sm tracking-wider uppercase">Notifications</span>
+          <span className="font-extrabold text-text-primary text-xs tracking-wider uppercase">Notifications</span>
           <button 
             onClick={() => setShowMenu(false)}
             className="p-1 rounded-lg hover:bg-surface-hover text-text-muted hover:text-text-primary transition"
           >
-            <IoMdClose className="text-lg" />
+            <IoMdClose className="text-base" />
           </button>
         </div>
 
-        {/* Filter Tabs & Quick Actions */}
-        <div className="flex items-center justify-between pt-2.5 pb-2 border-b border-border/50 text-xs">
-          <div className="flex gap-2.5">
+        {/* Filter Tabs */}
+        <div className="flex items-center justify-between pt-2.5 pb-2 border-b border-border text-xs">
+          <div className="flex gap-2">
             <button 
               onClick={() => setActiveFilter('all')}
-              className={`font-semibold pb-1 border-b-2 transition-all ${
+              className={`font-extrabold pb-0.5 border-b-2 transition ${
                 activeFilter === 'all' ? 'border-primary text-text-primary' : 'border-transparent text-text-muted hover:text-text-secondary'
               }`}
             >
@@ -93,7 +92,7 @@ const NotificationComponent = ({ showMenu, setShowMenu, showNotification, setSho
             </button>
             <button 
               onClick={() => setActiveFilter('unread')}
-              className={`font-semibold pb-1 border-b-2 transition-all flex items-center gap-1 ${
+              className={`font-extrabold pb-0.5 border-b-2 transition flex items-center gap-1 ${
                 activeFilter === 'unread' ? 'border-primary text-text-primary' : 'border-transparent text-text-muted hover:text-text-secondary'
               }`}
             >
@@ -105,40 +104,39 @@ const NotificationComponent = ({ showMenu, setShowMenu, showNotification, setSho
           </div>
           
           {notifications.length > 0 && (
-            <div className="flex items-center gap-3 text-text-muted">
+            <div className="flex items-center gap-2.5 text-text-muted text-[11px]">
               <button 
                 onClick={markAllAsRead}
-                className="hover:text-primary transition flex items-center gap-1 font-medium"
-                title="Mark all as read"
+                className="hover:text-primary transition flex items-center gap-1 font-bold"
+                title="Mark all read"
               >
-                <IoCheckmarkDoneOutline className="text-sm" /> Read All
+                <IoCheckmarkDoneOutline size={14} /> Read All
               </button>
               <button 
                 onClick={clearAll}
-                className="hover:text-rose-500 transition flex items-center gap-1 font-medium"
+                className="hover:text-rose-500 transition flex items-center gap-1 font-bold"
                 title="Clear all"
               >
-                <IoTrashOutline className="text-sm" /> Clear All
+                <IoTrashOutline size={14} /> Clear All
               </button>
             </div>
           )}
         </div>
 
         {/* Notifications Scroller */}
-        <div className="text-sm pt-2 max-h-[320px] overflow-y-auto wa-scroll">  
+        <div className="text-xs pt-2 max-h-[320px] overflow-y-auto wa-scroll">  
           {filteredNotifications.length > 0 ? (
-            <div className="flex flex-col divider-y divider-border">
+            <div className="flex flex-col space-y-1">
               {filteredNotifications.map((notif) => {
                 const senderPic = notif.sender?.profilePic?.url || "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png";
                 return (
                   <div 
                     key={notif._id} 
                     onClick={() => handleNotificationClick(notif)}
-                    className={`flex items-start gap-3 p-3 rounded-xl hover:bg-surface-hover/60 border border-transparent hover:border-border/30 cursor-pointer transition-all duration-300 relative group/notif ${
-                      !notif.isRead ? 'bg-primary/5 border-primary/10' : ''
+                    className={`flex items-start gap-2.5 p-2.5 rounded-xl hover:bg-surface-hover/80 border border-transparent hover:border-border cursor-pointer transition relative ${
+                      !notif.isRead ? 'bg-primary/10 border-primary/20' : ''
                     }`}
                   >
-                    {/* Unread Indicator dot */}
                     {!notif.isRead && (
                       <span className="w-1.5 h-1.5 bg-primary rounded-full absolute left-1 top-1/2 -translate-y-1/2" />
                     )}
@@ -147,9 +145,10 @@ const NotificationComponent = ({ showMenu, setShowMenu, showNotification, setSho
                       <Image 
                         src={senderPic} 
                         alt="avatar" 
-                        width={30} 
-                        height={30} 
-                        className="rounded-full object-cover w-7.5 h-7.5 border border-border"
+                        width={28} 
+                        height={28} 
+                        className="rounded-full object-cover w-7 h-7 border border-border"
+                        unoptimized
                       />
                     </div>
 
@@ -162,7 +161,6 @@ const NotificationComponent = ({ showMenu, setShowMenu, showNotification, setSho
                       </span>
                     </div>
 
-                    {/* Right aligned action type badge */}
                     <div className="flex-shrink-0 self-center">
                       {getNotificationIcon(notif.type)}
                     </div>
@@ -172,7 +170,7 @@ const NotificationComponent = ({ showMenu, setShowMenu, showNotification, setSho
               
               {filteredNotifications.length > 5 && (
                 <button
-                  className="text-xs text-primary font-bold text-center py-2.5 hover:text-primary-hover border-t border-border mt-1 transition"
+                  className="text-xs text-primary font-bold text-center py-2 hover:text-primary-hover border-t border-border mt-1 transition"
                   onClick={() => { setShowMenu(false); setShowNotification(true) }}
                 >
                   View All Notifications
@@ -181,7 +179,7 @@ const NotificationComponent = ({ showMenu, setShowMenu, showNotification, setSho
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center py-8 text-center text-text-muted">
-              <IoNotificationsOutline size={30} className="opacity-20 mb-2" />
+              <IoNotificationsOutline size={28} className="opacity-20 mb-2" />
               <p className="text-xs font-semibold">No notifications found.</p>
             </div>
           )}

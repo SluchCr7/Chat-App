@@ -4,7 +4,7 @@ import React, { useContext, useState } from 'react';
 import { MessageContext } from '../Context/MessageContext';
 import { AuthContext } from '../Context/AuthContext';
 import Image from 'next/image';
-import { FaPhone, FaVideo, FaInfoCircle, FaLink, FaPlus, FaArrowLeft } from "react-icons/fa";
+import { FaPhone, FaVideo, FaInfoCircle, FaLink, FaPlus, FaArrowLeft, FaHashtag } from "react-icons/fa";
 import { toast } from 'react-toastify';
 
 const Chatheader = () => {
@@ -40,7 +40,6 @@ const Chatheader = () => {
   })?.role;
   const canCreateChannel = isGroup && ["owner", "admin", "moderator"].includes(groupRole);
 
-  // Determine presence
   const isOnline = isDirect && (onlineUsers.includes(selectedUser._id) || selectedUser.isOnline);
   const userStatus = isDirect ? selectedUser.status || "offline" : "";
 
@@ -73,13 +72,13 @@ const Chatheader = () => {
   };
 
   return (
-    <header className="w-full h-16 min-h-[64px] flex-shrink-0 px-4 border-b border-border bg-surface flex items-center justify-between shadow-sm transition-all duration-300 z-30">
+    <header className="w-full h-15 min-h-[60px] flex-shrink-0 px-4 border-b border-border bg-surface flex items-center justify-between shadow-sm transition-all duration-300 z-30">
       {/* Target details */}
-      <div className="flex items-center gap-2 sm:gap-4 overflow-hidden flex-1 mr-3">
+      <div className="flex items-center gap-3 overflow-hidden flex-1 mr-2">
         <button
           onClick={handleBack}
-          className="p-2 rounded-xl bg-bg-primary hover:bg-surface border border-border text-text-secondary hover:text-text-primary transition-all duration-300 mr-1 flex items-center justify-center flex-shrink-0"
-          title="Back to Chats"
+          className="md:hidden p-2 rounded-xl bg-bg-primary hover:bg-surface-hover border border-border text-text-secondary hover:text-text-primary transition flex items-center justify-center flex-shrink-0"
+          title="Back to conversations list"
         >
           <FaArrowLeft className="text-xs" />
         </button>
@@ -92,15 +91,15 @@ const Chatheader = () => {
                 : activeTarget?.avatar?.url || "https://cdn.pixabay.com/photo/2016/11/14/17/39/group-1824145_1280.png"
             }
             alt="chat_avatar"
-            width={40}
-            height={40}
-            className="rounded-full object-cover border border-border w-10 h-10"
+            width={38}
+            height={38}
+            className="rounded-full object-cover border border-border w-9.5 h-9.5"
             unoptimized
           />
           {isDirect && (
             <div className={`w-3 h-3 rounded-full absolute bottom-0 right-0 border-2 border-surface ${
               isOnline 
-                ? userStatus === "away" ? "bg-warning" : userStatus === "busy" ? "bg-error" : "bg-success status-glow-online"
+                ? userStatus === "away" ? "bg-amber-500" : userStatus === "busy" ? "bg-rose-500" : "bg-emerald-500 status-glow-online"
                 : "bg-text-disabled"
             }`}></div>
           )}
@@ -109,9 +108,13 @@ const Chatheader = () => {
         <div className="flex flex-col items-start min-w-0 text-left">
           <h2 className="font-bold text-sm text-text-primary flex items-center gap-1.5 leading-tight w-full truncate">
             <span className="truncate">{isDirect ? selectedUser.username : activeTarget.name}</span>
-            {isChannel && <span className="text-[10px] px-2 py-0.5 font-bold rounded-full bg-primary/10 text-primary border border-primary/20 flex-shrink-0"># {selectedChannel.name}</span>}
+            {isChannel && (
+              <span className="text-[10px] px-2 py-0.5 font-bold rounded-md bg-primary/10 text-primary border border-primary/20 flex-shrink-0 flex items-center gap-1">
+                <FaHashtag size={8} /> {selectedChannel.name}
+              </span>
+            )}
           </h2>
-          <span className="text-[11px] text-text-muted font-bold mt-0.5 truncate w-full">
+          <span className="text-[10px] text-text-muted font-bold mt-0.5 truncate w-full">
             {isDirect 
               ? (isOnline ? `Online (${userStatus})` : "Offline") 
               : isChannel 
@@ -123,110 +126,100 @@ const Chatheader = () => {
         </div>
       </div>
 
-      {/* Action triggers */}
-      <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
-        {/* Channel dropdown button */}
+      {/* Action buttons */}
+      <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
         {isGroup && canCreateChannel && (
           <button 
             onClick={() => setShowChannelModal(true)}
-            className="px-3 py-1.5 rounded-xl bg-bg-primary hover:bg-surface border border-border hover:border-border-hover text-primary hover:text-primary-hover font-bold text-xs transition duration-300 flex items-center gap-1.5"
+            className="px-2.5 py-1.5 rounded-xl bg-bg-primary hover:bg-surface-hover border border-border text-primary hover:border-primary/30 font-bold text-xs transition flex items-center gap-1"
           >
-            <FaPlus className="text-[9px]" /> Channel
-          </button>
-        )}
-        {isGroup && !canCreateChannel && (
-          <button 
-            disabled
-            className="px-3 py-1.5 rounded-xl bg-surface border border-border text-text-disabled font-bold text-xs transition duration-300 flex items-center gap-1.5"
-            title="Only owners, admins, or moderators can create channels"
-          >
-            <FaPlus className="text-[9px]" /> Channel
+            <FaPlus className="text-[9px]" /> <span className="hidden sm:inline">Channel</span>
           </button>
         )}
 
         {(isGroup || isChannel) && (
           <button 
             onClick={handleCopyInvite}
-            className="p-2.5 rounded-xl bg-bg-primary hover:bg-surface border border-border hover:border-border-hover text-text-secondary hover:text-primary transition-all duration-300 flex items-center justify-center shadow-sm"
+            className="p-2 rounded-xl bg-bg-primary hover:bg-surface-hover border border-border text-text-secondary hover:text-primary transition flex items-center justify-center"
             title="Copy Invite Link"
           >
-            <FaLink className="text-sm" />
+            <FaLink className="text-xs" />
           </button>
         )}
 
-        <button className="p-2.5 rounded-xl bg-bg-primary hover:bg-surface border border-border hover:border-border-hover text-text-secondary hover:text-text-primary transition-all duration-300 flex items-center justify-center shadow-sm">
-          <FaPhone className="text-sm" />
+        <button className="p-2 rounded-xl bg-bg-primary hover:bg-surface-hover border border-border text-text-secondary hover:text-text-primary transition flex items-center justify-center">
+          <FaPhone className="text-xs" />
         </button>
-        <button className="p-2.5 rounded-xl bg-bg-primary hover:bg-surface border border-border hover:border-border-hover text-text-secondary hover:text-text-primary transition-all duration-300 flex items-center justify-center shadow-sm">
-          <FaVideo className="text-sm" />
+        <button className="p-2 rounded-xl bg-bg-primary hover:bg-surface-hover border border-border text-text-secondary hover:text-text-primary transition flex items-center justify-center">
+          <FaVideo className="text-xs" />
         </button>
         
         <button 
           onClick={() => setShowRightSidebar(!showRightSidebar)}
-          className={`p-2.5 rounded-xl border transition-all duration-300 flex items-center justify-center shadow-sm ${
+          className={`p-2 rounded-xl border transition flex items-center justify-center ${
             showRightSidebar 
-            ? "bg-primary/10 border-primary/20 text-primary" 
-            : "bg-bg-primary border-border text-text-secondary hover:text-primary hover:border-border-hover hover:bg-surface"
+            ? "bg-primary/10 border-primary/30 text-primary" 
+            : "bg-bg-primary border-border text-text-secondary hover:text-primary hover:bg-surface-hover"
           }`}
           title="Details"
         >
-          <FaInfoCircle className="text-sm" />
+          <FaInfoCircle className="text-xs" />
         </button>
       </div>
 
       {/* Channel Creation Modal */}
       {showChannelModal && (
         <div className="menu_bg">
-          <div className="bg-black border border-border p-7 rounded-[24px] w-full max-w-md shadow-2xl relative animate-slide-in">
-            <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-              <FaPlus className="text-primary" /> Create New Channel
+          <div className="bg-bg-primary border border-border p-6 rounded-3xl w-full max-w-md shadow-2xl relative">
+            <h3 className="text-base font-bold text-text-primary mb-4 flex items-center gap-2">
+              <FaPlus className="text-primary" /> Create Channel
             </h3>
-            <form onSubmit={handleCreateChannelSubmit} className="space-y-4">
+            <form onSubmit={handleCreateChannelSubmit} className="space-y-4 text-left">
               <div>
-                <label className="block text-xs font-semibold text-text-secondary mb-1">Channel Name</label>
+                <label className="block text-xs font-bold text-text-secondary mb-1">Channel Name</label>
                 <input 
                   type="text" 
                   placeholder="e.g. general, announcements"
                   value={newChannelName}
                   onChange={(e) => setNewChannelName(e.target.value)}
-                  className="w-full p-3 bg-bg-primary border border-border focus:border-primary rounded-xl text-sm text-text-primary outline-none transition"
+                  className="w-full p-3 bg-surface border border-border focus:border-primary rounded-xl text-xs text-text-primary outline-none transition"
                   required
                 />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-text-secondary mb-1">Description</label>
+                <label className="block text-xs font-bold text-text-secondary mb-1">Description</label>
                 <textarea 
                   placeholder="What is this channel about?"
                   value={newChannelDesc}
                   onChange={(e) => setNewChannelDesc(e.target.value)}
-                  className="w-full p-3 bg-bg-primary border border-border focus:border-primary rounded-xl text-sm text-text-primary outline-none h-20 resize-none transition"
+                  className="w-full p-3 bg-surface border border-border focus:border-primary rounded-xl text-xs text-text-primary outline-none h-20 resize-none transition"
                 />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-text-secondary mb-1">Channel Type</label>
+                <label className="block text-xs font-bold text-text-secondary mb-1">Channel Type</label>
                 <select 
                   value={newChannelType} 
                   onChange={(e) => setNewChannelType(e.target.value)}
-                  className="w-full p-3 bg-bg-primary border border-border focus:border-primary rounded-xl text-sm text-text-primary outline-none transition"
+                  className="w-full p-3 bg-surface border border-border focus:border-primary rounded-xl text-xs text-text-primary outline-none transition"
                 >
                   <option value="public">Public (Everyone can join)</option>
                   <option value="private">Private (Invite only)</option>
-                  <option value="announcement">Announcement (Admins only send messages)</option>
+                  <option value="announcement">Announcement (Admins send messages)</option>
                 </select>
               </div>
-              <div className="flex gap-3 justify-end pt-2">
+              <div className="flex gap-2 justify-end pt-2">
                 <button 
                   type="button"
                   onClick={() => setShowChannelModal(false)}
-                  className="px-4 py-2.5 text-xs font-bold rounded-xl bg-surface border border-border text-text-secondary hover:text-text-primary hover:bg-surface-hover transition-all duration-300"
+                  className="px-4 py-2 text-xs font-bold rounded-xl bg-surface border border-border text-text-secondary hover:text-text-primary transition"
                 >
                   Cancel
                 </button>
                 <button 
                   type="submit"
-                  className="px-4 py-2.5 text-xs font-bold rounded-xl bg-primary text-text-inverse hover:bg-primary-hover transition-all duration-300"
+                  className="px-4 py-2 text-xs font-bold rounded-xl bg-primary text-text-inverse hover:bg-primary-hover transition"
                 >
-                  Create Channel
+                  Create
                 </button>
               </div>
             </form>
@@ -237,4 +230,4 @@ const Chatheader = () => {
   );
 };
 
-export default Chatheader;
+export default React.memo(Chatheader);

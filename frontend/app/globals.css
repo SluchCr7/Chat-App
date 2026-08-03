@@ -3,21 +3,27 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Core Design Tokens & Dynamic Theme Layout System */
+/* ==========================================================================
+   Enterprise SaaS Core Design System Tokens & Fluid Theme Engine
+   ========================================================================== */
+
 :root {
-  /* Corner Radii Elevation System */
-  --radius-sm: 6px;
-  --radius-md: 12px;
-  --radius-lg: 20px;
-  --radius-xl: 32px;
+  /* Corner Radii System */
+  --radius-xs: 6px;
+  --radius-sm: 10px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --radius-xl: 36px;
+  --radius-full: 9999px;
 
-  /* Shadow Elevation System */
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -1px rgba(0, 0, 0, 0.04);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.12), 0 4px 6px -2px rgba(0, 0, 0, 0.06);
-  --shadow-xl: 0 24px 38px -4px rgba(0, 0, 0, 0.18), 0 9px 16px -6px rgba(0, 0, 0, 0.08);
+  /* Shadow Depth Elevation */
+  --shadow-subtle: 0 1px 3px 0 rgba(0, 0, 0, 0.08), 0 1px 2px 0 rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 12px -2px rgba(0, 0, 0, 0.12), 0 2px 6px -1px rgba(0, 0, 0, 0.07);
+  --shadow-lg: 0 12px 24px -4px rgba(0, 0, 0, 0.18), 0 4px 12px -2px rgba(0, 0, 0, 0.08);
+  --shadow-xl: 0 24px 48px -8px rgba(0, 0, 0, 0.28), 0 8px 24px -4px rgba(0, 0, 0, 0.12);
+  --shadow-glow: 0 0 24px -4px rgba(14, 165, 233, 0.25);
 
-  /* Default Premium Dark (Black) Theme Settings */
+  /* Default Obsidian Dark (Black Theme) Defaults */
   --primary: #0ea5e9;
   --primary-rgb: 14, 165, 233;
   --primary-hover: #0284c7;
@@ -31,63 +37,63 @@
   --error: #ef4444;
   --info: #3b82f6;
 
-  /* Layered Background Elevations (Obsidian Levels) */
-  --bg-primary: #080a10;
-  --bg-secondary: #0f131a;
-  --bg-tertiary: #171d26;
-  --surface: #171d26;
-  --surface-hover: #212936;
-  --surface-active: #2b3545;
-  --card: #0f131a;
-  --card-hover: #171d26;
-  --modal-bg: #0f131a;
-  --dropdown-bg: #0f131a;
-  --sidebar-bg: #0a0d14;
-  --navbar-bg: #0a0d14;
-  --footer-bg: #05060a;
+  /* Layered Background Elevations */
+  --bg-primary: #07090e;
+  --bg-secondary: #0d1118;
+  --bg-tertiary: #141a24;
+  --surface: #121721;
+  --surface-hover: #1b2230;
+  --surface-active: #242d3f;
+  --card: #0e121a;
+  --card-hover: #151b27;
+  --modal-bg: #0b0f16;
+  --dropdown-bg: #0e121a;
+  --sidebar-bg: #090c12;
+  --navbar-bg: #07090e;
+  --footer-bg: #040508;
 
-  /* Text Hierarchy (Contrast Accessibility) */
-  --text-primary: #f3f4f6;
-  --text-secondary: #9ca3af;
-  --text-muted: #6b7280;
-  --text-disabled: #4b5563;
-  --text-inverse: #080a10;
+  /* High Contrast Accessible Typography Hierarchy */
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  --text-disabled: #475569;
+  --text-inverse: #07090e;
 
-  /* Borders */
-  --border: rgba(255, 255, 255, 0.07);
-  --border-light: rgba(255, 255, 255, 0.03);
-  --border-hover: rgba(255, 255, 255, 0.15);
+  /* Refined Micro Borders */
+  --border: rgba(255, 255, 255, 0.08);
+  --border-light: rgba(255, 255, 255, 0.04);
+  --border-hover: rgba(255, 255, 255, 0.16);
   --border-focus: #0ea5e9;
   --online: #10b981;
 }
 
-
-
-/* 1. Cyber Dark Theme (Defaults) */
+/* 1. Cyber Dark Theme (black) */
 .theme-black {
   --primary: #0ea5e9;
   --primary-rgb: 14, 165, 233;
   --primary-hover: #0284c7;
   --primary-light: #38bdf8;
   --primary-dark: #0369a1;
-  --bg-primary: #090b11;
-  --bg-secondary: #111520;
-  --bg-tertiary: #191f2d;
-  --surface: #191f2d;
-  --surface-hover: #222b3d;
-  --surface-active: #2b374e;
-  --card: #111520;
-  --card-hover: #191f2d;
-  --sidebar-bg: #0a0d14;
-  --navbar-bg: #0a0d14;
-  --text-primary: #f3f4f6;
-  --text-secondary: #9ca3af;
-  --text-muted: #6b7280;
-  --text-disabled: #4b5563;
-  --border: rgba(255, 255, 255, 0.06);
+  --bg-primary: #07090e;
+  --bg-secondary: #0d1118;
+  --bg-tertiary: #141a24;
+  --surface: #121721;
+  --surface-hover: #1b2230;
+  --surface-active: #242d3f;
+  --card: #0e121a;
+  --card-hover: #151b27;
+  --sidebar-bg: #090c12;
+  --navbar-bg: #07090e;
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  --text-disabled: #475569;
+  --border: rgba(255, 255, 255, 0.08);
+  --border-light: rgba(255, 255, 255, 0.04);
+  --border-hover: rgba(255, 255, 255, 0.18);
 }
 
-/* 2. Premium Accessible Light Theme (White) */
+/* 2. Premium Porcelain Light Theme (white) */
 .theme-white {
   --primary: #4f46e5;
   --primary-rgb: 79, 70, 229;
@@ -102,8 +108,8 @@
   --bg-secondary: #f1f5f9;
   --bg-tertiary: #e2e8f0;
   --surface: #ffffff;
-  --surface-hover: #f1f5f9;
-  --surface-active: #e2e8f0;
+  --surface-hover: #f8fafc;
+  --surface-active: #f1f5f9;
   --card: #ffffff;
   --card-hover: #f8fafc;
   --modal-bg: #ffffff;
@@ -112,107 +118,118 @@
   --navbar-bg: #ffffff;
   --footer-bg: #f8fafc;
 
-  /* Accessible High Contrast Text variables */
   --text-primary: #0f172a;
   --text-secondary: #334155;
   --text-muted: #64748b;
   --text-disabled: #94a3b8;
   --text-inverse: #ffffff;
 
-  --border: rgba(15, 23, 42, 0.08);
+  --border: rgba(15, 23, 42, 0.09);
   --border-light: rgba(15, 23, 42, 0.04);
-  --border-hover: rgba(15, 23, 42, 0.16);
+  --border-hover: rgba(15, 23, 42, 0.18);
   --border-focus: #4f46e5;
 }
 
-/* 3. Deep Coral Rose Theme (Red) */
+/* 3. Deep Crimson Rose Theme (red) */
 .theme-red {
   --primary: #f43f5e;
   --primary-rgb: 244, 63, 94;
   --primary-hover: #e11d48;
   --primary-light: #fb7185;
   --primary-dark: #be123c;
-  --bg-primary: #0d090a;
-  --bg-secondary: #171012;
-  --bg-tertiary: #22171a;
-  --surface: #22171a;
-  --surface-hover: #2f2024;
-  --surface-active: #3c292f;
-  --card: #171012;
-  --card-hover: #22171a;
-  --border: rgba(244, 63, 94, 0.08);
+  --bg-primary: #0d080a;
+  --bg-secondary: #160d10;
+  --bg-tertiary: #201317;
+  --surface: #1e1215;
+  --surface-hover: #2a1a1f;
+  --surface-active: #372129;
+  --card: #160d10;
+  --card-hover: #1e1215;
+  --border: rgba(244, 63, 94, 0.12);
+  --border-light: rgba(244, 63, 94, 0.06);
+  --border-hover: rgba(244, 63, 94, 0.25);
   --text-primary: #ffe4e6;
   --text-secondary: #fda4af;
   --text-muted: #f43f5e;
 }
 
-/* 4. Emerald Forest Theme (Green) */
+/* 4. Emerald Forest Theme (green) */
 .theme-green {
   --primary: #10b981;
   --primary-rgb: 16, 185, 129;
   --primary-hover: #059669;
   --primary-light: #34d399;
   --primary-dark: #047857;
-  --bg-primary: #050a07;
-  --bg-secondary: #0b1410;
-  --bg-tertiary: #12221b;
-  --surface: #12221b;
-  --surface-hover: #1b3228;
-  --surface-active: #244235;
-  --card: #0b1410;
-  --card-hover: #12221b;
-  --border: rgba(16, 185, 129, 0.08);
+  --bg-primary: #040906;
+  --bg-secondary: #09130d;
+  --bg-tertiary: #101f16;
+  --surface: #0e1c14;
+  --surface-hover: #162a1e;
+  --surface-active: #1e3828;
+  --card: #09130d;
+  --card-hover: #0e1c14;
+  --border: rgba(16, 185, 129, 0.12);
+  --border-light: rgba(16, 185, 129, 0.06);
+  --border-hover: rgba(16, 185, 129, 0.25);
   --text-primary: #d1fae5;
   --text-secondary: #6ee7b7;
   --text-muted: #10b981;
 }
 
-/* 5. Deep Ocean Sapphire Theme (Blue) */
+/* 5. Deep Ocean Sapphire Theme (blue) */
 .theme-blue {
   --primary: #3b82f6;
   --primary-rgb: 59, 130, 246;
   --primary-hover: #2563eb;
   --primary-light: #60a5fa;
   --primary-dark: #1d4ed8;
-  --bg-primary: #050b14;
-  --bg-secondary: #0a1324;
-  --bg-tertiary: #0f1d37;
-  --surface: #0f1d37;
-  --surface-hover: #172a50;
-  --surface-active: #1f3769;
-  --card: #0a1324;
-  --card-hover: #0f1d37;
-  --border: rgba(59, 130, 246, 0.08);
+  --bg-primary: #040914;
+  --bg-secondary: #091225;
+  --bg-tertiary: #0f1d3a;
+  --surface: #0e1a34;
+  --surface-hover: #16274e;
+  --surface-active: #1e3468;
+  --card: #091225;
+  --card-hover: #0e1a34;
+  --border: rgba(59, 130, 246, 0.12);
+  --border-light: rgba(59, 130, 246, 0.06);
+  --border-hover: rgba(59, 130, 246, 0.25);
   --text-primary: #dbeafe;
   --text-secondary: #93c5fd;
   --text-muted: #3b82f6;
 }
 
-/* 6. Honey Amber Gold Theme (Yellow) */
+/* 6. Honey Amber Gold Theme (yellow) */
 .theme-yellow {
   --primary: #f59e0b;
   --primary-rgb: 245, 158, 11;
   --primary-hover: #d97706;
   --primary-light: #fbbf24;
   --primary-dark: #b45309;
-  --bg-primary: #080603;
-  --bg-secondary: #120e07;
-  --bg-tertiary: #1d170b;
-  --surface: #1d170b;
-  --surface-hover: #292010;
-  --surface-active: #352915;
-  --card: #120e07;
-  --card-hover: #1d170b;
-  --border: rgba(245, 158, 11, 0.08);
+  --bg-primary: #090704;
+  --bg-secondary: #130f08;
+  --bg-tertiary: #1f180d;
+  --surface: #1c150c;
+  --surface-hover: #292012;
+  --surface-active: #372a18;
+  --card: #130f08;
+  --card-hover: #1c150c;
+  --border: rgba(245, 158, 11, 0.12);
+  --border-light: rgba(245, 158, 11, 0.06);
+  --border-hover: rgba(245, 158, 11, 0.25);
   --text-primary: #fef9c3;
   --text-secondary: #fde047;
   --text-muted: #f59e0b;
 }
 
+/* ==========================================================================
+   Custom SaaS Utilities & Glassmorphism Panels
+   ========================================================================== */
+
 /* Custom Standard Scrollbars */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
@@ -227,34 +244,33 @@
 
 /* Glassmorphism Panel styles */
 .glass-panel {
-  background: var(--bg-card);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  background: rgba(18, 23, 33, 0.75);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
   border: 1px solid var(--border);
   box-shadow: var(--shadow-xl);
 }
 
-.glass-panel-light {
-  background: rgba(255, 255, 255, 0.02);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.04);
+.theme-white .glass-panel {
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  box-shadow: 0 20px 40px -8px rgba(15, 23, 42, 0.08);
 }
 
 /* Glow Status Rings */
 .status-glow-online {
-  box-shadow: 0 0 14px var(--online), 0 0 2px var(--online);
-  animation: status-pulse 2s infinite ease-in-out;
+  box-shadow: 0 0 10px var(--online), 0 0 2px var(--online);
+  animation: status-pulse 2.5s infinite ease-in-out;
 }
 
 @keyframes status-pulse {
   0%, 100% { transform: scale(1); opacity: 1; }
-  50% { transform: scale(0.9); opacity: 0.8; }
+  50% { transform: scale(0.92); opacity: 0.85; }
 }
 
 .menu_bg {
-  background-color: rgba(0, 0, 0, 0.8);
-  backdrop-filter: blur(12px);
+  background-color: rgba(3, 5, 10, 0.75);
+  backdrop-filter: blur(16px);
   position: fixed;
   top: 0;
   left: 0;
@@ -264,215 +280,6 @@
   display: flex;
   justify-content: center;
   align-items: center;
-}
-
-@keyframes spin-border {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-.loading_border {
-  border-radius: 50%;
-  animation: spin-border 1s linear infinite;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 9999;
-}
-
-/* ==========================================================================
-   Premium & Elegant Toast Notifications Custom Design System (React Toastify Override)
-   ========================================================================== */
-
-/* Custom Toast Container Alignment & Bounds */
-.custom-toast-container.Toastify__toast-container {
-  width: 380px !important;
-  max-width: 95vw !important;
-  padding: 12px !important;
-}
-
-.custom-toast-container.Toastify__toast-container--top-center {
-  top: 1.5rem !important;
-  transform: translateX(-50%) !important;
-}
-
-.custom-toast-container.Toastify__toast-container--top-left {
-  top: 1.5rem !important;
-  left: 1.5rem !important;
-}
-
-.custom-toast-container.Toastify__toast-container--top-right {
-  top: 1.5rem !important;
-  right: 1.5rem !important;
-}
-
-/* Base Toast Panel - Modern Glassmorphism Card Style */
-.custom-toast.Toastify__toast {
-  background: rgba(13, 17, 24, 0.8) !important;
-  backdrop-filter: blur(24px) saturate(190%) !important;
-  -webkit-backdrop-filter: blur(24px) saturate(190%) !important;
-  border: 1px solid rgba(255, 255, 255, 0.08) !important;
-  border-radius: 16px !important;
-  box-shadow: 
-    0 4px 6px -1px rgba(0, 0, 0, 0.1),
-    0 20px 40px -8px rgba(0, 0, 0, 0.5),
-    0 1px 1px 0 rgba(255, 255, 255, 0.05) inset !important;
-  color: #f3f4f6 !important;
-  font-family: inherit !important;
-  padding: 14px 18px !important;
-  min-height: 56px !important;
-  display: flex !important;
-  align-items: center !important;
-  margin-bottom: 12px !important;
-  overflow: hidden !important;
-  position: relative !important;
-  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease !important;
-}
-
-/* Light Theme overrides when .theme-white is active */
-.theme-white .custom-toast.Toastify__toast {
-  background: rgba(255, 255, 255, 0.85) !important;
-  border: 1px solid rgba(15, 23, 42, 0.09) !important;
-  box-shadow: 
-    0 4px 6px -1px rgba(15, 23, 42, 0.05),
-    0 20px 40px -8px rgba(15, 23, 42, 0.12),
-    0 1px 1px 0 rgba(255, 255, 255, 0.9) inset !important;
-  color: #0f172a !important;
-}
-
-/* Internal body content layout */
-.custom-toast.Toastify__toast .Toastify__toast-body {
-  font-size: 13.5px !important;
-  font-weight: 500 !important;
-  line-height: 1.5 !important;
-  color: #f3f4f6 !important;
-  margin: 0 !important;
-  padding: 0 6px !important;
-  display: flex !important;
-  align-items: center !important;
-  gap: 12px !important;
-}
-
-.theme-white .custom-toast.Toastify__toast .Toastify__toast-body {
-  color: #1e293b !important;
-}
-
-/* Elegant Status-specific border and background glow hints */
-.custom-toast.Toastify__toast--success {
-  border-color: rgba(16, 185, 129, 0.25) !important;
-  box-shadow: 
-    0 20px 40px -8px rgba(0, 0, 0, 0.5),
-    0 0 20px rgba(16, 185, 129, 0.08) !important;
-}
-.theme-white .custom-toast.Toastify__toast--success {
-  border-color: rgba(16, 185, 129, 0.22) !important;
-  box-shadow: 
-    0 20px 40px -8px rgba(16, 185, 129, 0.08) !important;
-}
-
-.custom-toast.Toastify__toast--error {
-  border-color: rgba(239, 68, 68, 0.25) !important;
-  box-shadow: 
-    0 20px 40px -8px rgba(0, 0, 0, 0.5),
-    0 0 20px rgba(239, 68, 68, 0.08) !important;
-}
-.theme-white .custom-toast.Toastify__toast--error {
-  border-color: rgba(239, 68, 68, 0.22) !important;
-  box-shadow: 
-    0 20px 40px -8px rgba(239, 68, 68, 0.08) !important;
-}
-
-.custom-toast.Toastify__toast--info {
-  border-color: rgba(59, 130, 246, 0.25) !important;
-  box-shadow: 
-    0 20px 40px -8px rgba(0, 0, 0, 0.5),
-    0 0 20px rgba(59, 130, 246, 0.08) !important;
-}
-.theme-white .custom-toast.Toastify__toast--info {
-  border-color: rgba(59, 130, 246, 0.22) !important;
-  box-shadow: 
-    0 20px 40px -8px rgba(59, 130, 246, 0.08) !important;
-}
-
-.custom-toast.Toastify__toast--warning {
-  border-color: rgba(245, 158, 11, 0.25) !important;
-  box-shadow: 
-    0 20px 40px -8px rgba(0, 0, 0, 0.5),
-    0 0 20px rgba(245, 158, 11, 0.08) !important;
-}
-.theme-white .custom-toast.Toastify__toast--warning {
-  border-color: rgba(245, 158, 11, 0.22) !important;
-  box-shadow: 
-    0 20px 40px -8px rgba(245, 158, 11, 0.08) !important;
-}
-
-/* Beautiful custom status icon colors and sizes */
-.custom-toast .Toastify__toast-icon {
-  width: 20px !important;
-  height: 20px !important;
-  margin-right: 4px !important;
-  flex-shrink: 0 !important;
-}
-
-.custom-toast.Toastify__toast--success .Toastify__toast-icon svg {
-  fill: #10b981 !important;
-}
-.custom-toast.Toastify__toast--error .Toastify__toast-icon svg {
-  fill: #ef4444 !important;
-}
-.custom-toast.Toastify__toast--info .Toastify__toast-icon svg {
-  fill: #3b82f6 !important;
-}
-.custom-toast.Toastify__toast--warning .Toastify__toast-icon svg {
-  fill: #f59e0b !important;
-}
-
-/* Sleek close button styling */
-.custom-toast .Toastify__close-button {
-  color: #9ca3af !important;
-  opacity: 0.5 !important;
-  padding: 6px !important;
-  transition: opacity 0.2s ease, transform 0.2s ease !important;
-  align-self: center !important;
-  margin-left: auto !important;
-}
-
-.theme-white .custom-toast .Toastify__close-button {
-  color: #64748b !important;
-}
-
-.custom-toast .Toastify__close-button:hover {
-  opacity: 1 !important;
-  transform: scale(1.1) !important;
-  color: #ffffff !important;
-}
-
-.theme-white .custom-toast .Toastify__close-button:hover {
-  color: #0f172a !important;
-}
-
-/* Sleek Ultra-Thin Minimalist Progress Bar at the bottom */
-.custom-toast .Toastify__progress-bar {
-  height: 3px !important;
-  bottom: 0 !important;
-  left: 0 !important;
-  border-radius: 0 0 16px 16px !important;
-}
-
-.custom-toast .Toastify__progress-bar--success {
-  background: linear-gradient(90deg, #10b981, #34d399, #059669) !important;
-}
-
-.custom-toast .Toastify__progress-bar--error {
-  background: linear-gradient(90deg, #ef4444, #f87171, #dc2626) !important;
-}
-
-.custom-toast .Toastify__progress-bar--info {
-  background: linear-gradient(90deg, #3b82f6, #60a5fa, #2563eb) !important;
-}
-
-.custom-toast .Toastify__progress-bar--warning {
-  background: linear-gradient(90deg, #f59e0b, #fbbf24, #d97706) !important;
 }
 
 /* Shimmer Loading Skeleton Animation System */
@@ -497,8 +304,8 @@
   background-image: linear-gradient(
     90deg,
     rgba(255, 255, 255, 0) 0%,
-    rgba(255, 255, 255, 0.04) 20%,
-    rgba(255, 255, 255, 0.08) 60%,
+    rgba(255, 255, 255, 0.05) 20%,
+    rgba(255, 255, 255, 0.1) 60%,
     rgba(255, 255, 255, 0) 100%
   );
   animation: shimmer 2s infinite cubic-bezier(0.4, 0, 0.6, 1);
@@ -510,120 +317,65 @@
     90deg,
     rgba(0, 0, 0, 0) 0%,
     rgba(0, 0, 0, 0.03) 20%,
-    rgba(0, 0, 0, 0.07) 60%,
+    rgba(0, 0, 0, 0.08) 60%,
     rgba(0, 0, 0, 0) 100%
   );
 }
 
-/* ==========================================================================
-   Premium Obsidian Glassmorphism Overrides & Neon Glow System
-   ========================================================================== */
-
-.premium-card {
-  background: var(--bg-secondary);
+/* Premium Card & Bubble Designs */
+.saas-card {
+  background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
-  box-shadow: var(--shadow-md);
-  transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+  box-shadow: var(--shadow-subtle);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.premium-card:hover {
+.saas-card:hover {
   background: var(--surface-hover);
   border-color: var(--border-hover);
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
-  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
 }
 
-/* Selected active items border and shadow glow */
-.premium-active-glow {
-  background: linear-gradient(135deg, rgba(var(--primary-rgb), 0.12) 0%, rgba(var(--primary-rgb), 0.03) 100%) !important;
-  border-color: var(--primary) !important;
-  box-shadow: 0 0 15px rgba(var(--primary-rgb), 0.15) !important;
-}
-
-/* Beautiful custom tab buttons */
-.custom-tab-btn {
-  position: relative;
-  transition: all 0.3s ease;
-}
-
-.custom-tab-btn::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 50%;
-  width: 0;
-  height: 2px;
-  background: var(--primary);
-  transition: all 0.3s ease;
-  transform: translateX(-50%);
-}
-
-.custom-tab-btn.active::after {
-  width: 60%;
-}
-
-/* Premium chat input control deck */
-.premium-input-deck {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border);
-  box-shadow: var(--shadow-lg);
-  border-radius: var(--radius-lg);
-}
-
-/* Message bubbles styling updates (Unique card designs) */
 .msg-bubble-sent {
   background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%) !important;
   color: var(--text-inverse) !important;
-  border-radius: 20px 20px 4px 20px !important;
-  box-shadow: 0 4px 15px rgba(var(--primary-rgb), 0.2) !important;
-  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 18px 18px 4px 18px !important;
+  box-shadow: 0 4px 16px rgba(var(--primary-rgb), 0.22) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
 }
 
 .msg-bubble-received {
   background: var(--surface) !important;
   color: var(--text-primary) !important;
-  border-radius: 20px 20px 20px 4px !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25) !important;
+  border-radius: 18px 18px 18px 4px !important;
+  box-shadow: var(--shadow-md) !important;
   border: 1px solid var(--border) !important;
 }
 
-/* Glowing text effects */
-.text-glow {
-  text-shadow: 0 0 10px rgba(var(--primary-rgb), 0.5);
+/* Custom Toast Container Alignment & Overrides */
+.custom-toast-container.Toastify__toast-container {
+  width: 380px !important;
+  max-width: 95vw !important;
+  padding: 12px !important;
 }
 
-/* Smooth lists slide-in */
-@keyframes slideUpIn {
-  from {
-    opacity: 0;
-    transform: translateY(12px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.animate-slide-up-in {
-  animation: slideUpIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-/* Neon glow indicators */
-.active-dot-neon {
-  box-shadow: 0 0 10px var(--online), 0 0 2px var(--online);
-}
-
-/* Glass dropdown override */
-.glass-dropdown-card {
-  background: rgba(15, 19, 26, 0.75) !important;
+.custom-toast.Toastify__toast {
+  background: rgba(14, 18, 26, 0.88) !important;
   backdrop-filter: blur(20px) saturate(180%) !important;
   -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
   border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 16px !important;
+  box-shadow: var(--shadow-xl) !important;
+  color: #f8fafc !important;
+  font-family: inherit !important;
+  padding: 14px 18px !important;
+  margin-bottom: 10px !important;
 }
 
-.theme-white .glass-dropdown-card {
-  background: rgba(255, 255, 255, 0.8) !important;
-  border: 1px solid rgba(15, 23, 42, 0.08) !important;
+.theme-white .custom-toast.Toastify__toast {
+  background: rgba(255, 255, 255, 0.92) !important;
+  border: 1px solid rgba(15, 23, 42, 0.09) !important;
+  box-shadow: 0 10px 30px -4px rgba(15, 23, 42, 0.12) !important;
+  color: #0f172a !important;
 }
-

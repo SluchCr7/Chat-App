@@ -3,6 +3,7 @@
 import React, { useContext, useEffect, useRef, useState, useCallback } from 'react';
 import { MessageContext } from '../Context/MessageContext';
 import { AuthContext } from '../Context/AuthContext';
+import { ThemeContext } from '../Context/ThemeContext';
 import ChatInput from './ChatInput';
 import Chatheader from './Chatheader';
 import MessageSkeleton from '../Skeletons/MessageSkeleton';
@@ -26,10 +27,13 @@ const ChatContainer = () => {
   } = useContext(MessageContext);
   
   const { authUser } = useContext(AuthContext);
+  const themeContext = useContext(ThemeContext);
+  const wallpaper = themeContext ? themeContext.wallpaper : null;
+
   const MessageEndRef = useRef(null);
   const ScrollContainerRef = useRef(null);
 
-  // Find the active pinned message (most recently updated one)
+  // Active pinned message
   const activePinnedMessage = (messages || [])
     .filter(m => m.isPinned)
     .sort((a, b) => new Date(a.updatedAt).getTime() - new Date(b.updatedAt).getTime())
@@ -39,10 +43,9 @@ const ChatContainer = () => {
     const element = document.getElementById(`msg-${msgId}`);
     if (element) {
       element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      // Apply a premium highlight pulse effect
-      element.classList.add('bg-primary/10', 'ring-1', 'ring-primary/20', 'scale-[1.01]', 'shadow-md');
+      element.classList.add('ring-2', 'ring-primary', 'scale-[1.01]', 'shadow-lg');
       setTimeout(() => {
-        element.classList.remove('bg-primary/10', 'ring-1', 'ring-primary/20', 'scale-[1.01]', 'shadow-md');
+        element.classList.remove('ring-2', 'ring-primary', 'scale-[1.01]', 'shadow-lg');
       }, 1500);
     }
   };
@@ -51,7 +54,7 @@ const ChatContainer = () => {
   const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
   const [previousScrollHeight, setPreviousScrollHeight] = useState(0);
 
-  // --- Scroll to Bottom Programmatically ---
+  // Scroll to Bottom
   const scrollToBottom = useCallback((behavior = 'smooth') => {
     if (ScrollContainerRef.current) {
       const { scrollHeight, clientHeight } = ScrollContainerRef.current;
@@ -62,7 +65,6 @@ const ChatContainer = () => {
     }
   }, []);
 
-  // Set the first unread message ID when switching chat contexts
   useEffect(() => {
     if (messages && messages.length > 0 && authUser) {
       const firstUnread = messages.find(m => {
@@ -77,10 +79,8 @@ const ChatContainer = () => {
     } else {
       setFirstUnreadMessageId(null);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedUser, selectedGroup, selectedChannel]);
+  }, [selectedUser, selectedGroup, selectedChannel, messages, authUser]);
 
-  // Adjust scroll after content updates or pagination
   useEffect(() => {
     if (shouldAutoScroll) {
       scrollToBottom('smooth');
@@ -91,7 +91,6 @@ const ChatContainer = () => {
     }
   }, [messages, typingUsers, shouldAutoScroll, previousScrollHeight, scrollToBottom]);
 
-  // Reset scroll states on target swap
   useEffect(() => {
     setShouldAutoScroll(true);
     setPreviousScrollHeight(0);
@@ -99,21 +98,43 @@ const ChatContainer = () => {
 
   const handleScroll = (e) => {
     const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
-    
-    // Check if user is near bottom
     const isAtBottom = scrollHeight - scrollTop - clientHeight < 150;
     setShouldAutoScroll(isAtBottom);
 
-    // Infinite scroll trigger
     if (scrollTop === 0 && hasMoreMessages && !isMessagesLoading) {
       setPreviousScrollHeight(scrollHeight);
       loadMoreMessages();
     }
   };
 
+  // Helper for custom wallpaper styling
+  const getWallpaperStyle = () => {
+    if (!wallpaper || wallpaper.type === 'none') return {};
+    if (wallpaper.type === 'color') return { backgroundColor: wallpaper.value };
+    if (wallpaper.type === 'pattern') {
+      const style = {
+        backgroundImage: `url(${wallpaper.value})`,
+        backgroundSize: 'auto',
+        backgroundRepeat: 'repeat',
+        backgroundPosition: 'center',
+      };
+      if (wallpaper.color) style.backgroundColor = wallpaper.color;
+      return style;
+    }
+    if (wallpaper.type === 'image') {
+      return {
+        backgroundImage: `url(${wallpaper.value})`,
+        backgroundSize: 'cover',
+        backgroundRepeat: 'no-repeat',
+        backgroundPosition: 'center',
+      };
+    }
+    return {};
+  };
+
   if (isMessagesLoading && messages.length === 0) return <MessageSkeleton />;
 
-  // --- Grouping Messages by Day ---
+  // Grouping Messages by Day
   const groupMessagesByDate = (messages) => {
     return messages.reduce((groups, message) => {
       const date = new Date(message.createdAt);
@@ -139,7 +160,6 @@ const ChatContainer = () => {
     (a, b) => new Date(a).getTime() - new Date(b).getTime()
   );
 
-  // Determine typing users in active context
   const activeTyping = Object.entries(typingUsers)
     .filter(([userId, data]) => {
       if (!data.isTyping) return false;
@@ -154,23 +174,21 @@ const ChatContainer = () => {
     <div className="flex-1 h-full bg-bg-primary flex flex-col overflow-hidden relative transition-all duration-300">
       <Chatheader />
 
+      {/* Pinned Message Banner */}
       {activePinnedMessage && (
         <div 
           onClick={() => jumpToMessage(activePinnedMessage._id)}
-          className="bg-surface/85 backdrop-blur-md border-b border-border px-5 py-2.5 flex items-center justify-between cursor-pointer hover:bg-surface-hover/50 transition-all duration-300 z-20 group/pin relative shadow-sm"
+          className="bg-surface/90 backdrop-blur-md border-b border-border px-5 py-2 flex items-center justify-between cursor-pointer hover:bg-surface-hover/60 transition duration-200 z-20 group relative shadow-sm"
         >
-          {/* Accent indicator line */}
-          <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-cyan-400 group-hover/pin:bg-cyan-300 transition duration-300" />
-          
           <div className="flex items-center gap-3 overflow-hidden select-none">
-            <div className="w-8 h-8 rounded-lg bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400 group-hover/pin:scale-105 transition duration-300">
+            <div className="w-7 h-7 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center text-primary flex-shrink-0">
               <FaThumbtack className="text-xs" />
             </div>
             
             <div className="flex flex-col text-left overflow-hidden leading-tight">
-              <span className="text-[10px] font-extrabold uppercase tracking-wider text-cyan-400 flex items-center gap-1.5">
+              <span className="text-[10px] font-black uppercase tracking-wider text-primary flex items-center gap-1.5">
                 Pinned Message
-                <span className="text-[9px] text-text-muted font-bold lowercase">
+                <span className="text-[9px] text-text-muted font-semibold lowercase">
                   by @{activePinnedMessage.sender?.username || "user"}
                 </span>
               </span>
@@ -180,115 +198,125 @@ const ChatContainer = () => {
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <button 
-              onClick={(e) => {
-                e.stopPropagation();
-                TogglePin(activePinnedMessage._id);
-              }}
-              className="p-2 rounded-lg text-text-muted hover:text-rose-400 hover:bg-rose-500/10 transition-all duration-300"
-              title="Unpin Message"
-            >
-              <IoMdClose size={16} />
-            </button>
-          </div>
+          <button 
+            onClick={(e) => {
+              e.stopPropagation();
+              TogglePin(activePinnedMessage._id);
+            }}
+            className="p-1.5 rounded-lg text-text-muted hover:text-rose-500 hover:bg-rose-500/10 transition"
+            title="Unpin Message"
+          >
+            <IoMdClose size={16} />
+          </button>
         </div>
       )}
 
-      {/* Messages Scroll Area */}
+      {/* Scrollable Chat Area */}
       <div 
         ref={ScrollContainerRef}
         onScroll={handleScroll}
-        className="flex-1 w-full overflow-y-auto p-5 space-y-6 wa-scroll bg-bg-primary/50"
+        className="flex-1 w-full overflow-y-auto p-5 space-y-6 wa-scroll relative"
       >
-        {isMessagesLoading && (
-          <div className="flex justify-center py-2">
-            <span className="loading loading-spinner loading-sm text-primary"></span>
-          </div>
+        {/* Chat Wallpaper Layer */}
+        {wallpaper && wallpaper.type !== 'none' && (
+          <div 
+            className="absolute inset-0 pointer-events-none transition-all duration-300"
+            style={{ ...getWallpaperStyle(), opacity: wallpaper.opacity ?? 0.15, zIndex: 0 }}
+          />
         )}
 
-        {sortedDates.length > 0 ? (
-          sortedDates.map((dateKey) => (
-            <div key={dateKey} className="space-y-4">
-              {/* Date Separator */}
-              <div className="relative flex items-center justify-center my-6">
-                <div className="absolute inset-0 flex items-center" aria-hidden="true">
-                  <div className="w-full border-t border-border"></div>
-                </div>
-                <span className="relative z-10 bg-bg-primary/95 backdrop-blur-sm px-4 py-1.5 text-xs font-bold text-text-secondary border border-border rounded-full shadow-sm tracking-wide">
-                  {getDisplayDate(dateKey)}
-                </span>
-              </div>
-
-              {/* Messages Mapping */}
-              {groupedMessages[dateKey].map((msg, index) => {
-                const isSender = (msg.sender?._id || msg.sender) === authUser?._id;
-                const msgId = msg._id || `temp-${index}`;
-                const showUnreadSeparator = msgId === firstUnreadMessageId;
-                
-                return (
-                  <React.Fragment key={msgId}>
-                    {showUnreadSeparator && (
-                      <div className="flex items-center my-6">
-                        <div className="flex-grow border-t border-rose-500/30"></div>
-                        <span className="bg-rose-500/10 text-rose-500 border border-rose-500/20 px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider mx-4 shadow-[0_0_10px_rgba(239,68,68,0.1)]">
-                          New Messages
-                        </span>
-                        <div className="flex-grow border-t border-rose-500/30"></div>
-                      </div>
-                    )}
-                    <div 
-                      id={`msg-${msgId}`} 
-                      className="transition-all duration-500 rounded-2xl"
-                    >
-                      {isSender ? (
-                        <SenderMessage message={msg} user={authUser} />
-                      ) : (
-                        <ReceiverMessage 
-                          message={msg} 
-                          user={msg.sender || selectedUser} 
-                        />
-                      )}
-                    </div>
-                  </React.Fragment>
-                );
-              })}
+        <div className="relative z-10 space-y-6">
+          {isMessagesLoading && (
+            <div className="flex justify-center py-2">
+              <span className="loading loading-spinner loading-sm text-primary"></span>
             </div>
-          ))
-        ) : (
-          <div className="h-full flex items-center justify-center flex-col text-center text-text-muted select-none">
-            <p className="text-sm font-semibold tracking-wide bg-surface/40 px-6 py-3 border border-border rounded-full backdrop-blur-sm">No messages yet. Send a message to start the conversation.</p>
-          </div>
-        )}
+          )}
 
-        <div ref={MessageEndRef} />
+          {sortedDates.length > 0 ? (
+            sortedDates.map((dateKey) => (
+              <div key={dateKey} className="space-y-4">
+                {/* Date Divider */}
+                <div className="relative flex items-center justify-center my-6">
+                  <div className="absolute inset-0 flex items-center" aria-hidden="true">
+                    <div className="w-full border-t border-border"></div>
+                  </div>
+                  <span className="relative z-10 bg-surface/90 backdrop-blur-md px-3.5 py-1 text-xs font-bold text-text-secondary border border-border rounded-full shadow-sm">
+                    {getDisplayDate(dateKey)}
+                  </span>
+                </div>
+
+                {/* Messages List */}
+                {groupedMessages[dateKey].map((msg, index) => {
+                  const isSender = (msg.sender?._id || msg.sender) === authUser?._id;
+                  const msgId = msg._id || `temp-${index}`;
+                  const showUnreadSeparator = msgId === firstUnreadMessageId;
+                  
+                  return (
+                    <React.Fragment key={msgId}>
+                      {showUnreadSeparator && (
+                        <div className="flex items-center my-6">
+                          <div className="flex-grow border-t border-rose-500/30"></div>
+                          <span className="bg-rose-500/10 text-rose-500 border border-rose-500/20 px-3 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider mx-4 shadow-sm">
+                            New Unread Messages
+                          </span>
+                          <div className="flex-grow border-t border-rose-500/30"></div>
+                        </div>
+                      )}
+                      <div 
+                        id={`msg-${msgId}`} 
+                        className="transition-all duration-300 rounded-2xl"
+                      >
+                        {isSender ? (
+                          <SenderMessage message={msg} user={authUser} />
+                        ) : (
+                          <ReceiverMessage 
+                            message={msg} 
+                            user={msg.sender || selectedUser} 
+                          />
+                        )}
+                      </div>
+                    </React.Fragment>
+                  );
+                })}
+              </div>
+            ))
+          ) : (
+            <div className="h-full min-h-[300px] flex items-center justify-center flex-col text-center text-text-muted select-none">
+              <p className="text-xs font-bold bg-surface/70 px-5 py-2.5 border border-border rounded-full backdrop-blur-md">
+                No messages yet. Send a message to start conversation.
+              </p>
+            </div>
+          )}
+
+          <div ref={MessageEndRef} />
+        </div>
       </div>
 
-      {/* Real-time typing indicators docked container */}
+      {/* Real-time Typing Indicator Bar */}
       {activeTyping.length > 0 && (
-        <div className="px-5 py-2.5 border-t border-border bg-bg-primary/95 flex items-center gap-2.5 text-xs text-text-secondary select-none animate-fade-in z-20 flex-shrink-0">
+        <div className="px-5 py-2 border-t border-border bg-surface/90 flex items-center gap-2 text-xs text-text-secondary select-none z-20 flex-shrink-0">
           <div className="flex gap-1">
             <span className="w-1.5 h-1.5 rounded-full bg-primary animate-bounce" style={{ animationDelay: '0ms' }}></span>
             <span className="w-1.5 h-1.5 rounded-full bg-primary animate-bounce" style={{ animationDelay: '150ms' }}></span>
             <span className="w-1.5 h-1.5 rounded-full bg-primary animate-bounce" style={{ animationDelay: '300ms' }}></span>
           </div>
-          <span className="font-semibold text-[11px]">
+          <span className="font-bold text-[11px]">
             {activeTyping.join(", ")} {activeTyping.length === 1 ? "is" : "are"} typing...
           </span>
         </div>
       )}
 
-      {/* Floating Scroll-to-Bottom Button */}
+      {/* Scroll-to-Bottom Floating Button */}
       {!shouldAutoScroll && (
         <button
           onClick={() => {
             setShouldAutoScroll(true);
             scrollToBottom('smooth');
           }}
-          className="absolute bottom-20 right-6 z-40 p-3 rounded-full bg-primary hover:bg-primary-hover text-text-inverse shadow-xl border border-primary/20 hover:scale-110 active:scale-95 transition-all duration-300 flex items-center justify-center"
+          className="absolute bottom-20 right-6 z-40 p-2.5 rounded-full bg-primary text-text-inverse shadow-lg border border-primary/20 hover:scale-110 active:scale-95 transition flex items-center justify-center"
           title="Scroll to bottom"
         >
-          <FaArrowDown className="text-xs text-white" />
+          <FaArrowDown className="text-xs" />
         </button>
       )}
 

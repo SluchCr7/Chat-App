@@ -1,4 +1,5 @@
 "use client"
+
 import NavBar from "./NavBar";
 import AuthContextProvider, { AuthContext } from "../Context/AuthContext";
 import MessageContextProvider from "../Context/MessageContext";
@@ -13,12 +14,12 @@ const LayoutWrapper = ({ children, showNotification, setShowNotification, showMe
     const { authUser } = useContext(AuthContext);
     const pathname = usePathname();
 
-    // Enforce strict 100vh app page layout boundary when user is logged in
+    // Enforce strict 100vh app page layout boundary when user is logged in on app pages
     const isAppLayout = authUser && (pathname === "/" || pathname?.startsWith("/Pages/"));
 
     if (isAppLayout) {
         return (
-            <div className="h-screen bg-bg text-text flex flex-col overflow-hidden">
+            <div className="h-screen bg-bg-primary text-text-primary flex flex-col overflow-hidden select-none">
                 <NavBar 
                     showNotification={showNotification} 
                     setShowNotification={setShowNotification} 
@@ -29,13 +30,15 @@ const LayoutWrapper = ({ children, showNotification, setShowNotification, showMe
                     showNotification={showNotification} 
                     setShowNotification={setShowNotification} 
                 />
-                <main className={`flex-1 flex flex-col bg-bg-primary ${pathname === "/" ? "overflow-hidden" : "overflow-y-auto"}`}>{children}</main>
+                <main className={`flex-1 flex flex-col bg-bg-primary ${pathname === "/" ? "overflow-hidden" : "overflow-y-auto"}`}>
+                    {children}
+                </main>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-bg text-text flex flex-col">
+        <div className="min-h-screen bg-bg-primary text-text-primary flex flex-col">
             <NavBar 
                 showNotification={showNotification} 
                 setShowNotification={setShowNotification} 
@@ -47,16 +50,16 @@ const LayoutWrapper = ({ children, showNotification, setShowNotification, showMe
                 setShowNotification={setShowNotification} 
             />
             <main className="flex-1">{children}</main>
-            <footer className="border-t border-custom bg-bg/90 text-muted py-5 px-6">
-                <div className="mx-auto flex max-w-7xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <footer className="border-t border-border bg-bg-footer/90 text-text-muted py-6 px-6 backdrop-blur-md">
+                <div className="mx-auto flex max-w-7xl flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                     <div className="inline-flex items-center gap-3">
                         <Logo compact />
-                        <div>
-                            <p className="text-sm font-semibold text-text-active">ChatYou</p>
-                            <p className="text-xs text-muted">Secure messaging for teams and communities.</p>
+                        <div className="text-left">
+                            <p className="text-sm font-extrabold text-text-primary">ChatYou Workspace</p>
+                            <p className="text-xs text-text-muted">Enterprise messaging for modern teams & communities.</p>
                         </div>
                     </div>
-                    <p className="text-xs text-muted">Designed for modern chat experiences — © {new Date().getFullYear()}</p>
+                    <p className="text-xs text-text-muted font-medium">Designed with excellence — © {new Date().getFullYear()}</p>
                 </div>
             </footer>
         </div>

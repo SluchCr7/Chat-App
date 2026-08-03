@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useContext, useState, useEffect, useRef , useCallback } from 'react';
+import React, { useContext, useState, useEffect, useRef, useCallback } from 'react';
 import { 
   FaImage, FaPaperclip, FaSmile, FaMicrophone, FaReply, 
   FaTrashAlt, FaStop, FaPlay, FaPause 
@@ -70,7 +70,6 @@ const ChatInput = () => {
   const canvasRef = useRef(null);
   const previewAudioRef = useRef(null);
 
-  // Voice recording helpers (declared early to prevent temporal dead zone reference errors in useEffect)
   const cleanupRecordingResources = useCallback((stopTracks = true) => {
     if (timerRef.current) {
       clearInterval(timerRef.current);
@@ -102,12 +101,10 @@ const ChatInput = () => {
     setRecordingState('idle');
   }, [cleanupRecordingResources]);
 
-  // --- 1. Populate drafts on selection change ---
+  // Populate drafts on selection change
   useEffect(() => {
     setMessage('');
-    setReplyMessage(null); // Clear reply when chat changes
-    
-    // Discard any active recording if user switches chats
+    setReplyMessage(null);
     cancelRecording();
 
     if (!targetId) return;
@@ -121,7 +118,7 @@ const ChatInput = () => {
     }
   }, [selectedUser, selectedGroup, selectedChannel, directChats, groupChats, setReplyMessage, targetId, type, cancelRecording]);
 
-  // --- 2. Save draft automatically with debounce ---
+  // Save draft automatically with debounce
   const triggerDraftSave = (text) => {
     if (!targetId) return;
 
@@ -132,13 +129,13 @@ const ChatInput = () => {
       if (type === "direct") {
         const activeDM = directChats.find(c => c.recipient?._id === targetId);
         if (activeDM) chatId = activeDM._id;
-        else return; // If conversation is not created yet, no draft is saved on server
+        else return;
       }
       await handleSaveDraft(chatId, type, text);
-    }, 1000); // 1-second debounce
+    }, 1000);
   };
 
-  // --- 3. Real-time Typing Handlers ---
+  // Real-time Typing Handlers
   const handleInputChange = (e) => {
     const val = e.target.value;
     setMessage(val);
@@ -159,7 +156,7 @@ const ChatInput = () => {
     }, 2000);
   };
 
-  // --- 4. Emoji Actions ---
+  // Emoji Actions
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (emojiPickerRef.current && !emojiPickerRef.current.contains(event.target)) {
@@ -234,10 +231,9 @@ const ChatInput = () => {
     }
   };
 
-  // --- 5. Voice Recording Actions ---
+  // Voice Recording Actions
   const startRecording = async () => {
     try {
-      // Close emoji picker if open
       setShowEmojiPicker(false);
 
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -269,7 +265,7 @@ const ChatInput = () => {
       setupAudioVisualizer(stream);
     } catch (err) {
       console.error("Microphone access error:", err);
-      toast.error("Microphone permission denied or not available. Please allow access.");
+      toast.error("Microphone permission denied or not available.");
     }
   };
 
@@ -309,7 +305,7 @@ const ChatInput = () => {
         const barGap = 3.5;
         const totalBars = Math.floor(width / (barWidth + barGap));
         
-        ctx.fillStyle = '#10b981'; // Premium Emerald / WhatsApp green visualizer color
+        ctx.fillStyle = '#10b981';
 
         for (let i = 0; i < totalBars; i++) {
           const dataIdx = i % bufferLength;
@@ -352,7 +348,6 @@ const ChatInput = () => {
       const formData = new FormData();
       formData.append('audio', audioBlob, `voice-note-${Date.now()}.webm`);
 
-      // Upload audio blob to API
       const uploadRes = await axios.post(
         `${process.env.NEXT_PUBLIC_SOCKET_URL}/api/messages/upload-audio`,
         formData,
@@ -366,20 +361,18 @@ const ChatInput = () => {
 
       const { url, fileSize } = uploadRes.data;
 
-      // Pass voice metadata to AddNewMessage context helper
       await AddNewMessage('', [], null, {
         url,
         duration: recordingTime,
         fileSize
       });
 
-      // Clear states
       setAudioBlob(null);
       setAudioUrl('');
       setRecordingState('idle');
     } catch (err) {
       console.error("Failed to upload voice message:", err);
-      toast.error("Failed to send voice message. Please try again.");
+      toast.error("Failed to send voice message.");
     } finally {
       setIsUploading(false);
     }
@@ -413,7 +406,7 @@ const ChatInput = () => {
     };
   }, [audioUrl, cleanupRecordingResources]);
 
-  // --- 6. File Handler Actions ---
+  // File Handler Actions
   const handleFileChange = (e) => {
     const files = Array.from(e.target.files);
     const validFiles = files.filter(file => {
@@ -434,7 +427,6 @@ const ChatInput = () => {
   const handleSend = async () => {
     if (!message.trim() && attachments.length === 0) return;
 
-    // Clear typing indicator
     if (socket && targetId) {
       setIsTyping(false);
       socket.emit("typingStop", { targetId, type });
@@ -443,7 +435,6 @@ const ChatInput = () => {
     const replyToId = replyMessage ? replyMessage._id : null;
     await AddNewMessage(message, attachments, replyToId);
     
-    // Clear draft
     if (targetId) {
       let chatId = targetId;
       if (type === "direct") {
@@ -479,17 +470,17 @@ const ChatInput = () => {
       
       {/* Reply Reference Preview Bar */}
       {replyMessage && (
-        <div className="flex items-center justify-between p-3 bg-primary/5 border border-primary/20 rounded-xl animate-slide-in">
+        <div className="flex items-center justify-between p-3 bg-primary/10 border border-primary/20 rounded-2xl">
           <div className="flex items-center gap-2 text-left overflow-hidden">
             <FaReply className="text-primary text-xs flex-shrink-0" />
             <div className="flex flex-col overflow-hidden leading-tight">
-              <span className="text-[10px] font-extrabold text-primary uppercase tracking-wider">Replying to @{replyMessage.sender?.username || "Friend"}</span>
+              <span className="text-[10px] font-black text-primary uppercase tracking-wider">Replying to @{replyMessage.sender?.username || "Friend"}</span>
               <p className="text-xs text-text-secondary truncate italic font-medium">{replyMessage.text || "Media attachment"}</p>
             </div>
           </div>
           <button 
             onClick={() => setReplyMessage(null)}
-            className="p-1 rounded-full text-text-muted hover:text-rose-500 hover:bg-surface-hover transition-all duration-300"
+            className="p-1 rounded-full text-text-muted hover:text-rose-500 transition"
             title="Cancel Reply"
           >
             <IoMdClose size={16} />
@@ -497,32 +488,32 @@ const ChatInput = () => {
         </div>
       )}
 
-      {/* File Previews Panel */}
+      {/* Attachments Preview Bar */}
       {attachments.length > 0 && (
-        <div className="flex flex-wrap gap-3 p-3 bg-bg-primary border border-border rounded-xl max-h-32 overflow-y-auto">
+        <div className="flex flex-wrap gap-2.5 p-2.5 bg-bg-primary border border-border rounded-2xl max-h-32 overflow-y-auto">
           {attachments.map((file, index) => {
             const isImage = file.type.startsWith("image/");
             return (
-              <div key={index} className="relative flex items-center gap-2.5 p-2 bg-surface rounded-lg border border-border pr-8 animate-fade-in">
+              <div key={index} className="relative flex items-center gap-2 p-2 bg-surface rounded-xl border border-border pr-7">
                 {isImage ? (
                   /* eslint-disable-next-line @next/next/no-img-element */
                   <img 
                     src={URL.createObjectURL(file)} 
                     alt="preview" 
-                    className="w-10 h-10 object-cover rounded border border-border" 
+                    className="w-9 h-9 object-cover rounded-lg border border-border" 
                   />
                 ) : (
-                  <FaPaperclip className="text-primary text-sm" />
+                  <FaPaperclip className="text-primary text-xs" />
                 )}
-                <div className="flex flex-col max-w-[120px] text-left">
+                <div className="flex flex-col max-w-[110px] text-left">
                   <span className="text-[10px] font-bold text-text-primary truncate">{file.name}</span>
                   <span className="text-[8px] text-text-muted font-bold">{(file.size / 1024 / 1024).toFixed(2)} MB</span>
                 </div>
                 <button 
                   onClick={() => handleRemoveAttachment(index)}
-                  className="absolute right-1 top-1/2 -translate-y-1/2 text-text-muted hover:text-rose-500 transition-all duration-300"
+                  className="absolute right-1 top-1/2 -translate-y-1/2 text-text-muted hover:text-rose-500 transition"
                 >
-                  <IoMdClose size={16} />
+                  <IoMdClose size={14} />
                 </button>
               </div>
             );
@@ -530,17 +521,17 @@ const ChatInput = () => {
         </div>
       )}
 
-      {/* Floating Emoji Picker Popover */}
+      {/* Floating Emoji Picker Drawer */}
       {showEmojiPicker && (
         <div 
           ref={emojiPickerRef} 
-          className="absolute bottom-20 left-4 z-50 shadow-2xl animate-fade-in w-[320px] sm:w-[350px] max-w-[90vw]"
+          className="absolute bottom-20 left-4 z-50 shadow-2xl w-[310px] sm:w-[350px] max-w-[90vw]"
         >
           <EmojiPicker 
             theme={pickerTheme}
             onEmojiClick={onEmojiClick}
             width="100%"
-            height={360}
+            height={350}
             skinTonesDisabled={false}
             searchDisabled={false}
             previewConfig={{ showPreview: false }}
@@ -548,12 +539,12 @@ const ChatInput = () => {
         </div>
       )}
 
-      {/* Redesigned Premium Layout Input Row */}
-      <div className="flex items-center gap-2.5 w-full">
+      {/* Input Action Deck */}
+      <div className="flex items-center gap-2 w-full">
         {recordingState === 'idle' ? (
           <>
-            {/* Attachment buttons */}
-            <div className="flex items-center gap-1.5">
+            {/* Attachment Triggers */}
+            <div className="flex items-center gap-1">
               <input 
                 type="file"
                 id="file-attachment"
@@ -563,10 +554,10 @@ const ChatInput = () => {
               />
               <label 
                 htmlFor="file-attachment"
-                className="w-10 h-10 rounded-xl bg-bg-primary hover:bg-surface-hover border border-border hover:border-border-hover text-text-secondary hover:text-text-primary shadow-sm transition-all duration-300 cursor-pointer flex items-center justify-center hover:scale-105 active:scale-95"
+                className="w-9.5 h-9.5 rounded-xl bg-bg-primary hover:bg-surface-hover border border-border text-text-secondary hover:text-text-primary transition cursor-pointer flex items-center justify-center"
                 title="Attach Files"
               >
-                <FaPaperclip className="text-sm" />
+                <FaPaperclip className="text-xs" />
               </label>
 
               <input 
@@ -579,24 +570,24 @@ const ChatInput = () => {
               />
               <label 
                 htmlFor="image-attachment"
-                className="w-10 h-10 rounded-xl bg-bg-primary hover:bg-surface-hover border border-border hover:border-border-hover text-text-secondary hover:text-text-primary shadow-sm transition-all duration-300 cursor-pointer flex items-center justify-center hover:scale-105 active:scale-95"
+                className="w-9.5 h-9.5 rounded-xl bg-bg-primary hover:bg-surface-hover border border-border text-text-secondary hover:text-text-primary transition cursor-pointer flex items-center justify-center"
                 title="Attach Images"
               >
-                <FaImage className="text-sm" />
+                <FaImage className="text-xs" />
               </label>
             </div>
 
-            {/* Input Wrapper Field */}
-            <div className="flex-1 relative flex items-center bg-bg-primary border border-border hover:border-border-hover focus-within:border-primary focus-within:ring-1 focus-within:ring-primary rounded-xl px-3 py-1.5 transition-all duration-300">
+            {/* Input Text Deck */}
+            <div className="flex-1 relative flex items-center bg-bg-primary border border-border focus-within:border-primary rounded-xl px-3 py-1 transition">
               
-              {/* Quick Emojis Bar (Desktop Hover feature) */}
+              {/* Quick Emojis Bar */}
               {recentEmojis.length > 0 && !showEmojiPicker && (
-                <div className="hidden md:flex items-center gap-1 mr-2 px-1.5 py-0.5 bg-surface/50 border border-border/50 rounded-lg">
+                <div className="hidden sm:flex items-center gap-1 mr-2 px-1.5 py-0.5 bg-surface/50 border border-border/50 rounded-lg">
                   {recentEmojis.map((emoji, i) => (
                     <button 
                       key={i} 
                       onClick={() => onEmojiClick({ emoji })}
-                      className="hover:scale-125 transition-transform duration-150 text-sm"
+                      className="hover:scale-125 transition text-xs"
                     >
                       {emoji}
                     </button>
@@ -611,139 +602,120 @@ const ChatInput = () => {
                 value={message}
                 onChange={handleInputChange}
                 onKeyDown={handleKeyDown}
-                className="flex-1 bg-transparent text-sm text-text-primary placeholder:text-text-muted outline-none border-none py-1.5 font-medium"
+                className="flex-1 bg-transparent text-xs text-text-primary placeholder:text-text-muted outline-none border-none py-1.5 font-semibold"
               />
 
-              {/* Emoji popover button inside right of input */}
               <button 
                 onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                className="p-1.5 text-text-secondary hover:text-primary transition-all duration-300 hover:scale-110 active:scale-90"
+                className="p-1 text-text-secondary hover:text-primary transition"
                 title="Choose Emoji"
               >
-                <FaSmile className="text-lg" />
+                <FaSmile className="text-base" />
               </button>
             </div>
 
             {/* Microphone Voice button */}
             <button 
               onClick={startRecording}
-              className="w-10 h-10 rounded-xl bg-bg-primary hover:bg-surface-hover border border-border hover:border-border-hover text-text-secondary hover:text-primary shadow-sm transition-all duration-300 flex items-center justify-center hover:scale-105 active:scale-95"
+              className="w-9.5 h-9.5 rounded-xl bg-bg-primary hover:bg-surface-hover border border-border text-text-secondary hover:text-primary transition flex items-center justify-center"
               title="Record Voice Note"
             >
-              <FaMicrophone className="text-sm" />
+              <FaMicrophone className="text-xs" />
             </button>
 
             {/* Send Button */}
             <button 
               onClick={handleSend}
               disabled={!message.trim() && attachments.length === 0}
-              className={`w-10 h-10 rounded-xl border transition-all duration-300 flex items-center justify-center ${
+              className={`w-9.5 h-9.5 rounded-xl border transition flex items-center justify-center ${
                 (message.trim() || attachments.length > 0)
-                ? "bg-gradient-to-r from-primary to-primary-hover border-primary text-text-inverse shadow-md cursor-pointer hover:scale-105 active:scale-95"
+                ? "bg-primary border-primary text-text-inverse shadow-md cursor-pointer hover:bg-primary-hover"
                 : "bg-surface border-border text-text-disabled cursor-not-allowed"
               }`}
               title="Send Message"
             >
-              <IoIosSend className="text-xl" />
+              <IoIosSend className="text-lg" />
             </button>
           </>
         ) : recordingState === 'recording' ? (
-          /* VOICE RECORDING STATE PANEL */
-          <div className="flex-1 flex items-center justify-between bg-bg-primary border border-border rounded-xl px-4 py-2.5 animate-slide-in">
-            <div className="flex items-center gap-3">
-              {/* Pulsing visual recording dot */}
+          /* VOICE RECORDING STATE */
+          <div className="flex-1 flex items-center justify-between bg-bg-primary border border-border rounded-xl px-4 py-2">
+            <div className="flex items-center gap-2.5">
               <div className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-ping" />
-              <span className="text-sm font-semibold text-rose-500 tabular-nums">
+              <span className="text-xs font-bold text-rose-500 tabular-nums">
                 {formatTime(recordingTime)}
               </span>
             </div>
 
-            {/* Real-time Waveform Canvas visualizer */}
-            <div className="flex-1 max-w-sm px-6 h-6 flex items-center justify-center">
+            <div className="flex-1 max-w-xs px-4 h-6 flex items-center justify-center">
               <canvas 
                 ref={canvasRef} 
-                width={200} 
+                width={180} 
                 height={24} 
                 className="w-full h-full bg-transparent opacity-80"
               />
             </div>
 
-            {/* Recording Controls */}
-            <div className="flex items-center gap-1.5">
-              {/* Discard / Cancel Button */}
+            <div className="flex items-center gap-1">
               <button 
                 onClick={cancelRecording}
-                className="p-2 rounded-lg text-text-secondary hover:text-rose-500 hover:bg-rose-500/10 transition-all duration-200"
+                className="p-1.5 rounded-lg text-text-secondary hover:text-rose-500 transition"
                 title="Cancel recording"
               >
-                <FaTrashAlt className="text-sm" />
+                <FaTrashAlt className="text-xs" />
               </button>
-
-              {/* Stop & Preview Button */}
               <button 
                 onClick={stopRecording}
-                className="p-2 rounded-lg text-text-secondary hover:text-text-primary hover:bg-surface-hover transition-all duration-200"
+                className="p-1.5 rounded-lg text-text-secondary hover:text-text-primary transition"
                 title="Stop and preview"
               >
                 <FaStop className="text-xs" />
               </button>
-
-              {/* Upload Instantly Send Button */}
               <button 
                 onClick={sendVoiceMessage}
-                className="w-8 h-8 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white flex items-center justify-center shadow-md transition-all duration-200 hover:scale-105 active:scale-95"
+                className="w-7 h-7 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white flex items-center justify-center shadow-md transition"
                 title="Send voice note"
               >
-                <IoIosSend className="text-base" />
+                <IoIosSend className="text-sm" />
               </button>
             </div>
           </div>
         ) : (
-          /* RECORDED PREVIEW MODE / PREVIEW STATE */
-          <div className="flex-1 flex items-center justify-between bg-bg-primary border border-border rounded-xl px-4 py-2.5 animate-slide-in">
+          /* RECORDED PREVIEW MODE */
+          <div className="flex-1 flex items-center justify-between bg-bg-primary border border-border rounded-xl px-4 py-2">
             <div className="flex items-center gap-2">
-              {/* Preview Play/Pause button */}
               <button 
                 onClick={togglePreviewPlayback}
-                className="w-8 h-8 rounded-full bg-primary/10 hover:bg-primary/20 text-primary flex items-center justify-center transition-all duration-200"
+                className="w-7 h-7 rounded-full bg-primary/10 text-primary flex items-center justify-center transition"
                 title={previewPlaying ? "Pause Preview" : "Play Preview"}
               >
-                {previewPlaying ? <FaPause className="text-xs" /> : <FaPlay className="text-xs ml-0.5" />}
+                {previewPlaying ? <FaPause className="text-[10px]" /> : <FaPlay className="text-[10px] ml-0.5" />}
               </button>
-
-              <span className="text-xs font-semibold text-text-primary">
-                Voice Note Preview ({formatTime(recordingTime)})
+              <span className="text-xs font-bold text-text-primary">
+                Voice Preview ({formatTime(recordingTime)})
               </span>
             </div>
 
-            {/* Upload details / loading */}
             {isUploading && (
-              <div className="flex items-center gap-2 text-text-secondary text-[11px] font-medium">
-                <span className="w-3 h-3 border-2 border-primary/20 border-t-primary rounded-full animate-spin inline-block" />
-                Uploading voice...
-              </div>
+              <span className="text-[10px] text-text-secondary font-bold">Uploading voice...</span>
             )}
 
-            {/* Actions */}
-            <div className="flex items-center gap-2">
-              {/* Discard Button */}
+            <div className="flex items-center gap-1.5">
               <button 
                 onClick={cancelRecording}
                 disabled={isUploading}
-                className="p-2 rounded-lg text-text-secondary hover:text-rose-500 hover:bg-rose-500/10 transition-all duration-200 disabled:opacity-50"
+                className="p-1.5 rounded-lg text-text-secondary hover:text-rose-500 transition disabled:opacity-50"
                 title="Discard voice note"
               >
-                <FaTrashAlt className="text-sm" />
+                <FaTrashAlt className="text-xs" />
               </button>
-
-              {/* Upload Send Button */}
               <button 
                 onClick={sendVoiceMessage}
                 disabled={isUploading}
-                className="w-8 h-8 rounded-lg bg-primary hover:bg-primary-hover text-text-inverse flex items-center justify-center shadow-md transition-all duration-200 hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-7 h-7 rounded-lg bg-primary text-text-inverse flex items-center justify-center shadow-md transition disabled:opacity-50"
                 title="Send voice note"
               >
-                <IoIosSend className="text-base" />
+                <IoIosSend className="text-sm" />
               </button>
             </div>
           </div>
@@ -753,4 +725,4 @@ const ChatInput = () => {
   );
 };
 
-export default ChatInput;
+export default React.memo(ChatInput);

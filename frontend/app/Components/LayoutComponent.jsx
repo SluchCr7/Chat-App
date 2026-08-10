@@ -50,18 +50,21 @@ const LayoutWrapper = ({ children, showNotification, setShowNotification, showMe
                 setShowNotification={setShowNotification} 
             />
             <main className="flex-1">{children}</main>
-            <footer className="border-t border-border bg-bg-footer/90 text-text-muted py-6 px-6 backdrop-blur-md">
-                <div className="mx-auto flex max-w-7xl flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                    <div className="inline-flex items-center gap-3">
-                        <Logo compact />
-                        <div className="text-left">
-                            <p className="text-sm font-extrabold text-text-primary">ChatYou Workspace</p>
-                            <p className="text-xs text-text-muted">Enterprise messaging for modern teams & communities.</p>
+            {/* Show footer only if NOT on authentication screens */}
+            {!(pathname === "/" || pathname === "/Pages/Login" || pathname === "/Pages/Register") && (
+                <footer className="border-t border-border bg-bg-footer/90 text-text-muted py-6 px-6 backdrop-blur-md">
+                    <div className="mx-auto flex max-w-7xl flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="inline-flex items-center gap-3">
+                            <Logo compact />
+                            <div className="text-left">
+                                <p className="text-sm font-extrabold text-text-primary">ChatYou Workspace</p>
+                                <p className="text-xs text-text-muted">Enterprise messaging for modern teams & communities.</p>
+                            </div>
                         </div>
+                        <p className="text-xs text-text-muted font-medium">Designed with excellence — © {new Date().getFullYear()}</p>
                     </div>
-                    <p className="text-xs text-text-muted font-medium">Designed with excellence — © {new Date().getFullYear()}</p>
-                </div>
-            </footer>
+                </footer>
+            )}
         </div>
     );
 };

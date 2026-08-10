@@ -12,6 +12,7 @@ export const AuthContext = createContext();
 
 const AuthContextProvider = ({ children }) => {
     const [authUser, setAuthUser] = useState(null);
+    const [isAuthLoading, setIsAuthLoading] = useState(true);
     const [isLoggingIn, setIsLoggingIn] = useState(false);
     const [isSigningUp, setIsSigningUp] = useState(false);
     const [socket, setSocket] = useState(null);
@@ -157,11 +158,17 @@ const AuthContextProvider = ({ children }) => {
     }, []);
 
     useEffect(() => {
-        const storedUser = localStorage.getItem("userAuth");
-        if (storedUser) {
-            const parsedUser = JSON.parse(storedUser);
-            setAuthUser(parsedUser);
-            connectSocket(parsedUser);
+        try {
+            const storedUser = localStorage.getItem("userAuth");
+            if (storedUser) {
+                const parsedUser = JSON.parse(storedUser);
+                setAuthUser(parsedUser);
+                connectSocket(parsedUser);
+            }
+        } catch (e) {
+            console.error("Error reading auth state:", e);
+        } finally {
+            setIsAuthLoading(false);
         }
     }, [connectSocket]);
 
@@ -270,6 +277,7 @@ const AuthContextProvider = ({ children }) => {
                 value={{
                     authUser,
                     setAuthUser,
+                    isAuthLoading,
                     isLoggingIn,
                     setIsLoggingIn,
                     isSigningUp,

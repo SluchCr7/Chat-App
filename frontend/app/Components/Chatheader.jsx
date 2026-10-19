@@ -80,8 +80,6 @@ const Chatheader = () => {
 
   const handleBack = () => {
     setSelectedUser(null);
-    setSelectedGroup(null);
-    setSelectedChannel(null);
   };
 
   return (

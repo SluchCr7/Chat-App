@@ -39,20 +39,20 @@ const NotificationMenuScreen = ({ showNotification, setShowNotification }) => {
       if (roomType === 'group' || roomType === 'channel') {
         const groupObj = (groupChats || []).find(g => g._id === refId || g.channels?.some(c => c._id === refId));
         if (groupObj) {
-          setSelectedGroup(groupObj);
-          setSelectedUser(null);
           if (roomType === 'channel') {
             const channelObj = groupObj.channels?.find(c => c._id === refId);
-            if (channelObj) setSelectedChannel(channelObj);
+            if (channelObj) {
+              setSelectedChannel(channelObj);
+            } else {
+              setSelectedGroup(groupObj);
+            }
           } else {
-            setSelectedChannel(null);
+            setSelectedGroup(groupObj);
           }
         }
       } else {
         if (notif.sender) {
           setSelectedUser(notif.sender);
-          setSelectedGroup(null);
-          setSelectedChannel(null);
         }
       }
     }

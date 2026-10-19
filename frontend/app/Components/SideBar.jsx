@@ -154,14 +154,10 @@ const SideBar = () => {
 
   const handleSelectUser = (user) => {
     setSelectedUser(user);
-    setSelectedGroup(null);
-    setSelectedChannel(null);
   };
 
   const handleSelectGroup = (group) => {
     setSelectedGroup(group);
-    setSelectedUser(null);
-    setSelectedChannel(null);
   };
 
   const getLastMessageSnippet = (msg) => {

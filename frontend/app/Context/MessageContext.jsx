@@ -28,6 +28,7 @@ const MessageContextProvider = ({ children }) => {
     const [selectedUser, setSelectedUser] = useState(null);
     const [selectedGroup, setSelectedGroup] = useState(null);
     const [selectedChannel, setSelectedChannel] = useState(null);
+    const selectionRequestId = useRef(0);
 
     // Message loading state
     const [messages, setMessages] = useState([]);
@@ -903,10 +904,13 @@ const MessageContextProvider = ({ children }) => {
     };
 
     const handleSelectChat = async (type, target) => {
+        const requestId = ++selectionRequestId.current;
         setSelectedUser(null);
         setSelectedGroup(null);
         setSelectedChannel(null);
         setGroupChannels([]);
+
+        if (!target) return;
 
         if (type === "user") {
             setSelectedUser(target);
@@ -915,6 +919,7 @@ const MessageContextProvider = ({ children }) => {
 
         if (type === "group") {
             const groupDetails = await fetchGroupDetails(target._id);
+            if (requestId !== selectionRequestId.current) return;
             if (groupDetails) {
                 setSelectedGroup(groupDetails);
                 // Sync fetched group details back to groupChats for sidebar consistency
@@ -935,6 +940,7 @@ const MessageContextProvider = ({ children }) => {
 
             if (groupId) {
                 const groupDetails = await fetchGroupDetails(groupId);
+                if (requestId !== selectionRequestId.current) return;
                 if (groupDetails) {
                     setSelectedGroup(groupDetails);
                     setSelectedChannel({ ...target, group: groupDetails });

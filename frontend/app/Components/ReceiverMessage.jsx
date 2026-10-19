@@ -2,9 +2,15 @@
 
 import React, { useContext, useState } from 'react';
 import Image from 'next/image';
-import { FaStar, FaThumbtack, FaRegSmile, FaFileDownload, FaShare, FaTimes, FaReply } from "react-icons/fa";
+import { 
+  FaStar, FaThumbtack, FaRegSmile, FaFileDownload, FaShare, FaTimes, FaReply 
+} from "react-icons/fa";
+import { 
+  LuSmile, LuStar, LuPin, LuReply, LuForward, LuDownload 
+} from "react-icons/lu";
 import { MessageContext } from '../Context/MessageContext';
 import VoiceMessage from './VoiceMessage';
+import Avatar from './Avatar';
 
 const ReceiverMessage = ({ message, user }) => {
   const { SendReaction, TogglePin, ToggleStar, contacts, groupChats, handleForwardMessage, setReplyMessage } = useContext(MessageContext);
@@ -21,12 +27,12 @@ const ReceiverMessage = ({ message, user }) => {
 
   const toggleTargetSelection = (id, type) => {
     setSelectedTargets(prev => {
-        const exists = prev.some(t => t.id === id);
-        if (exists) {
-            return prev.filter(t => t.id !== id);
-        } else {
-            return [...prev, { id, type }];
-        }
+      const exists = prev.some(t => t.id === id);
+      if (exists) {
+        return prev.filter(t => t.id !== id);
+      } else {
+        return [...prev, { id, type }];
+      }
     });
   };
 
@@ -40,39 +46,36 @@ const ReceiverMessage = ({ message, user }) => {
   const isStarred = message.starredBy?.length > 0;
   
   const senderName = message.sender?.username || user?.username || "Friend";
-  const senderPic = message.sender?.profilePic?.url || user?.profilePic?.url || "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png";
+  const senderPic = message.sender?.profilePic?.url || user?.profilePic?.url;
 
   return (
-    <div className="flex justify-start mb-4 relative group transition-all duration-200">
+    <div className="flex justify-start mb-3.5 relative group transition-colors duration-150">
+      
       {/* Content wrapper */}
-      <div className="flex max-w-[75%] gap-2.5 items-end">
+      <div className="flex max-w-[85%] sm:max-w-[75%] gap-2.5 items-end">
         {/* User avatar */}
-        <div className="w-8 h-8 flex-shrink-0">
-          <Image
-            src={senderPic}
-            alt="Receiver"
-            width={32}
-            height={32}
-            className="rounded-full object-cover border border-border w-8 h-8"
-            unoptimized
-          />
-        </div>
+        <Avatar
+          src={senderPic}
+          name={senderName}
+          size={32}
+          className="flex-shrink-0"
+        />
 
-        <div className="flex flex-col items-start text-left">
+        <div className="flex flex-col items-start text-left min-w-0">
           {/* Sender Username */}
-          <span className="text-[10px] font-extrabold text-text-muted mb-1 ml-1 tracking-wide">
+          <span className="text-[10px] font-bold text-text-muted mb-1 ml-1 tracking-wide">
             {senderName}
           </span>
 
           {message.isPinned && (
-            <span className="text-[9px] font-extrabold text-primary flex items-center gap-1 mb-1 ml-1">
-              <FaThumbtack className="text-[8px]" /> Pinned Message
+            <span className="text-[9px] font-bold text-primary flex items-center gap-1 mb-1 ml-1">
+              <LuPin className="text-[10px]" /> Pinned Message
             </span>
           )}
 
           {isStarred && (
-            <span className="text-[9px] font-extrabold text-amber-500 flex items-center gap-1 mb-1 ml-1">
-              <FaStar className="text-[8px]" /> Starred
+            <span className="text-[9px] font-bold text-amber-400 flex items-center gap-1 mb-1 ml-1">
+              <LuStar className="text-[10px]" /> Starred
             </span>
           )}
 
@@ -80,12 +83,12 @@ const ReceiverMessage = ({ message, user }) => {
           {message.replyTo && (
             <div className="bg-surface border-l-2 border-primary border border-border px-3 py-1.5 rounded-t-xl text-[11px] text-text-secondary mb-0.5 text-left w-full">
               <span className="text-[9px] font-black text-primary block mb-0.5 uppercase tracking-wider">Replying to</span>
-              <p className="italic truncate font-semibold">{message.replyTo.text || "media attachment"}</p>
+              <p className="italic truncate font-medium">{message.replyTo.text || "media attachment"}</p>
             </div>
           )}
 
           {/* Message bubble */}
-          <div className="msg-bubble-received px-4 py-3 shadow-sm">
+          <div className="msg-bubble-received px-4 py-2.5 shadow-sm">
             {/* Photos */}
             {Array.isArray(message.Photos) && message.Photos.length > 0 && (
               <div className="flex flex-wrap gap-2 mb-2 justify-start">
@@ -145,12 +148,12 @@ const ReceiverMessage = ({ message, user }) => {
                         href={file.url} 
                         target="_blank" 
                         rel="noreferrer"
-                        className="flex items-center gap-3 p-2 rounded-xl bg-bg-primary border border-border hover:bg-bg-primary/70 transition"
+                        className="flex items-center gap-3 p-2 rounded-xl bg-bg-primary/70 border border-border hover:bg-bg-primary transition"
                       >
-                        <FaFileDownload className="text-primary text-base" />
+                        <LuDownload className="text-primary text-base" />
                         <div className="flex flex-col text-left">
                           <span className="text-xs font-bold truncate max-w-[140px] text-text-primary">{file.name || "Document"}</span>
-                          <span className="text-[9px] text-text-muted font-bold">{(file.size / 1024 / 1024).toFixed(2)} MB</span>
+                          <span className="text-[9px] text-text-muted font-medium">{(file.size / 1024 / 1024).toFixed(2)} MB</span>
                         </div>
                       </a>
                     );
@@ -161,7 +164,7 @@ const ReceiverMessage = ({ message, user }) => {
             )}
 
             {message.text ? (
-              <p className="text-xs font-semibold whitespace-pre-wrap leading-relaxed">{message.text}</p>
+              <p className="text-xs font-medium whitespace-pre-wrap leading-relaxed break-words">{message.text}</p>
             ) : null}
           </div>
 
@@ -176,7 +179,7 @@ const ReceiverMessage = ({ message, user }) => {
 
           {/* Footer Metadata */}
           <div className="flex items-center gap-1.5 mt-1 justify-start">
-            <span className="text-[9px] text-text-muted font-semibold">
+            <span className="text-[9px] text-text-muted font-medium">
               {new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
             </span>
             {message.isEdited && <span className="text-[9px] text-text-muted font-bold uppercase">Edited</span>}
@@ -185,52 +188,57 @@ const ReceiverMessage = ({ message, user }) => {
       </div>
 
       {/* Options Hover Overlay */}
-      <div className="absolute top-1/2 -translate-y-1/2 right-2 hidden group-hover:flex items-center gap-1 bg-surface border border-border p-1 rounded-xl shadow-lg z-10">
+      <div className="absolute top-1/2 -translate-y-1/2 right-2 hidden group-hover:flex items-center gap-0.5 bg-surface/95 backdrop-blur-md border border-border p-1 rounded-xl shadow-xl z-20">
         <button 
           onClick={() => setShowReactions(!showReactions)}
           className="p-1.5 text-xs text-text-secondary hover:text-primary hover:bg-surface-hover rounded-lg transition"
-          title="React"
+          title="Add Reaction"
+          aria-label="Add Reaction"
         >
-          <FaRegSmile />
+          <LuSmile className="text-sm" />
         </button>
         <button 
           onClick={() => ToggleStar(message._id)}
-          className={`p-1.5 text-xs hover:bg-surface-hover rounded-lg transition ${isStarred ? "text-amber-500" : "text-text-secondary hover:text-amber-500"}`}
-          title="Star"
+          className={`p-1.5 text-xs hover:bg-surface-hover rounded-lg transition ${isStarred ? "text-amber-400" : "text-text-secondary hover:text-amber-400"}`}
+          title="Star Message"
+          aria-label="Star Message"
         >
-          <FaStar />
+          <LuStar className="text-sm" />
         </button>
         <button 
           onClick={() => TogglePin(message._id)}
           className={`p-1.5 text-xs hover:bg-surface-hover rounded-lg transition ${message.isPinned ? "text-primary" : "text-text-secondary hover:text-primary"}`}
-          title="Pin"
+          title="Pin to top"
+          aria-label="Pin Message"
         >
-          <FaThumbtack />
+          <LuPin className="text-sm" />
         </button>
         <button 
           onClick={() => setReplyMessage(message)}
           className="p-1.5 text-xs text-text-secondary hover:text-primary hover:bg-surface-hover rounded-lg transition"
           title="Reply"
+          aria-label="Reply"
         >
-          <FaReply />
+          <LuReply className="text-sm" />
         </button>
         <button 
           onClick={() => setShowForwardModal(true)}
           className="p-1.5 text-xs text-text-secondary hover:text-primary hover:bg-surface-hover rounded-lg transition"
-          title="Forward Message"
+          title="Forward"
+          aria-label="Forward"
         >
-          <FaShare />
+          <LuForward className="text-sm" />
         </button>
       </div>
 
       {/* Emoji Reaction Drawer */}
       {showReactions && (
-        <div className="absolute top-[-38px] right-2 bg-surface border border-border p-1 rounded-xl shadow-xl flex gap-2 z-20">
-          {["👍", "❤️", "😂", "😮", "😢", "🙏"].map(emoji => (
+        <div className="absolute top-[-38px] right-2 bg-surface/95 backdrop-blur-xl border border-border p-1.5 rounded-2xl shadow-2xl flex gap-2 z-30">
+          {["👍", "❤️", "😂", "😮", "😢", "🙏", "🔥", "🚀"].map(emoji => (
             <button 
               key={emoji}
               onClick={() => handleReactionSelect(emoji)}
-              className="text-base hover:scale-125 transition duration-150"
+              className="text-base hover:scale-130 transition duration-150 p-0.5"
             >
               {emoji}
             </button>
@@ -241,20 +249,21 @@ const ReceiverMessage = ({ message, user }) => {
       {/* Forward Dialog Modal */}
       {showForwardModal && (
         <div className="menu_bg z-50">
-          <div className="bg-bg-primary border border-border p-5 rounded-3xl w-full max-w-sm shadow-2xl relative flex flex-col max-h-[70vh]">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-xs font-bold text-text-primary flex items-center gap-2">
-                <FaShare className="text-primary" /> Forward Message
+          <div className="bg-surface border border-border p-5 rounded-3xl w-full max-w-sm shadow-2xl relative flex flex-col max-h-[70vh] text-left">
+            <div className="flex items-center justify-between pb-3 mb-3 border-b border-border">
+              <h3 className="text-xs font-black text-text-primary flex items-center gap-2">
+                <LuForward className="text-primary text-sm" /> Forward Message
               </h3>
               <button 
                 onClick={() => { setShowForwardModal(false); setSelectedTargets([]); }}
-                className="text-text-muted hover:text-text-primary transition"
+                className="p-1 rounded-lg text-text-muted hover:text-text-primary hover:bg-surface-hover transition"
+                aria-label="Close"
               >
                 <FaTimes />
               </button>
             </div>
             
-            <div className="flex-1 overflow-y-auto space-y-3 pr-1 wa-scroll text-left">
+            <div className="flex-1 overflow-y-auto space-y-3 pr-1 text-left">
               <div>
                 <span className="text-[9px] uppercase font-black text-text-muted tracking-widest block mb-2 px-1">Contacts</span>
                 {contacts.length > 0 ? (
@@ -265,16 +274,16 @@ const ReceiverMessage = ({ message, user }) => {
                         key={c._id}
                         onClick={() => toggleTargetSelection(c._id, "direct")}
                         className={`w-full p-2 rounded-xl border flex items-center justify-between mb-1 text-left transition ${
-                            isSelected 
+                          isSelected 
                             ? "bg-primary/10 border-primary/30" 
-                            : "border-border bg-surface/50 hover:bg-surface-hover"
+                            : "border-border bg-bg-primary/40 hover:bg-surface-hover"
                         }`}
                       >
                         <div className="flex items-center gap-2 overflow-hidden">
-                          <Image src={c.profilePic?.url || "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png"} width={24} height={24} alt="avatar" className="rounded-full object-cover" />
+                          <Avatar src={c.profilePic?.url} name={c.username} size={28} />
                           <span className="text-xs font-bold text-text-primary truncate">{c.username}</span>
                         </div>
-                        <input type="checkbox" checked={isSelected} readOnly className="checkbox checkbox-xs checkbox-primary border-border bg-bg-primary" />
+                        <input type="checkbox" checked={isSelected} readOnly className="checkbox checkbox-xs checkbox-primary border-border" />
                       </button>
                     );
                   })
@@ -284,7 +293,7 @@ const ReceiverMessage = ({ message, user }) => {
               </div>
 
               <div>
-                <span className="text-[9px] uppercase font-black text-text-muted tracking-widest block mb-2 px-1">Communities</span>
+                <span className="text-[9px] uppercase font-black text-text-muted tracking-widest block mb-2 px-1">Channels & Communities</span>
                 {groupChats.length > 0 ? (
                   groupChats.map(g => {
                     const isSelected = selectedTargets.some(t => t.id === g._id);
@@ -293,16 +302,16 @@ const ReceiverMessage = ({ message, user }) => {
                         key={g._id}
                         onClick={() => toggleTargetSelection(g._id, "group")}
                         className={`w-full p-2 rounded-xl border flex items-center justify-between mb-1 text-left transition ${
-                            isSelected 
+                          isSelected 
                             ? "bg-primary/10 border-primary/30" 
-                            : "border-border bg-surface/50 hover:bg-surface-hover"
+                            : "border-border bg-bg-primary/40 hover:bg-surface-hover"
                         }`}
                       >
                         <div className="flex items-center gap-2 overflow-hidden">
-                          <Image src={g.avatar?.url || "https://cdn.pixabay.com/photo/2016/11/14/17/39/group-1824145_1280.png"} width={24} height={24} alt="avatar" className="rounded-full object-cover" />
+                          <Avatar src={g.avatar?.url} name={g.name} size={28} isGroup={true} />
                           <span className="text-xs font-bold text-text-primary truncate">{g.name}</span>
                         </div>
-                        <input type="checkbox" checked={isSelected} readOnly className="checkbox checkbox-xs checkbox-primary border-border bg-bg-primary" />
+                        <input type="checkbox" checked={isSelected} readOnly className="checkbox checkbox-xs checkbox-primary border-border" />
                       </button>
                     );
                   })
@@ -316,7 +325,7 @@ const ReceiverMessage = ({ message, user }) => {
               <button 
                 onClick={handleSendForward}
                 disabled={selectedTargets.length === 0}
-                className="w-full py-2 text-xs font-black text-text-inverse bg-primary hover:bg-primary-hover rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition"
+                className="w-full py-2.5 text-xs font-black text-text-inverse bg-primary hover:bg-primary-hover rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition shadow-sm"
               >
                 Forward Message ({selectedTargets.length})
               </button>

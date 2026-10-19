@@ -4,13 +4,11 @@ import React, { useContext, useState } from 'react';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { 
-  IoIosCamera, 
-  IoMdKey, 
-  IoMdInformationCircle
-} from 'react-icons/io';
-import { FaCalendarAlt, FaToggleOn, FaShieldAlt } from 'react-icons/fa';
+  LuCamera, LuKey, LuInfo, LuCalendar, LuCircleCheck, LuShield, LuSparkles 
+} from 'react-icons/lu';
 import { AuthContext } from '@/app/Context/AuthContext';
 import Logo from '@/app/Components/Logo';
+import Avatar from '@/app/Components/Avatar';
 import ProfileUpdateForm from '@/app/Components/ProfileUpdateForm';
 import PasswordUpdateForm from '@/app/Components/PasswordUpdateForm';
 
@@ -31,28 +29,33 @@ const Profile = () => {
   };
 
   return (
-    <div className="min-h-screen bg-bg-primary text-text-primary py-10 px-4 sm:px-6 transition-all duration-300 relative">
+    <div className="min-h-screen bg-bg-primary text-text-primary py-8 sm:py-10 px-4 sm:px-6 transition-colors duration-200 relative select-none">
       {/* Decorative backdrop glow */}
       <div className="absolute top-1/4 left-1/4 w-80 h-80 rounded-full bg-primary/5 blur-[100px] pointer-events-none" />
       <div className="absolute bottom-1/4 right-1/4 w-80 h-80 rounded-full bg-accent/5 blur-[100px] pointer-events-none" />
 
-      <div className="mx-auto max-w-5xl space-y-6 relative z-10">
+      <div className="mx-auto max-w-5xl space-y-6 relative z-10 text-left">
         
         {/* Banner/Header Block */}
         <motion.div 
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-          className="flex flex-col gap-2 rounded-3xl border border-border bg-surface/60 backdrop-blur-md p-6 shadow-sm text-left"
+          transition={{ duration: 0.35 }}
+          className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-3xl border border-border bg-surface/70 backdrop-blur-md p-6 shadow-sm text-left"
         >
           <div className="flex items-center gap-3">
-            <Logo compact />
+            <Logo compact size="md" />
             <div>
-              <h1 className="text-xl sm:text-2xl font-black text-text-primary tracking-tight">Account Dashboard</h1>
-              <p className="text-xs text-text-secondary font-semibold mt-0.5">
-                Manage your profile identity, avatar photo, and security credentials.
+              <h1 className="text-xl sm:text-2xl font-black text-text-primary tracking-tight">Account & Profile</h1>
+              <p className="text-xs text-text-secondary font-medium mt-0.5">
+                Manage your public handle, personal bio, photo identity, and security credentials.
               </p>
             </div>
+          </div>
+
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-[10px] font-bold self-start sm:self-auto">
+            <LuSparkles size={12} />
+            <span>VYRO Identity Verified</span>
           </div>
         </motion.div>
 
@@ -63,14 +66,14 @@ const Profile = () => {
           <motion.div 
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
+            transition={{ duration: 0.45, delay: 0.1 }}
             className="lg:col-span-8 rounded-3xl border border-border bg-surface p-6 sm:p-8 shadow-xl relative overflow-hidden"
           >
             
-            {/* Cover Photo Banner Mockup */}
-            <div className="absolute top-0 left-0 right-0 h-28 bg-gradient-to-r from-primary/20 via-accent/20 to-primary/10 border-b border-border/20" />
+            {/* Ambient Cover Banner */}
+            <div className="absolute top-0 left-0 right-0 h-28 bg-gradient-to-r from-primary/15 via-accent/15 to-primary/10 border-b border-border/40" />
 
-            <div className="flex flex-col items-center gap-3 text-center pb-6 border-b border-border relative z-10 pt-12">
+            <div className="flex flex-col items-center gap-3 text-center pb-6 border-b border-border relative z-10 pt-10">
               
               {/* Avatar Upload */}
               <div className="relative">
@@ -81,32 +84,36 @@ const Profile = () => {
                   onChange={handleInputChange}
                   accept="image/*"
                 />
-                <label htmlFor="avatar-upload" className="cursor-pointer group block">
-                  <div className="relative h-24 w-24 rounded-full border-4 border-surface overflow-hidden shadow-xl transition group-hover:scale-105 bg-bg-secondary">
-                    <Image
-                      src={image || authUser?.profilePic?.url || '/default-avatar.png'}
-                      alt="profile_img"
-                      fill
-                      className="object-cover"
-                      unoptimized
-                    />
-                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center text-white">
-                      <IoIosCamera size={24} />
+                <label htmlFor="avatar-upload" className="cursor-pointer group block" title="Upload new photo">
+                  <div className="relative h-24 w-24 rounded-full border-4 border-surface overflow-hidden shadow-xl transition group-hover:scale-105 bg-bg-secondary flex items-center justify-center">
+                    {image || authUser?.profilePic?.url ? (
+                      <Image
+                        src={image || authUser?.profilePic?.url}
+                        alt={authUser?.username || "profile"}
+                        fill
+                        className="object-cover"
+                        unoptimized
+                      />
+                    ) : (
+                      <Avatar name={authUser?.username} size={96} />
+                    )}
+                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition flex items-center justify-center text-white">
+                      <LuCamera size={22} />
                     </div>
                   </div>
                 </label>
               </div>
               
-              {/* Profile info */}
+              {/* Profile Details */}
               <div className="space-y-0.5">
                 <h2 className="text-lg font-black text-text-primary tracking-tight">{authUser?.username || 'User Name'}</h2>
-                <p className="text-[10px] font-extrabold text-primary uppercase tracking-wider">
-                  {authUser?.profileName ? `@${authUser.profileName}` : '@username'}
+                <p className="text-[11px] font-bold text-primary">
+                  {authUser?.profileName ? `@${authUser.profileName.replace(/^@/, '')}` : '@username'}
                 </p>
               </div>
 
               {authUser?.description && (
-                <p className="max-w-md text-xs text-text-secondary font-semibold leading-relaxed mt-1 bg-bg-primary/40 border border-border/50 px-4 py-2 rounded-2xl">
+                <p className="max-w-md text-xs text-text-secondary font-medium leading-relaxed mt-1 bg-bg-primary/50 border border-border px-4 py-2 rounded-2xl">
                   {authUser.description}
                 </p>
               )}
@@ -114,9 +121,9 @@ const Profile = () => {
 
             {/* Profile Update Form */}
             <div className="mt-6 space-y-4">
-              <div className="space-y-4 rounded-2xl border border-border bg-bg-primary/30 p-5">
-                <h3 className="text-xs font-black text-text-secondary uppercase tracking-wider flex items-center gap-1.5 border-b border-border pb-3">
-                  <IoMdInformationCircle size={14} className="text-primary" />
+              <div className="space-y-4 rounded-2xl border border-border bg-bg-primary/40 p-5">
+                <h3 className="text-xs font-black text-text-secondary uppercase tracking-wider flex items-center gap-2 border-b border-border pb-3">
+                  <LuInfo size={14} className="text-primary" />
                   Personal Information
                 </h3>
                 <ProfileUpdateForm />
@@ -129,21 +136,21 @@ const Profile = () => {
           <motion.div 
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
+            transition={{ duration: 0.45, delay: 0.15 }}
             className="lg:col-span-4 space-y-6"
           >
             
             {/* Account Details card */}
             <div className="rounded-3xl border border-border bg-surface p-6 shadow-md space-y-4">
               <h3 className="text-xs font-black uppercase tracking-wider text-text-secondary flex items-center gap-2 border-b border-border pb-3">
-                <FaShieldAlt className="text-primary" size={12} />
-                Security & Metrics
+                <LuShield className="text-primary" size={14} />
+                Security & Status
               </h3>
               
               <div className="space-y-3 text-xs text-text-secondary font-semibold">
                 <div className="flex items-center justify-between border-b border-border pb-3">
                   <span className="flex items-center gap-2">
-                    <FaCalendarAlt className="text-text-muted" size={12} />
+                    <LuCalendar className="text-text-muted" size={13} />
                     <span>Member Since</span>
                   </span>
                   <span className="text-text-primary font-bold">
@@ -153,35 +160,35 @@ const Profile = () => {
 
                 <div className="flex items-center justify-between border-b border-border pb-3">
                   <span className="flex items-center gap-2">
-                    <FaToggleOn className="text-text-muted" size={14} />
+                    <LuCircleCheck className="text-text-muted" size={13} />
                     <span>Account Status</span>
                   </span>
-                  <span className="bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded font-black text-[10px] text-emerald-500 uppercase tracking-wide">
+                  <span className="bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 rounded font-black text-[10px] text-emerald-400 uppercase tracking-wide">
                     Active
                   </span>
                 </div>
 
                 <div className="flex items-center justify-between">
                   <span className="flex items-center gap-2">
-                    <FaShieldAlt className="text-text-muted" size={14} />
+                    <LuShield className="text-text-muted" size={13} />
                     <span>Identity Status</span>
                   </span>
-                  <span className="bg-primary/10 border border-primary/20 px-2 py-0.5 rounded font-black text-[10px] text-primary uppercase tracking-wide">
-                    Verified
+                  <span className="bg-primary/10 border border-primary/20 px-2.5 py-0.5 rounded font-black text-[10px] text-primary uppercase tracking-wide">
+                    {authUser?.isVerified ? 'Verified' : 'Member'}
                   </span>
                 </div>
               </div>
             </div>
 
-            {/* Quick Actions card */}
+            {/* Security Actions Card */}
             <div className="rounded-3xl border border-border bg-surface p-6 shadow-md space-y-3">
               <h3 className="text-xs font-black uppercase tracking-wider text-text-secondary flex items-center gap-2 border-b border-border pb-3">
-                <IoMdKey className="text-primary" size={14} />
-                Security Options
+                <LuKey className="text-primary" size={14} />
+                Security Credentials
               </h3>
               
-              <p className="text-xs text-text-secondary leading-relaxed font-semibold">
-                Update account security options. Changing your password will invalidate active local workspace sessions.
+              <p className="text-xs text-text-secondary leading-relaxed font-medium">
+                Keep your account secure. Updating your password will refresh your session tokens.
               </p>
 
               <button 

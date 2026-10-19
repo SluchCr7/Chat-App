@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 80" fill="none">
+  <defs>
+    <linearGradient id="logo-icon-bg" x1="8" y1="8" x2="72" y2="72" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#182032" />
+      <stop offset="100%" stop-color="#0F1522" />
+    </linearGradient>
+    <linearGradient id="vyro-brand-grad-full" x1="20" y1="20" x2="60" y2="60" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#A78BFA" />
+      <stop offset="50%" stop-color="#8B5CF6" />
+      <stop offset="100%" stop-color="#06B6D4" />
+    </linearGradient>
+  </defs>
+
+  <!-- Icon Base -->
+  <rect x="8" y="8" width="64" height="64" rx="18" fill="url(#logo-icon-bg)"/>
+  <rect x="8.5" y="8.5" width="63" height="63" rx="17.5" stroke="rgba(255,255,255,0.08)"/>
+
+  <!-- Geometric Chevron -->
+  <path d="M22 24L40 56L58 24H49L40 43L31 24H22Z" fill="url(#vyro-brand-grad-full)"/>
+  <!-- Central Diamond -->
+  <polygon points="40,26 45,34 40,42 35,34" fill="#06B6D4"/>
+
+  <!-- Wordmark "VYRO" -->
+  <text x="88" y="44" font-family="system-ui, -apple-system, 'Inter', sans-serif" font-weight="900" font-size="28" fill="#F8FAFC" letter-spacing="0.12em">VYRO</text>
+  
+  <!-- Brand Tagline -->
+  <text x="89" y="60" font-family="system-ui, -apple-system, 'Inter', sans-serif" font-weight="500" font-size="9" fill="#94A3B8" letter-spacing="0.22em">A NEW SPACE FOR CONVERSATIONS</text>
+</svg>

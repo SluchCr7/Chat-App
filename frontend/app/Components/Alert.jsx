@@ -1,16 +1,19 @@
-import React, { memo } from 'react'
-import { IoInformation } from "react-icons/io5";
+import React, { memo } from 'react';
+import { LuInfo } from "react-icons/lu";
 
-const Alert =memo(({Notify}) => {
+const Alert = memo(({ Notify }) => {
+  if (!Notify) return null;
 
   return (
-    <div className={`${Notify === "" ? "opacity-0 pointer-events-none w-0" : "opacity-100 w-[90%] md:w-[350px]"} transition-all border-l-[2px] border-DarkRed duration-1000 flex items-center gap-2 bg-white z-[1000] py-4 px-7 rounded-md text-black shadow-xl fixed top-10 right-6`}>
-        <IoInformation className='text-2xl bg-black text-white w-5 h-5 rounded-full'/>
-        <span className='text-black text-sm'>{Notify}</span>
+    <div className="fixed top-6 right-6 z-[1000] max-w-sm w-[90%] sm:w-auto p-4 rounded-2xl bg-surface border border-border shadow-2xl text-text-primary flex items-center gap-3 transition-all duration-300 animate-slide-in">
+      <div className="w-8 h-8 rounded-xl bg-primary/10 text-primary border border-primary/20 flex items-center justify-center flex-shrink-0">
+        <LuInfo className="text-base" />
+      </div>
+      <span className="text-xs font-semibold leading-relaxed">{Notify}</span>
     </div>
-  )
-})
+  );
+});
 
-Alert.displayName = "Alert"
+Alert.displayName = "Alert";
 
-export default Alert
+export default Alert;

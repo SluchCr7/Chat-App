@@ -1,24 +1,35 @@
 import "./globals.css";
-import NavBar from "./Components/NavBar";
 import LayoutComponent from "./Components/LayoutComponent";
-import { JetBrains_Mono } from "next/font/google";
+import { Inter, JetBrains_Mono } from "next/font/google";
+
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+  display: "swap",
+});
 
 const jetBrainsMono = JetBrains_Mono({
-  subsets: ["latin"]
-  , weight: ["100", "200", "300", "400", "500", "600"]
-  , style: ["normal", "italic"]
-})
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
+  variable: "--font-mono",
+  display: "swap",
+});
 
 export const metadata = {
-  title: "ChatYou",
-  description: "ChatYou a chat app where you can chat with your friends and explore new communities to join", 
+  title: "VYRO — A new space for conversations",
+  description: "VYRO is a modern, expressive messaging workspace engineered for real-time team communication, encrypted channels, audio notes, and communities.",
+  keywords: ["chat", "messaging", "real-time", "conversations", "channels", "community", "vyro"],
+  icons: {
+    icon: "/favicon.svg",
+    shortcut: "/favicon.svg",
+    apple: "/vyro-icon.svg",
+  },
 };
+
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
-      <body
-        className={`${jetBrainsMono.className}`}
-      >
+    <html lang="en" className={`${inter.variable} ${jetBrainsMono.variable}`}>
+      <body className={`${inter.className} font-sans antialiased selection:bg-primary/20 selection:text-primary`}>
         <LayoutComponent>
           {children}
         </LayoutComponent>

@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" fill="none">
+  <defs>
+    <linearGradient id="vyro-icon-bg" x1="0" y1="0" x2="128" y2="128" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#111724" />
+      <stop offset="100%" stop-color="#080B11" />
+    </linearGradient>
+    <linearGradient id="vyro-wing-left" x1="28" y1="28" x2="64" y2="98" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#C4B5FD" />
+      <stop offset="40%" stop-color="#8B5CF6" />
+      <stop offset="100%" stop-color="#6D28D9" />
+    </linearGradient>
+    <linearGradient id="vyro-wing-right" x1="100" y1="28" x2="64" y2="98" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#22D3EE" />
+      <stop offset="50%" stop-color="#06B6D4" />
+      <stop offset="100%" stop-color="#0891B2" />
+    </linearGradient>
+    <filter id="vyro-glow" x="20" y="20" width="88" height="88" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="6" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <!-- Container Surface -->
+  <rect width="128" height="128" rx="32" fill="url(#vyro-icon-bg)"/>
+  <rect x="0.5" y="0.5" width="127" height="127" rx="31.5" stroke="rgba(255,255,255,0.08)"/>
+
+  <!-- Left Dynamic Wing -->
+  <path d="M28 34L64 96L50 96L18 34H28Z" fill="url(#vyro-wing-left)" filter="url(#vyro-glow)"/>
+  
+  <!-- Right Dynamic Wing -->
+  <path d="M100 34L64 96L78 96L110 34H100Z" fill="url(#vyro-wing-right)"/>
+
+  <!-- Floating Harmonic Center Apex -->
+  <path d="M64 42L74 58L64 74L54 58Z" fill="#F8FAFC" opacity="0.95"/>
+  <circle cx="64" cy="58" r="3" fill="#06B6D4"/>
+</svg>

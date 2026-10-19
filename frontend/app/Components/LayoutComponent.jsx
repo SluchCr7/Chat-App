@@ -55,13 +55,13 @@ const LayoutWrapper = ({ children, showNotification, setShowNotification, showMe
                 <footer className="border-t border-border bg-bg-footer/90 text-text-muted py-6 px-6 backdrop-blur-md">
                     <div className="mx-auto flex max-w-7xl flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                         <div className="inline-flex items-center gap-3">
-                            <Logo compact />
+                            <Logo compact size="sm" />
                             <div className="text-left">
-                                <p className="text-sm font-extrabold text-text-primary">ChatYou Workspace</p>
-                                <p className="text-xs text-text-muted">Enterprise messaging for modern teams & communities.</p>
+                                <p className="text-sm font-black text-text-primary tracking-wide">VYRO</p>
+                                <p className="text-xs text-text-muted">A new space for conversations.</p>
                             </div>
                         </div>
-                        <p className="text-xs text-text-muted font-medium">Designed with excellence — © {new Date().getFullYear()}</p>
+                        <p className="text-xs text-text-muted font-medium">VYRO Messaging Platform — © {new Date().getFullYear()}</p>
                     </div>
                 </footer>
             )}
@@ -82,7 +82,7 @@ const LayoutComponent = ({ children }) => {
                             showNotification={showNotification} 
                             setShowNotification={setShowNotification} 
                             showMenu={showMenu} 
-                            setShowMenu={setShowMenu}
+                            setShowMenu={setShowMenu} 
                         >
                             {children}
                         </LayoutWrapper>

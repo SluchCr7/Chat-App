@@ -4,105 +4,112 @@
 @tailwind utilities;
 
 /* ==========================================================================
-   Enterprise SaaS Core Design System Tokens & Fluid Theme Engine
+   VYRO Design System Tokens & Fluid Theme Engine
+   "A new space for conversations."
    ========================================================================== */
 
 :root {
   /* Corner Radii System */
   --radius-xs: 6px;
   --radius-sm: 10px;
-  --radius-md: 16px;
-  --radius-lg: 24px;
-  --radius-xl: 36px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
   --radius-full: 9999px;
 
   /* Shadow Depth Elevation */
-  --shadow-subtle: 0 1px 3px 0 rgba(0, 0, 0, 0.08), 0 1px 2px 0 rgba(0, 0, 0, 0.04);
-  --shadow-md: 0 4px 12px -2px rgba(0, 0, 0, 0.12), 0 2px 6px -1px rgba(0, 0, 0, 0.07);
-  --shadow-lg: 0 12px 24px -4px rgba(0, 0, 0, 0.18), 0 4px 12px -2px rgba(0, 0, 0, 0.08);
-  --shadow-xl: 0 24px 48px -8px rgba(0, 0, 0, 0.28), 0 8px 24px -4px rgba(0, 0, 0, 0.12);
-  --shadow-glow: 0 0 24px -4px rgba(14, 165, 233, 0.25);
+  --shadow-subtle: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 4px 14px -2px rgba(0, 0, 0, 0.25), 0 2px 6px -1px rgba(0, 0, 0, 0.12);
+  --shadow-lg: 0 12px 28px -4px rgba(0, 0, 0, 0.35), 0 4px 12px -2px rgba(0, 0, 0, 0.2);
+  --shadow-xl: 0 24px 48px -8px rgba(0, 0, 0, 0.45), 0 8px 24px -4px rgba(0, 0, 0, 0.25);
+  --shadow-glow: 0 0 24px -4px rgba(139, 92, 246, 0.28);
+  --shadow-glow-cyan: 0 0 24px -4px rgba(6, 182, 212, 0.25);
 
-  /* Default Obsidian Dark (Black Theme) Defaults */
-  --primary: #0ea5e9;
-  --primary-rgb: 14, 165, 233;
-  --primary-hover: #0284c7;
-  --primary-light: #38bdf8;
-  --primary-dark: #0369a1;
+  /* Restrained Dark-First Palette: Deep Slate Neutral + Violet Primary + Cyan Accent */
+  --primary: #8b5cf6;
+  --primary-rgb: 139, 92, 246;
+  --primary-hover: #7c3aed;
+  --primary-light: #a78bfa;
+  --primary-dark: #6d28d9;
   --secondary: #64748b;
   --secondary-hover: #475569;
-  --accent: #818cf8;
+  --accent: #06b6d4;
+  --accent-hover: #0891b2;
   --success: #10b981;
   --warning: #f59e0b;
   --error: #ef4444;
   --info: #3b82f6;
 
   /* Layered Background Elevations */
-  --bg-primary: #07090e;
-  --bg-secondary: #0d1118;
-  --bg-tertiary: #141a24;
-  --surface: #121721;
-  --surface-hover: #1b2230;
-  --surface-active: #242d3f;
-  --card: #0e121a;
-  --card-hover: #151b27;
-  --modal-bg: #0b0f16;
-  --dropdown-bg: #0e121a;
-  --sidebar-bg: #090c12;
-  --navbar-bg: #07090e;
-  --footer-bg: #040508;
+  --bg-primary: #080b11;
+  --bg-secondary: #0d121c;
+  --bg-tertiary: #131926;
+  --surface: #111724;
+  --surface-hover: #182032;
+  --surface-active: #212c42;
+  --card: #0f1522;
+  --card-hover: #161e2f;
+  --modal-bg: #0d121c;
+  --dropdown-bg: #101623;
+  --sidebar-bg: #0a0e17;
+  --navbar-bg: #080b11;
+  --footer-bg: #06080d;
 
   /* High Contrast Accessible Typography Hierarchy */
   --text-primary: #f8fafc;
   --text-secondary: #94a3b8;
   --text-muted: #64748b;
   --text-disabled: #475569;
-  --text-inverse: #07090e;
+  --text-inverse: #ffffff;
 
   /* Refined Micro Borders */
   --border: rgba(255, 255, 255, 0.08);
   --border-light: rgba(255, 255, 255, 0.04);
   --border-hover: rgba(255, 255, 255, 0.16);
-  --border-focus: #0ea5e9;
+  --border-focus: #8b5cf6;
   --online: #10b981;
 }
 
-/* 1. Cyber Dark Theme (black) */
+/* 1. Cyber Dark / Obsidian Theme (black) */
 .theme-black {
-  --primary: #0ea5e9;
-  --primary-rgb: 14, 165, 233;
-  --primary-hover: #0284c7;
-  --primary-light: #38bdf8;
-  --primary-dark: #0369a1;
-  --bg-primary: #07090e;
-  --bg-secondary: #0d1118;
-  --bg-tertiary: #141a24;
-  --surface: #121721;
-  --surface-hover: #1b2230;
-  --surface-active: #242d3f;
-  --card: #0e121a;
-  --card-hover: #151b27;
-  --sidebar-bg: #090c12;
-  --navbar-bg: #07090e;
+  --primary: #8b5cf6;
+  --primary-rgb: 139, 92, 246;
+  --primary-hover: #7c3aed;
+  --primary-light: #a78bfa;
+  --primary-dark: #6d28d9;
+  --secondary: #64748b;
+  --secondary-hover: #475569;
+  --accent: #06b6d4;
+  --bg-primary: #080b11;
+  --bg-secondary: #0d121c;
+  --bg-tertiary: #131926;
+  --surface: #111724;
+  --surface-hover: #182032;
+  --surface-active: #212c42;
+  --card: #0f1522;
+  --card-hover: #161e2f;
+  --sidebar-bg: #0a0e17;
+  --navbar-bg: #080b11;
   --text-primary: #f8fafc;
   --text-secondary: #94a3b8;
   --text-muted: #64748b;
   --text-disabled: #475569;
   --border: rgba(255, 255, 255, 0.08);
   --border-light: rgba(255, 255, 255, 0.04);
-  --border-hover: rgba(255, 255, 255, 0.18);
+  --border-hover: rgba(255, 255, 255, 0.16);
+  --border-focus: #8b5cf6;
 }
 
 /* 2. Premium Porcelain Light Theme (white) */
 .theme-white {
-  --primary: #4f46e5;
-  --primary-rgb: 79, 70, 229;
-  --primary-hover: #4338ca;
-  --primary-light: #818cf8;
-  --primary-dark: #3730a3;
+  --primary: #7c3aed;
+  --primary-rgb: 124, 58, 237;
+  --primary-hover: #6d28d9;
+  --primary-light: #8b5cf6;
+  --primary-dark: #5b21b6;
   --secondary: #64748b;
   --secondary-hover: #475569;
-  --accent: #06b6d4;
+  --accent: #0891b2;
   
   --bg-primary: #f8fafc;
   --bg-secondary: #f1f5f9;
@@ -124,10 +131,10 @@
   --text-disabled: #94a3b8;
   --text-inverse: #ffffff;
 
-  --border: rgba(15, 23, 42, 0.09);
+  --border: rgba(15, 23, 42, 0.08);
   --border-light: rgba(15, 23, 42, 0.04);
-  --border-hover: rgba(15, 23, 42, 0.18);
-  --border-focus: #4f46e5;
+  --border-hover: rgba(15, 23, 42, 0.16);
+  --border-focus: #7c3aed;
 }
 
 /* 3. Deep Crimson Rose Theme (red) */
@@ -137,6 +144,7 @@
   --primary-hover: #e11d48;
   --primary-light: #fb7185;
   --primary-dark: #be123c;
+  --accent: #38bdf8;
   --bg-primary: #0d080a;
   --bg-secondary: #160d10;
   --bg-tertiary: #201317;
@@ -145,7 +153,7 @@
   --surface-active: #372129;
   --card: #160d10;
   --card-hover: #1e1215;
-  --border: rgba(244, 63, 94, 0.12);
+  --border: rgba(244, 63, 94, 0.14);
   --border-light: rgba(244, 63, 94, 0.06);
   --border-hover: rgba(244, 63, 94, 0.25);
   --text-primary: #ffe4e6;
@@ -160,6 +168,7 @@
   --primary-hover: #059669;
   --primary-light: #34d399;
   --primary-dark: #047857;
+  --accent: #06b6d4;
   --bg-primary: #040906;
   --bg-secondary: #09130d;
   --bg-tertiary: #101f16;
@@ -168,7 +177,7 @@
   --surface-active: #1e3828;
   --card: #09130d;
   --card-hover: #0e1c14;
-  --border: rgba(16, 185, 129, 0.12);
+  --border: rgba(16, 185, 129, 0.14);
   --border-light: rgba(16, 185, 129, 0.06);
   --border-hover: rgba(16, 185, 129, 0.25);
   --text-primary: #d1fae5;
@@ -183,6 +192,7 @@
   --primary-hover: #2563eb;
   --primary-light: #60a5fa;
   --primary-dark: #1d4ed8;
+  --accent: #8b5cf6;
   --bg-primary: #040914;
   --bg-secondary: #091225;
   --bg-tertiary: #0f1d3a;
@@ -191,7 +201,7 @@
   --surface-active: #1e3468;
   --card: #091225;
   --card-hover: #0e1a34;
-  --border: rgba(59, 130, 246, 0.12);
+  --border: rgba(59, 130, 246, 0.14);
   --border-light: rgba(59, 130, 246, 0.06);
   --border-hover: rgba(59, 130, 246, 0.25);
   --text-primary: #dbeafe;
@@ -206,6 +216,7 @@
   --primary-hover: #d97706;
   --primary-light: #fbbf24;
   --primary-dark: #b45309;
+  --accent: #06b6d4;
   --bg-primary: #090704;
   --bg-secondary: #130f08;
   --bg-tertiary: #1f180d;
@@ -214,7 +225,7 @@
   --surface-active: #372a18;
   --card: #130f08;
   --card-hover: #1c150c;
-  --border: rgba(245, 158, 11, 0.12);
+  --border: rgba(245, 158, 11, 0.14);
   --border-light: rgba(245, 158, 11, 0.06);
   --border-hover: rgba(245, 158, 11, 0.25);
   --text-primary: #fef9c3;
@@ -223,13 +234,13 @@
 }
 
 /* ==========================================================================
-   Custom SaaS Utilities & Glassmorphism Panels
+   VYRO Custom SaaS Utilities & Glass Panels
    ========================================================================== */
 
 /* Custom Standard Scrollbars */
 ::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
+  width: 6px;
+  height: 6px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
@@ -244,7 +255,7 @@
 
 /* Glassmorphism Panel styles */
 .glass-panel {
-  background: rgba(18, 23, 33, 0.75);
+  background: rgba(17, 23, 36, 0.78);
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
   border: 1px solid var(--border);
@@ -252,7 +263,7 @@
 }
 
 .theme-white .glass-panel {
-  background: rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, 0.88);
   border: 1px solid rgba(15, 23, 42, 0.08);
   box-shadow: 0 20px 40px -8px rgba(15, 23, 42, 0.08);
 }
@@ -269,7 +280,7 @@
 }
 
 .menu_bg {
-  background-color: rgba(3, 5, 10, 0.75);
+  background-color: rgba(4, 7, 12, 0.78);
   backdrop-filter: blur(16px);
   position: fixed;
   top: 0;
@@ -337,11 +348,12 @@
   box-shadow: var(--shadow-md);
 }
 
+/* Distinctive VYRO Message Bubbles */
 .msg-bubble-sent {
   background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%) !important;
-  color: var(--text-inverse) !important;
+  color: #ffffff !important;
   border-radius: 18px 18px 4px 18px !important;
-  box-shadow: 0 4px 16px rgba(var(--primary-rgb), 0.22) !important;
+  box-shadow: 0 4px 16px rgba(var(--primary-rgb), 0.24) !important;
   border: 1px solid rgba(255, 255, 255, 0.12) !important;
 }
 
@@ -349,7 +361,7 @@
   background: var(--surface) !important;
   color: var(--text-primary) !important;
   border-radius: 18px 18px 18px 4px !important;
-  box-shadow: var(--shadow-md) !important;
+  box-shadow: var(--shadow-subtle) !important;
   border: 1px solid var(--border) !important;
 }
 
@@ -361,10 +373,10 @@
 }
 
 .custom-toast.Toastify__toast {
-  background: rgba(14, 18, 26, 0.88) !important;
+  background: rgba(13, 18, 28, 0.92) !important;
   backdrop-filter: blur(20px) saturate(180%) !important;
   -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
-  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid rgba(255, 255, 255, 0.09) !important;
   border-radius: 16px !important;
   box-shadow: var(--shadow-xl) !important;
   color: #f8fafc !important;
@@ -374,7 +386,7 @@
 }
 
 .theme-white .custom-toast.Toastify__toast {
-  background: rgba(255, 255, 255, 0.92) !important;
+  background: rgba(255, 255, 255, 0.94) !important;
   border: 1px solid rgba(15, 23, 42, 0.09) !important;
   box-shadow: 0 10px 30px -4px rgba(15, 23, 42, 0.12) !important;
   color: #0f172a !important;

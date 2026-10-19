@@ -4,7 +4,7 @@ import { createContext, useContext, useState, useEffect } from 'react'
 export const ThemeContext = createContext()
 
 const ThemeContextProvider = ({ children }) => {
-  const [theme, setTheme] = useState('white');
+  const [theme, setTheme] = useState('black');
   const [wallpaper, setWallpaper] = useState({
     type: 'none',
     value: '',

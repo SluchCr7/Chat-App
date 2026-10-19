@@ -1,8 +1,7 @@
 'use client';
 
-import React, { useContext, useState } from 'react';
-import { IoMdClose } from "react-icons/io";
-import { FaLock } from 'react-icons/fa';
+import React, { useContext, useState, useEffect } from 'react';
+import { LuLock, LuX, LuCheck } from "react-icons/lu";
 import { AuthContext } from '../Context/AuthContext';
 
 const PasswordUpdateForm = ({ show, setShow }) => {
@@ -15,6 +14,16 @@ const PasswordUpdateForm = ({ show, setShow }) => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const { updatePassword } = useContext(AuthContext);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && show) {
+        setShow(false);
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [show, setShow]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -44,103 +53,106 @@ const PasswordUpdateForm = ({ show, setShow }) => {
   if (!show) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
-      
+    <div className="menu_bg">
       {/* Modal Card */}
-      <div className="bg-surface border border-border rounded-[28px] max-w-md w-full p-8 shadow-2xl relative flex flex-col gap-6 animate-scale-up">
+      <div className="bg-surface border border-border rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl relative flex flex-col gap-5 text-left">
         
         {/* Close Button */}
         <button
           onClick={() => setShow(false)}
-          className="absolute top-5 right-5 p-2 rounded-xl text-text-muted hover:text-text-primary hover:bg-bg-primary/50 transition duration-300"
+          className="absolute top-5 right-5 p-1.5 rounded-xl text-text-muted hover:text-text-primary hover:bg-surface-hover transition"
           type="button"
+          aria-label="Close dialog"
         >
-          <IoMdClose size={20} />
+          <LuX size={18} />
         </button>
 
         {/* Modal Header */}
-        <div className="text-left space-y-1 pr-6">
-          <h2 className="text-xl font-extrabold text-text-primary">Update Password</h2>
+        <div className="space-y-1 pr-6 border-b border-border pb-3">
+          <h2 className="text-base font-black text-text-primary tracking-tight">Update Password</h2>
           <p className="text-xs text-text-secondary font-medium">
-            Enter your current password and create a new secure password.
+            Enter your current password and establish a new secure credential.
           </p>
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4 text-left">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-3.5">
           
           {/* Old Password */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-text-secondary uppercase tracking-wider block">
-              Old Password
+          <div className="space-y-1">
+            <label className="text-[11px] font-bold text-text-secondary uppercase tracking-wider block">
+              Current Password
             </label>
-            <div className="flex items-center gap-3 rounded-xl border border-border bg-bg-primary/40 focus-within:border-primary focus-within:ring-1 focus-within:ring-primary/20 px-4 py-3 transition duration-300">
-              <FaLock className="text-text-muted text-xs" />
+            <div className="flex items-center gap-3 rounded-xl border border-border bg-bg-primary/50 focus-within:border-primary focus-within:ring-1 focus-within:ring-primary/20 px-3.5 py-2.5 transition duration-150">
+              <LuLock className="text-text-muted text-xs" />
               <input
                 type="password"
                 name="oldPassword"
                 value={formData.oldPassword}
                 onChange={handleChange}
-                placeholder="Enter current password"
-                className="w-full bg-transparent text-text-primary outline-none placeholder:text-text-muted text-sm font-semibold"
+                placeholder="Current password"
+                className="w-full bg-transparent text-text-primary outline-none placeholder:text-text-muted text-xs font-semibold"
+                required
               />
             </div>
           </div>
 
           {/* New Password */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-text-secondary uppercase tracking-wider block">
+          <div className="space-y-1">
+            <label className="text-[11px] font-bold text-text-secondary uppercase tracking-wider block">
               New Password
             </label>
-            <div className="flex items-center gap-3 rounded-xl border border-border bg-bg-primary/40 focus-within:border-primary focus-within:ring-1 focus-within:ring-primary/20 px-4 py-3 transition duration-300">
-              <FaLock className="text-text-muted text-xs" />
+            <div className="flex items-center gap-3 rounded-xl border border-border bg-bg-primary/50 focus-within:border-primary focus-within:ring-1 focus-within:ring-primary/20 px-3.5 py-2.5 transition duration-150">
+              <LuLock className="text-text-muted text-xs" />
               <input
                 type="password"
                 name="newPassword"
                 value={formData.newPassword}
                 onChange={handleChange}
                 placeholder="Create new password"
-                className="w-full bg-transparent text-text-primary outline-none placeholder:text-text-muted text-sm font-semibold"
+                className="w-full bg-transparent text-text-primary outline-none placeholder:text-text-muted text-xs font-semibold"
+                required
               />
             </div>
           </div>
 
           {/* Confirm New Password */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-text-secondary uppercase tracking-wider block">
+          <div className="space-y-1">
+            <label className="text-[11px] font-bold text-text-secondary uppercase tracking-wider block">
               Confirm New Password
             </label>
-            <div className="flex items-center gap-3 rounded-xl border border-border bg-bg-primary/40 focus-within:border-primary focus-within:ring-1 focus-within:ring-primary/20 px-4 py-3 transition duration-300">
-              <FaLock className="text-text-muted text-xs" />
+            <div className="flex items-center gap-3 rounded-xl border border-border bg-bg-primary/50 focus-within:border-primary focus-within:ring-1 focus-within:ring-primary/20 px-3.5 py-2.5 transition duration-150">
+              <LuLock className="text-text-muted text-xs" />
               <input
                 type="password"
                 name="confirmPassword"
                 value={formData.confirmPassword}
                 onChange={handleChange}
                 placeholder="Retype new password"
-                className="w-full bg-transparent text-text-primary outline-none placeholder:text-text-muted text-sm font-semibold"
+                className="w-full bg-transparent text-text-primary outline-none placeholder:text-text-muted text-xs font-semibold"
+                required
               />
             </div>
           </div>
 
-          {/* Error and Success States */}
+          {/* Error and Success Feedback */}
           {error && (
-            <p className="text-xs text-rose-500 font-bold bg-rose-500/10 border border-rose-500/20 px-3 py-2 rounded-lg animate-shake">
+            <p className="text-xs text-rose-400 font-bold bg-rose-500/10 border border-rose-500/20 px-3 py-2 rounded-xl">
               {error}
             </p>
           )}
           {success && (
-            <p className="text-xs text-emerald-500 font-bold bg-emerald-500/10 border border-emerald-500/20 px-3 py-2 rounded-lg">
-              {success}
+            <p className="text-xs text-emerald-400 font-bold bg-emerald-500/10 border border-emerald-500/20 px-3 py-2 rounded-xl flex items-center gap-1.5">
+              <LuCheck size={14} /> {success}
             </p>
           )}
 
           {/* Submit */}
           <button
             type="submit"
-            className="w-full mt-2 rounded-xl bg-primary hover:bg-primary-hover px-5 py-3 text-xs font-extrabold text-text-inverse uppercase tracking-wider shadow-md hover:scale-102 active:scale-95 transition-all duration-300"
+            className="w-full mt-2 rounded-xl bg-primary hover:bg-primary-hover px-5 py-3 text-xs font-bold text-text-inverse uppercase tracking-wider shadow-md active:scale-95 transition-all duration-150"
           >
-            Update Password
+            Save New Password
           </button>
         </form>
       </div>

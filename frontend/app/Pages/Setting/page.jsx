@@ -2,6 +2,7 @@
 
 import React, { useContext, useState, useEffect } from 'react';
 import Logo from '@/app/Components/Logo';
+import Avatar from '@/app/Components/Avatar';
 import { ThemeContext } from '@/app/Context/ThemeContext';
 import { 
   FaPalette, 
@@ -12,30 +13,29 @@ import {
   FaSlidersH
 } from 'react-icons/fa';
 import { 
-  MdTexture, 
-  MdLayersClear
-} from 'react-icons/md';
+  LuPalette, LuImage, LuSlidersHorizontal, LuLink, LuCheck, LuLayers, LuSparkles 
+} from 'react-icons/lu';
 
 const themes = [
-  { name: 'white', bg: '#f8fafc', text: '#0f172a', border: 'border-slate-300' },
-  { name: 'black', bg: '#07090e', text: '#f8fafc', border: 'border-slate-800' },
-  { name: 'red', bg: '#0d080a', text: '#ffe4e6', border: 'border-rose-950' },
-  { name: 'green', bg: '#040906', text: '#d1fae5', border: 'border-emerald-950' },
-  { name: 'blue', bg: '#040914', text: '#dbeafe', border: 'border-blue-950' },
-  { name: 'yellow', bg: '#090704', text: '#fef9c3', border: 'border-amber-950' },
+  { name: 'black', label: 'Dark Obsidian', bg: '#080b11', text: '#f8fafc', accent: '#8b5cf6', desc: 'Restrained dark with violet' },
+  { name: 'white', label: 'Porcelain Light', bg: '#f8fafc', text: '#0f172a', accent: '#7c3aed', desc: 'Clean bright workspace' },
+  { name: 'blue', label: 'Sapphire Blue', bg: '#040914', text: '#dbeafe', accent: '#3b82f6', desc: 'Deep cosmic sapphire' },
+  { name: 'green', label: 'Emerald Forest', bg: '#040906', text: '#d1fae5', accent: '#10b981', desc: 'Organic deep emerald' },
+  { name: 'red', label: 'Crimson Rose', bg: '#0d080a', text: '#ffe4e6', accent: '#f43f5e', desc: 'Deep moody crimson' },
+  { name: 'yellow', label: 'Amber Gold', bg: '#090704', text: '#fef9c3', accent: '#f59e0b', desc: 'Warm amber glow' },
 ];
 
 const colorPresets = [
-  { name: 'Midnight Dark', value: '#0b141a', isDark: true },
-  { name: 'Royal Blue', value: '#0d1e2d', isDark: true },
-  { name: 'Forest Green', value: '#05180f', isDark: true },
-  { name: 'Warm Amber', value: '#231815', isDark: true },
-  { name: 'Deep Purple', value: '#1b1329', isDark: true },
-  { name: 'Beige Classic', value: '#efeae2', isDark: false },
-  { name: 'Sky Blue', value: '#e0f2fe', isDark: false },
-  { name: 'Mint Green', value: '#ecfdf5', isDark: false },
-  { name: 'Lavender Soft', value: '#f5f3ff', isDark: false },
-  { name: 'Rose Petal', value: '#fff1f2', isDark: false },
+  { name: 'Midnight Dark', value: '#080b11', isDark: true },
+  { name: 'Deep Slate', value: '#0d121c', isDark: true },
+  { name: 'Cosmic Violet', value: '#131124', isDark: true },
+  { name: 'Forest Shadow', value: '#05180f', isDark: true },
+  { name: 'Deep Amber', value: '#1c150c', isDark: true },
+  { name: 'Porcelain Light', value: '#f8fafc', isDark: false },
+  { name: 'Soft Gray', value: '#f1f5f9', isDark: false },
+  { name: 'Lavender Mist', value: '#f5f3ff', isDark: false },
+  { name: 'Sky White', value: '#f0f9ff', isDark: false },
+  { name: 'Mint Tint', value: '#f0fdf4', isDark: false },
 ];
 
 const patterns = [
@@ -185,28 +185,30 @@ const ThemeSettingsPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-bg-primary text-text-primary py-10 px-4 sm:px-6 transition-all duration-300">
+    <div className="min-h-screen bg-bg-primary text-text-primary py-10 px-4 sm:px-6 transition-colors duration-200">
       <div className="mx-auto max-w-5xl space-y-8 text-left">
         
-        {/* Card */}
+        {/* Main Card */}
         <div className="rounded-3xl border border-border bg-surface p-6 sm:p-8 shadow-xl space-y-6">
           <div className="space-y-2">
             <div className="inline-flex items-center gap-3 rounded-2xl bg-bg-primary/50 border border-border px-3.5 py-2 shadow-inner">
-              <Logo compact />
+              <Logo compact size="sm" />
               <div>
-                <h1 className="text-xl sm:text-2xl font-black text-text-primary">Appearance Settings</h1>
-                <p className="max-w-2xl text-xs text-text-secondary font-semibold mt-0.5">
-                  Personalize the app experience with custom themes and wallpapers.
+                <h1 className="text-xl sm:text-2xl font-black text-text-primary">Appearance & Themes</h1>
+                <p className="max-w-2xl text-xs text-text-secondary font-medium mt-0.5">
+                  Personalize the VYRO messaging workspace with custom theme palettes and ambient wallpapers.
                 </p>
               </div>
             </div>
           </div>
 
           {/* Theme Accent Selector */}
-          <div className="rounded-2xl border border-border bg-bg-primary/40 p-5 shadow-inner">
+          <div className="rounded-2xl border border-border bg-bg-primary/50 p-5 shadow-inner">
             <div className="flex flex-col gap-1 border-b border-border pb-3 mb-5">
-              <h2 className="text-xs font-black text-text-primary uppercase tracking-wider">Choose Theme Accent</h2>
-              <p className="text-[11px] text-text-muted font-bold">
+              <h2 className="text-xs font-black text-text-primary uppercase tracking-wider flex items-center gap-2">
+                <LuPalette className="text-primary" /> Workspace Theme
+              </h2>
+              <p className="text-[11px] text-text-muted font-medium">
                 Active Theme: <span className="text-primary uppercase font-black">{theme}</span>
               </p>
             </div>
@@ -219,14 +221,19 @@ const ThemeSettingsPage = () => {
                     key={t.name}
                     onClick={() => setTheme(t.name)}
                     style={{ backgroundColor: t.bg, color: t.text }}
-                    className={`rounded-xl p-3.5 text-xs font-black transition-all border uppercase tracking-wider flex flex-col items-center justify-center gap-2 shadow-sm ${
+                    className={`rounded-xl p-3 text-xs font-black transition-all border uppercase tracking-wider flex flex-col items-center justify-center gap-2 shadow-sm ${
                       isActive 
-                        ? "border-primary ring-2 ring-primary/40 scale-105" 
-                        : "border-border hover:border-border-hover"
+                        ? "border-primary ring-2 ring-primary/40 scale-102" 
+                        : "border-border hover:border-border-hover opacity-90 hover:opacity-100"
                     }`}
                   >
-                    <span>{t.name}</span>
-                    <div className={`w-3 h-3 rounded-full border border-current ${isActive ? "bg-current" : "bg-transparent"}`}></div>
+                    <span className="text-[11px]">{t.label}</span>
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: t.accent }} />
+                      <div className={`w-3 h-3 rounded-full border border-current flex items-center justify-center ${isActive ? "bg-current" : "bg-transparent"}`}>
+                        {isActive && <span className="w-1.5 h-1.5 rounded-full bg-surface" />}
+                      </div>
+                    </div>
                   </button>
                 );
               })}
@@ -234,11 +241,13 @@ const ThemeSettingsPage = () => {
           </div>
 
           {/* Wallpaper Panel */}
-          <div className="rounded-2xl border border-border bg-bg-primary/40 p-5 shadow-inner">
+          <div className="rounded-2xl border border-border bg-bg-primary/50 p-5 shadow-inner">
             <div className="border-b border-border pb-3 mb-5">
-              <h2 className="text-xs font-black text-text-primary uppercase tracking-wider">Chat Wallpaper</h2>
-              <p className="text-xs text-text-secondary mt-0.5 font-semibold">
-                Set a customized background color, repeating vector pattern, or high resolution image for your chat rooms.
+              <h2 className="text-xs font-black text-text-primary uppercase tracking-wider flex items-center gap-2">
+                <LuImage className="text-primary" /> Chat Wallpaper
+              </h2>
+              <p className="text-xs text-text-secondary mt-0.5 font-medium">
+                Set a customized background solid tone, subtle repeating pattern, or high resolution image for your conversation view.
               </p>
             </div>
 
@@ -248,70 +257,42 @@ const ThemeSettingsPage = () => {
                 
                 {/* Tabs */}
                 <div className="flex flex-wrap gap-1.5 p-1 bg-surface border border-border rounded-xl">
-                  <button
-                    onClick={() => { setActiveTab('none'); handleClearWallpaper(); }}
-                    className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold transition ${
-                      activeTab === 'none' 
-                        ? 'bg-primary text-text-inverse shadow-md' 
-                        : 'text-text-secondary hover:bg-bg-primary/50'
-                    }`}
-                  >
-                    <MdLayersClear size={14} />
-                    <span>None</span>
-                  </button>
-                  <button
-                    onClick={() => setActiveTab('color')}
-                    className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold transition ${
-                      activeTab === 'color' 
-                        ? 'bg-primary text-text-inverse shadow-md' 
-                        : 'text-text-secondary hover:bg-bg-primary/50'
-                    }`}
-                  >
-                    <FaPalette size={12} />
-                    <span>Colors</span>
-                  </button>
-                  <button
-                    onClick={() => setActiveTab('pattern')}
-                    className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold transition ${
-                      activeTab === 'pattern' 
-                        ? 'bg-primary text-text-inverse shadow-md' 
-                        : 'text-text-secondary hover:bg-bg-primary/50'
-                    }`}
-                  >
-                    <MdTexture size={14} />
-                    <span>Patterns</span>
-                  </button>
-                  <button
-                    onClick={() => setActiveTab('image')}
-                    className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold transition ${
-                      activeTab === 'image' 
-                        ? 'bg-primary text-text-inverse shadow-md' 
-                        : 'text-text-secondary hover:bg-bg-primary/50'
-                    }`}
-                  >
-                    <FaImage size={12} />
-                    <span>Images</span>
-                  </button>
+                  {[
+                    { id: 'none', label: 'Default' },
+                    { id: 'color', label: 'Color' },
+                    { id: 'pattern', label: 'Patterns' },
+                    { id: 'image', label: 'Images' }
+                  ].map((tab) => (
+                    <button
+                      key={tab.id}
+                      onClick={() => {
+                        if (tab.id === 'none') handleClearWallpaper();
+                        else setActiveTab(tab.id);
+                      }}
+                      className={`flex-1 py-1.5 px-3 text-xs font-bold rounded-lg transition capitalize ${
+                        activeTab === tab.id
+                          ? "bg-primary text-text-inverse shadow-sm"
+                          : "text-text-muted hover:text-text-primary"
+                      }`}
+                    >
+                      {tab.label}
+                    </button>
+                  ))}
                 </div>
 
-                {/* Content */}
-                <div className="p-4 bg-surface border border-border rounded-2xl min-h-[200px] flex flex-col justify-between">
-                  
+                {/* Sub-panel Content */}
+                <div className="p-4 rounded-xl border border-border bg-surface/70 space-y-4 text-left">
                   {activeTab === 'none' && (
-                    <div className="flex flex-col items-center justify-center text-center py-6 space-y-2">
-                      <MdLayersClear size={40} className="text-text-muted" />
-                      <div>
-                        <h4 className="text-xs font-bold text-text-primary">Default Transparent Background</h4>
-                        <p className="text-xs text-text-muted max-w-xs mt-0.5">
-                          The chat scroll area will blend directly into the active theme.
-                        </p>
-                      </div>
+                    <div className="text-center py-6 text-text-muted">
+                      <LuLayers className="mx-auto text-2xl opacity-20 mb-2" />
+                      <p className="text-xs font-medium">No custom wallpaper applied.</p>
+                      <p className="text-[10px] text-text-muted mt-0.5">Select Color, Patterns, or Images above to customize.</p>
                     </div>
                   )}
 
                   {activeTab === 'color' && (
-                    <div className="space-y-3">
-                      <h4 className="text-[10px] font-black uppercase tracking-wider text-text-secondary">Select Color Preset</h4>
+                    <div className="space-y-2">
+                      <h4 className="text-[10px] font-black uppercase tracking-wider text-text-secondary">Solid Presets</h4>
                       <div className="grid grid-cols-5 gap-2">
                         {colorPresets.map((c) => {
                           const isSelected = wallpaper.type === 'color' && wallpaper.value === c.value;
@@ -320,12 +301,14 @@ const ThemeSettingsPage = () => {
                               key={c.value}
                               onClick={() => handleSelectColor(c.value)}
                               style={{ backgroundColor: c.value }}
-                              className={`aspect-square rounded-xl border border-border flex items-center justify-center hover:scale-105 transition`}
+                              className={`h-10 rounded-xl border relative flex items-center justify-center hover:scale-105 transition shadow-sm ${
+                                isSelected ? 'border-primary ring-2 ring-primary/40' : 'border-border'
+                              }`}
                               title={c.name}
                             >
                               {isSelected && (
-                                <span className={`p-1 rounded-full ${c.isDark ? 'bg-white/20 text-white' : 'bg-black/10 text-black'}`}>
-                                  <FaCheck size={8} />
+                                <span className={`p-1 rounded-full ${c.isDark ? 'bg-white/20 text-white' : 'bg-black/15 text-black'}`}>
+                                  <LuCheck size={10} />
                                 </span>
                               )}
                             </button>
@@ -338,7 +321,7 @@ const ThemeSettingsPage = () => {
                   {activeTab === 'pattern' && (
                     <div className="space-y-4">
                       <div className="space-y-2">
-                        <h4 className="text-[10px] font-black uppercase tracking-wider text-text-secondary">Choose Pattern</h4>
+                        <h4 className="text-[10px] font-black uppercase tracking-wider text-text-secondary">Repeating Patterns</h4>
                         <div className="grid grid-cols-5 gap-2">
                           {patterns.map((p) => {
                             const isSelected = wallpaper.type === 'pattern' && wallpaper.value === p.value;
@@ -346,19 +329,20 @@ const ThemeSettingsPage = () => {
                               <button
                                 key={p.name}
                                 onClick={() => handleSelectPattern(p.value)}
-                                style={{ 
+                                style={{
+                                  backgroundColor: selectedPatternColor || 'var(--bg-primary)',
                                   backgroundImage: `url(${p.value})`,
                                   backgroundSize: 'auto',
                                   backgroundRepeat: 'repeat'
                                 }}
                                 className={`h-10 rounded-xl border flex items-center justify-center hover:border-primary transition ${
-                                  isSelected ? 'border-primary ring-2 ring-primary/30' : 'border-border'
+                                  isSelected ? 'border-primary ring-2 ring-primary/40' : 'border-border'
                                 }`}
                                 title={p.name}
                               >
                                 {isSelected && (
                                   <span className="p-1 rounded-full bg-primary text-white">
-                                    <FaCheck size={8} />
+                                    <LuCheck size={10} />
                                   </span>
                                 )}
                               </button>
@@ -378,7 +362,7 @@ const ThemeSettingsPage = () => {
                                 : 'border-border bg-bg-primary text-text-primary'
                             }`}
                           >
-                            Theme Base
+                            Theme Default
                           </button>
                           {colorPresets.map((c) => {
                             const isColorSelected = selectedPatternColor === c.value;
@@ -392,7 +376,7 @@ const ThemeSettingsPage = () => {
                               >
                                 {isColorSelected && (
                                   <span className={`p-1 rounded-full ${c.isDark ? 'bg-white/20 text-white' : 'bg-black/15 text-black'}`}>
-                                    <FaCheck size={8} />
+                                    <LuCheck size={8} />
                                   </span>
                                 )}
                               </button>
@@ -420,13 +404,13 @@ const ThemeSettingsPage = () => {
                                   backgroundPosition: 'center'
                                 }}
                                 className={`aspect-square rounded-xl border flex items-center justify-center hover:scale-105 transition ${
-                                  isSelected ? 'border-primary ring-2 ring-primary/30' : 'border-border'
+                                  isSelected ? 'border-primary ring-2 ring-primary/40' : 'border-border'
                                 }`}
                                 title={img.name}
                               >
                                 {isSelected && (
                                   <span className="p-1 rounded-full bg-primary text-white">
-                                    <FaCheck size={8} />
+                                    <LuCheck size={10} />
                                   </span>
                                 )}
                               </button>
@@ -437,7 +421,7 @@ const ThemeSettingsPage = () => {
 
                       <form onSubmit={handleCustomUrlApply} className="space-y-1.5 border-t border-border pt-3">
                         <h4 className="text-[10px] font-black uppercase tracking-wider text-text-secondary flex items-center gap-1">
-                          <FaLink size={10} /> Image URL
+                          <LuLink size={12} /> External Image URL
                         </h4>
                         <div className="flex gap-2">
                           <input
@@ -445,11 +429,11 @@ const ThemeSettingsPage = () => {
                             value={customUrl}
                             onChange={(e) => setCustomUrl(e.target.value)}
                             placeholder="https://images.unsplash.com/..."
-                            className="flex-1 px-3 py-1.5 text-xs border border-border bg-bg-primary rounded-xl focus:outline-none focus:border-primary text-text-primary font-semibold"
+                            className="flex-1 px-3 py-1.5 text-xs border border-border bg-bg-primary rounded-xl focus:outline-none focus:border-primary text-text-primary font-medium"
                           />
                           <button
                             type="submit"
-                            className="px-3 py-1.5 text-xs font-bold bg-primary text-text-inverse rounded-xl shadow-md transition"
+                            className="px-3 py-1.5 text-xs font-bold bg-primary text-text-inverse rounded-xl shadow-sm hover:bg-primary-hover transition"
                           >
                             Apply
                           </button>
@@ -462,8 +446,8 @@ const ThemeSettingsPage = () => {
                   {wallpaper && wallpaper.type !== 'none' && (
                     <div className="border-t border-border pt-3 mt-3 space-y-1.5">
                       <div className="flex items-center justify-between text-xs text-text-secondary font-bold">
-                        <span className="flex items-center gap-1">
-                          <FaSlidersH size={12} className="text-primary" />
+                        <span className="flex items-center gap-1.5">
+                          <LuSlidersHorizontal size={13} className="text-primary" />
                           Wallpaper Opacity
                         </span>
                         <span className="bg-primary/10 text-primary px-2 py-0.5 rounded font-black text-[10px]">
@@ -485,23 +469,24 @@ const ThemeSettingsPage = () => {
                 </div>
               </div>
 
-              {/* Phone Preview Column */}
+              {/* Phone Mockup Live Preview */}
               <div className="lg:col-span-5 flex flex-col items-center justify-center">
-                <div className="w-full max-w-[250px] aspect-[9/16] border border-border rounded-[32px] bg-bg-primary shadow-2xl relative flex flex-col overflow-hidden select-none">
+                <div className="w-full max-w-[260px] aspect-[9/16] border border-border rounded-[36px] bg-bg-primary shadow-2xl relative flex flex-col overflow-hidden select-none">
+                  {/* Speaker Notch */}
                   <div className="absolute top-0 inset-x-0 h-5 bg-black z-30 flex items-center justify-center">
                     <div className="w-14 h-2.5 bg-neutral-800 rounded-full"></div>
                   </div>
 
+                  {/* Header */}
                   <div className="bg-surface/90 border-b border-border pt-6 pb-2 px-3 flex items-center gap-2 z-20">
-                    <div className="w-7 h-7 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-xs">
-                      JD
-                    </div>
+                    <Avatar name="Alex Morgan" size={28} isOnline={true} showStatus={true} />
                     <div className="flex flex-col text-left">
-                      <span className="text-[10px] font-bold text-text-primary">John Doe</span>
-                      <span className="text-[8px] text-emerald-500 font-black tracking-wider uppercase">online</span>
+                      <span className="text-[10px] font-bold text-text-primary">Alex Morgan</span>
+                      <span className="text-[8px] text-emerald-400 font-bold uppercase">online now</span>
                     </div>
                   </div>
 
+                  {/* Body with active wallpaper */}
                   <div className="flex-1 p-3 space-y-3 relative overflow-hidden flex flex-col justify-end bg-bg-primary">
                     {wallpaper && wallpaper.type !== 'none' && (
                       <div 
@@ -512,22 +497,22 @@ const ThemeSettingsPage = () => {
 
                     <div className="space-y-2 z-10 relative">
                       <div className="flex justify-start">
-                        <div className="bg-surface border border-border text-text-primary px-2.5 py-1.5 rounded-xl text-[9px] font-semibold text-left max-w-[85%]">
-                          How does this chat wallpaper look?
+                        <div className="msg-bubble-received px-2.5 py-1.5 rounded-xl text-[9px] font-medium text-left max-w-[85%]">
+                          How does this chat wallpaper look on VYRO?
                         </div>
                       </div>
                       <div className="flex justify-end">
-                        <div className="bg-primary text-text-inverse px-2.5 py-1.5 rounded-xl text-[9px] font-semibold text-left max-w-[85%]">
-                          It looks super clean and modern!
+                        <div className="msg-bubble-sent px-2.5 py-1.5 rounded-xl text-[9px] font-medium text-left max-w-[85%]">
+                          It looks distinct, clean and modern!
                         </div>
                       </div>
                     </div>
                   </div>
                 </div>
 
-                <span className="text-[10px] font-black text-text-muted uppercase tracking-wider mt-3 flex items-center gap-1">
-                  <FaRegImage size={10} className="text-primary" />
-                  Live Wallpaper Preview
+                <span className="text-[10px] font-black text-text-muted uppercase tracking-wider mt-3 flex items-center gap-1.5">
+                  <LuSparkles size={11} className="text-primary" />
+                  Live Theme & Wallpaper Preview
                 </span>
               </div>
             </div>

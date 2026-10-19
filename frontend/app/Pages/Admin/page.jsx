@@ -3,7 +3,11 @@
 import React, { useContext, useEffect, useState, useCallback } from 'react';
 import { AuthContext } from '@/app/Context/AuthContext';
 import Logo from '@/app/Components/Logo';
-import { FaUserShield, FaUsers, FaDatabase, FaServer, FaCheck, FaTimes, FaTrashAlt, FaClock } from "react-icons/fa";
+import Avatar from '@/app/Components/Avatar';
+import { 
+  LuShield, LuUsers, LuDatabase, LuServer, LuClock, 
+  LuCheck, LuX, LuTrash2, LuCpu, LuHardDrive, LuChevronLeft, LuChevronRight 
+} from "react-icons/lu";
 import { toast } from 'react-toastify';
 import axios from 'axios';
 
@@ -98,21 +102,21 @@ const AdminDashboard = () => {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-bg-primary text-text-primary">
-        <span className="loading loading-spinner loading-lg text-primary"></span>
+        <span className="loading loading-spinner loading-md text-primary"></span>
       </div>
     );
   }
 
   if (!authUser || !authUser.isAdmin) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-bg-primary px-4">
-        <div className="max-w-md p-8 rounded-3xl border border-border bg-surface text-center space-y-4 shadow-xl">
-          <div className="p-4 bg-error/10 text-error rounded-full inline-block border border-error/20">
-            <FaUserShield className="text-4xl" />
+      <div className="min-h-screen flex flex-col items-center justify-center bg-bg-primary text-text-primary p-6 text-center">
+        <div className="p-4 rounded-3xl bg-surface border border-border shadow-xl max-w-md w-full space-y-4">
+          <div className="w-12 h-12 rounded-2xl bg-rose-500/10 text-rose-400 border border-rose-500/20 flex items-center justify-center mx-auto">
+            <LuShield className="text-xl" />
           </div>
-          <h1 className="text-xl font-bold text-text-primary">Restricted Module Access</h1>
-          <p className="text-xs text-text-secondary leading-relaxed font-semibold">
-            This module is reserved for platform administrators only.
+          <h1 className="text-lg font-black tracking-tight">Access Restricted</h1>
+          <p className="text-xs text-text-secondary font-medium">
+            You do not have administrative privileges to view the VYRO moderation dashboard.
           </p>
         </div>
       </div>
@@ -120,75 +124,84 @@ const AdminDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen w-full py-8 bg-bg-primary text-text-primary px-6 transition-all duration-300">
-      <div className="max-w-7xl mx-auto space-y-8 text-left">
+    <div className="min-h-screen bg-bg-primary text-text-primary py-8 sm:py-10 px-4 sm:px-6 transition-colors duration-200">
+      <div className="mx-auto max-w-6xl space-y-8 text-left">
         
-        {/* Header */}
-        <div className="inline-flex items-center gap-3 rounded-2xl bg-surface border border-border px-4 py-3 shadow-sm">
-          <Logo compact />
-          <div>
-            <h1 className="text-xl sm:text-2xl font-black text-text-primary tracking-tight">Admin Console</h1>
-            <p className="text-text-muted text-xs font-semibold mt-0.5">Platform operations, system metrics, and moderation database.</p>
+        {/* Header Block */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-6">
+          <div className="flex items-center gap-3">
+            <Logo compact size="md" />
+            <div>
+              <h1 className="text-xl sm:text-2xl font-black text-text-primary tracking-tight">Admin Console</h1>
+              <p className="text-xs text-text-secondary font-medium mt-0.5">
+                System telemetry, user directory, role permissions, and space moderation.
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-[10px] font-black uppercase tracking-wider">
+              Super Admin Mode
+            </span>
           </div>
         </div>
 
-        {/* Metrics Widgets */}
+        {/* Metric Cards Row */}
         {stats && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="p-5 rounded-2xl border border-border bg-surface flex items-center gap-4 shadow-sm">
-              <div className="p-3.5 rounded-xl bg-info/10 text-info border border-info/20">
-                <FaUsers className="text-xl" />
+              <div className="p-3.5 rounded-xl bg-primary/10 text-primary border border-primary/20">
+                <LuUsers className="text-xl" />
               </div>
               <div>
-                <span className="block text-[9px] uppercase font-black text-text-muted tracking-widest">Total Users</span>
-                <span className="text-xl font-black text-text-primary">{stats.stats.totalUsers}</span>
-                <span className="block text-[10px] text-emerald-500 mt-0.5 font-bold">● {stats.stats.onlineUsersCount} Online Now</span>
+                <span className="block text-[9px] uppercase font-black text-text-muted tracking-widest">Active Accounts</span>
+                <span className="text-2xl font-black text-text-primary">{stats.stats.totalUsers}</span>
+                <span className="block text-[10px] text-text-secondary mt-0.5 font-medium">{stats.stats.verifiedUsers} verified</span>
               </div>
             </div>
 
             <div className="p-5 rounded-2xl border border-border bg-surface flex items-center gap-4 shadow-sm">
               <div className="p-3.5 rounded-xl bg-accent/10 text-accent border border-accent/20">
-                <FaDatabase className="text-xl" />
+                <LuDatabase className="text-xl" />
               </div>
               <div>
-                <span className="block text-[9px] uppercase font-black text-text-muted tracking-widest">Total Groups</span>
-                <span className="text-xl font-black text-text-primary">{stats.stats.totalGroups}</span>
-                <span className="block text-[10px] text-text-secondary mt-0.5 font-semibold">{stats.stats.totalChannels} channels</span>
+                <span className="block text-[9px] uppercase font-black text-text-muted tracking-widest">Communities</span>
+                <span className="text-2xl font-black text-text-primary">{stats.stats.totalGroups}</span>
+                <span className="block text-[10px] text-text-secondary mt-0.5 font-medium">{stats.stats.totalChannels} channels</span>
               </div>
             </div>
 
             <div className="p-5 rounded-2xl border border-border bg-surface flex items-center gap-4 shadow-sm">
-              <div className="p-3.5 rounded-xl bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
-                <FaServer className="text-xl" />
+              <div className="p-3.5 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                <LuServer className="text-xl" />
               </div>
               <div>
-                <span className="block text-[9px] uppercase font-black text-text-muted tracking-widest">Messages Sent</span>
-                <span className="text-xl font-black text-text-primary">{stats.stats.totalMessages}</span>
-                <span className="block text-[10px] text-text-secondary mt-0.5 font-semibold">Total DB records</span>
+                <span className="block text-[9px] uppercase font-black text-text-muted tracking-widest">Messages Processed</span>
+                <span className="text-2xl font-black text-text-primary">{stats.stats.totalMessages}</span>
+                <span className="block text-[10px] text-text-secondary mt-0.5 font-medium">Real-time sync</span>
               </div>
             </div>
 
             <div className="p-5 rounded-2xl border border-border bg-surface flex items-center gap-4 shadow-sm">
-              <div className="p-3.5 rounded-xl bg-amber-500/10 text-amber-500 border border-amber-500/20">
-                <FaClock className="text-xl" />
+              <div className="p-3.5 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                <LuClock className="text-xl" />
               </div>
               <div>
-                <span className="block text-[9px] uppercase font-black text-text-muted tracking-widest">System Uptime</span>
-                <span className="text-lg font-black text-text-primary">
-                  {(stats.systemInfo.uptime / 3600).toFixed(1)} hrs
+                <span className="block text-[9px] uppercase font-black text-text-muted tracking-widest">Service Uptime</span>
+                <span className="text-2xl font-black text-text-primary">
+                  {(stats.systemInfo.uptime / 3600).toFixed(1)}h
                 </span>
-                <span className="block text-[10px] text-text-secondary mt-0.5 font-semibold">Node {stats.systemInfo.nodeVersion}</span>
+                <span className="block text-[10px] text-text-secondary mt-0.5 font-medium">Node {stats.systemInfo.nodeVersion}</span>
               </div>
             </div>
           </div>
         )}
 
-        {/* User Moderation & Performance */}
+        {/* User Moderation & Performance Columns */}
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
           
           {/* User Table */}
           <div className="xl:col-span-2 border border-border bg-surface rounded-3xl p-6 space-y-4 shadow-sm">
-            <h2 className="text-sm font-black text-text-primary border-b border-border pb-3 uppercase tracking-wider">User Directory & Moderation</h2>
+            <h2 className="text-xs font-black text-text-primary border-b border-border pb-3 uppercase tracking-wider">User Directory & Permissions</h2>
             
             <div className="overflow-x-auto w-full">
               <table className="table w-full text-xs text-left">
@@ -205,27 +218,24 @@ const AdminDashboard = () => {
                   {usersData.map((user) => (
                     <tr key={user._id} className="border-b border-border/30 hover:bg-bg-primary/40 transition">
                       <td className="py-3 px-3 flex items-center gap-2.5">
-                        <img 
-                          src={user.profilePic?.url || "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png"} 
-                          alt="avatar" 
-                          className="w-8 h-8 rounded-full object-cover border border-border" 
-                        />
-                        <div className="flex flex-col">
-                          <span className="font-bold text-text-primary text-xs">{user.username}</span>
-                          <span className="text-[10px] text-text-muted font-semibold">@{user.profileName}</span>
+                        <Avatar src={user.profilePic?.url} name={user.username} size={32} />
+                        <div className="flex flex-col min-w-0">
+                          <span className="font-bold text-text-primary text-xs truncate">{user.username}</span>
+                          <span className="text-[10px] text-text-muted font-medium truncate">@{user.profileName}</span>
                         </div>
                       </td>
-                      <td className="py-3 px-3 text-text-secondary text-xs font-semibold">{user.email}</td>
+                      <td className="py-3 px-3 text-text-secondary text-xs font-medium">{user.email}</td>
                       <td className="py-3 px-3 text-center">
                         <button 
                           onClick={() => handleToggleVerify(user._id)}
                           className={`p-1.5 rounded-lg border transition ${
                             user.isVerified 
-                            ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-500" 
+                            ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" 
                             : "bg-surface border-border text-text-muted hover:border-border-hover"
                           }`}
+                          title="Toggle Verification"
                         >
-                          {user.isVerified ? <FaCheck size={10} /> : <FaTimes size={10} />}
+                          {user.isVerified ? <LuCheck size={12} /> : <LuX size={12} />}
                         </button>
                       </td>
                       <td className="py-3 px-3 text-center">
@@ -233,20 +243,21 @@ const AdminDashboard = () => {
                           onClick={() => handleToggleAdmin(user._id)}
                           className={`p-1.5 rounded-lg border transition ${
                             user.isAdmin 
-                            ? "bg-accent/10 border-accent/20 text-accent" 
+                            ? "bg-primary/10 border-primary/20 text-primary" 
                             : "bg-surface border-border text-text-muted hover:border-border-hover"
                           }`}
+                          title="Toggle Admin Privilege"
                         >
-                          {user.isAdmin ? <FaCheck size={10} /> : <FaTimes size={10} />}
+                          {user.isAdmin ? <LuCheck size={12} /> : <LuX size={12} />}
                         </button>
                       </td>
                       <td className="py-3 px-3 text-center">
                         <button 
                           onClick={() => handleDeleteUser(user._id)}
-                          className="p-1.5 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-500 hover:bg-rose-500/20 transition"
+                          className="p-1.5 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-400 hover:bg-rose-500/20 transition"
                           title="Delete User"
                         >
-                          <FaTrashAlt size={10} />
+                          <LuTrash2 size={12} />
                         </button>
                       </td>
                     </tr>
@@ -255,26 +266,26 @@ const AdminDashboard = () => {
               </table>
             </div>
 
-            {/* Pagination */}
+            {/* Pagination Controls */}
             <div className="flex justify-between items-center pt-3 border-t border-border text-xs">
-              <span className="text-text-secondary font-semibold">Total {totalUsersCount} registered users</span>
-              <div className="flex gap-2">
+              <span className="text-text-secondary font-medium">Total {totalUsersCount} registered users</span>
+              <div className="flex gap-2 items-center">
                 <button 
                   onClick={() => setPage(p => Math.max(1, p - 1))}
                   disabled={page === 1}
-                  className="px-3 py-1 rounded-lg bg-bg-primary border border-border text-text-secondary hover:text-text-primary disabled:opacity-50 transition"
+                  className="px-2.5 py-1 rounded-lg bg-bg-primary border border-border text-text-secondary hover:text-text-primary disabled:opacity-50 transition flex items-center gap-1"
                 >
-                  Prev
+                  <LuChevronLeft size={13} /> Prev
                 </button>
-                <span className="px-3 py-1 rounded-lg bg-primary/10 text-primary font-bold border border-primary/20">
+                <span className="px-3 py-1 rounded-lg bg-primary/10 text-primary font-bold border border-primary/20 text-xs">
                   {page} / {totalPages}
                 </span>
                 <button 
                   onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                   disabled={page === totalPages}
-                  className="px-3 py-1 rounded-lg bg-bg-primary border border-border text-text-secondary hover:text-text-primary disabled:opacity-50 transition"
+                  className="px-2.5 py-1 rounded-lg bg-bg-primary border border-border text-text-secondary hover:text-text-primary disabled:opacity-50 transition flex items-center gap-1"
                 >
-                  Next
+                  Next <LuChevronRight size={13} />
                 </button>
               </div>
             </div>
@@ -282,17 +293,19 @@ const AdminDashboard = () => {
 
           {/* System Performance Status */}
           {stats && (
-            <div className="border border-border bg-surface rounded-3xl p-6 space-y-5 shadow-sm">
-              <h2 className="text-sm font-black text-text-primary border-b border-border pb-3 uppercase tracking-wider">Environment Monitor</h2>
+            <div className="border border-border bg-surface rounded-3xl p-6 space-y-5 shadow-sm text-left">
+              <h2 className="text-xs font-black text-text-primary border-b border-border pb-3 uppercase tracking-wider flex items-center gap-2">
+                <LuCpu className="text-primary" /> Environment Telemetry
+              </h2>
               
               <div className="space-y-3">
-                <div className="flex justify-between items-center py-1.5 border-b border-border/30 text-xs font-semibold">
-                  <span className="text-text-secondary">Platform</span>
+                <div className="flex justify-between items-center py-1.5 border-b border-border/30 text-xs font-medium">
+                  <span className="text-text-secondary">Host Platform</span>
                   <span className="font-bold text-text-primary">{stats.systemInfo.platform} ({stats.systemInfo.arch})</span>
                 </div>
 
-                <div className="flex justify-between items-center py-1.5 border-b border-border/30 text-xs font-semibold">
-                  <span className="text-text-secondary">CPUs</span>
+                <div className="flex justify-between items-center py-1.5 border-b border-border/30 text-xs font-medium">
+                  <span className="text-text-secondary">Processor Cores</span>
                   <span className="font-bold text-text-primary">{stats.systemInfo.cpuCount} Cores</span>
                 </div>
 
@@ -309,7 +322,7 @@ const AdminDashboard = () => {
                       style={{ width: `${((stats.systemInfo.freeMem / stats.systemInfo.totalMem) * 100)}%` }}
                     />
                   </div>
-                  <span className="block text-[9px] text-text-muted font-bold mt-1">
+                  <span className="block text-[10px] text-text-muted font-medium mt-1">
                     {(stats.systemInfo.freeMem / 1024 / 1024 / 1024).toFixed(1)} GB free of {(stats.systemInfo.totalMem / 1024 / 1024 / 1024).toFixed(1)} GB
                   </span>
                 </div>
